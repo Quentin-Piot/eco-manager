@@ -10,14 +10,14 @@ module.exports = {
       colors: {
         border: "#7FB3D5",
         input: "#A9CCE3",
-        ring: "#5499C7",
+        ring: "#4382ac",
         background: {
-          DEFAULT: "#EBF5FB",
+          DEFAULT: "#f4fafb",
           dark: "#17202A",
         },
         foreground: "#21618C",
         primary: {
-          DEFAULT: "#5499C7",
+          DEFAULT: "#4382ac",
           foreground: "#FFFFFF",
           light: "#A9CCE3",
           dark: "#2980B9",
@@ -43,12 +43,12 @@ module.exports = {
           foreground: "#FFFFFF",
         },
         popover: {
-          DEFAULT: "#EBF5FB",
-          foreground: "#5499C7",
+          DEFAULT: "#f4fafb",
+          foreground: "#4382ac",
         },
         card: {
-          DEFAULT: "#EBF5FB",
-          foreground: "#5499C7",
+          DEFAULT: "#f4fafb",
+          foreground: "#4382ac",
         },
       },
       borderWidth: {
