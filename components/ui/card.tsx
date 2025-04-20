@@ -5,16 +5,17 @@ import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
 const Card = React.forwardRef<ViewRef, ViewProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <View
       ref={ref}
       className={cn(
         "px-3 py-2",
-        "rounded-lg  bg-white  shadow shadow-foreground/40",
+        "rounded-lg border-l-muted-darker/10 border-t-muted-darker/10 border-b-muted-darker/10 border-r-muted-darker/10 border-[1px]  bg-white",
         "dark:bg-background-dark dark:border-muted-darker/90 dark:border-2 dark:shadow-none",
         className,
       )}
       {...props}
+      style={style}
     />
   ),
 );
@@ -41,7 +42,7 @@ const CardTitle = React.forwardRef<TextRef, TextProps>(
       aria-level={3}
       ref={ref}
       className={cn(
-        "text-xl text-primary font-semibold leading-none tracking-tight",
+        "text-lg text-primary-darker font-bold leading-none tracking-tight",
         className,
       )}
       style={{

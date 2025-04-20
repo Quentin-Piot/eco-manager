@@ -26,23 +26,23 @@ export function SpendingCard({
   className,
 }: SpendingCardProps) {
   return (
-    <Card className={cn("flex-1 basis-[45%]", className)}>
+    <Card className={cn("flex-1 basis-[48%]", className)}>
       <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-        <CardTitle className="text-base font-medium text-muted-darker">
+        <CardTitle className="text-base font-medium text-primary-darker">
           {title}
         </CardTitle>
-        <Text
-          className={`rounded-full ${color.bg} px-2 py-1 text-xs font-bold ${color.text}`}
-        >
-          {currentAmount} / {budgetAmount}
-        </Text>
       </CardHeader>
-      <CardContent className="px-0">
+      <CardContent className="px-0 items-center justify-center gap-1 pt-3">
         <Progress
           value={percentage}
           className={`h-[12px] w-full ${color.progress}/20`}
           indicatorClassName={color.progress}
         />
+        <Text
+          className={`rounded-full px-2 text-xs font-semibold ${color.text}`}
+        >
+          {currentAmount} / {budgetAmount}
+        </Text>
       </CardContent>
     </Card>
   );

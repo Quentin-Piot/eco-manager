@@ -1,16 +1,16 @@
 export const colors = {
   border: "#7FB3D5",
-  input: "#A9CCE3",
+  input: "#EDF1F4FF",
   ring: "#4382ac",
   background: {
-    DEFAULT: "#f4fafb",
+    DEFAULT: "#fbfbfb",
     dark: "#17202A",
   },
   foreground: "#21618C",
   primary: {
     DEFAULT: "#4382ac",
     foreground: "#FFFFFF",
-    light: "#A9CCE3",
+    light: "#EDF1F4FF",
     dark: "#2980B9",
     darker: "#1A5276",
   },
@@ -25,6 +25,7 @@ export const colors = {
     foreground: "#FFFFFF",
   },
   muted: {
+    light: "#edf3f6",
     DEFAULT: "#D4E6F1",
     darker: "#566573",
     foreground: "#797D7F",
@@ -40,6 +41,30 @@ export const colors = {
   card: {
     DEFAULT: "#f4fafb",
     foreground: "#4382ac",
+  },
+  // Added category colors
+  categories: {
+    // Expenses
+    shopping: "#60A5FA", // Light Blue
+    housing: "#A78BFA", // Violet
+    activities: "#FB923C", // Orange
+    other_expenses: "#F87171", // Red
+    laundry: "#34D399", // Emerald
+    drinks: "#FBBF24", // Amber
+    coffee: "#A16207", // Brown/Dark Yellow
+    groceries: "#3B82F6", // Blue
+    entertainment: "#EC4899", // Pink
+    fees_charges: "#8B5CF6", // Violet
+    exchange_fees: "#10B981", // Green
+    accommodation: "#D946EF", // Fuchsia
+    tourism: "#0EA5E9", // Sky Blue
+    transport: "#2DD4BF", // Teal
+    flights: "#14B8A6", // Teal
+    restaurants: "#EF4444", // Red
+    // Revenue
+    other_revenue: "#22C55E", // Green
+    gifts: "#EAB308", // Yellow
+    salary: "#6366F1", // Indigo
   },
 };
 
