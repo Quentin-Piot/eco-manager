@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Path, Svg } from "react-native-svg";
 import { Category, categoryDetailsMap } from "~/lib/types/categories"; // Import categoryDetailsMap
@@ -6,23 +6,35 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const CHART_SIZE = 180;
 const ICON_WIDTH = 20;
-const ICON_MARGIN = 35; // Marge entre le cercle et l'icône
+const ICON_MARGIN = 30;
 
 const styles = StyleSheet.create({
+  // Style pour le conteneur parent qui contiendra l'SVG et les icônes
+  chartContainer: {
+    position: "absolute", // Positionnez ce conteneur où vous voulez sur l'écran
+    top: "50%",
+    left: "50%",
+    // Le transform sera appliqué dynamiquement en fonction de la taille
+  },
+  // Style pour chaque conteneur d'icône individuel
   iconContainer: {
-    position: "absolute",
+    position: "absolute", // Positionnement absolu à l'intérieur de chartContainer
     width: ICON_WIDTH,
     height: ICON_WIDTH,
     alignItems: "center",
     justifyContent: "center",
+    // Les propriétés `left` et `top` seront définies dynamiquement
   },
-  icon: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
-  },
+  // Ce style n'est pas directement appliqué aux MaterialIcons,
+  // mais peut être utile si vous utilisez des Image ou d'autres composants.
+  // icon: {
+  //   width: "100%",
+  //   height: "100%",
+  //   resizeMode: "contain",
+  // },
 });
 
+// Gardez la fonction de calcul des points du gradient si elle est utilisée ailleurs
 const calculateGradientPoints = (
   radius: number,
   startAngle: number,
@@ -58,95 +70,124 @@ type PieChartTouchLayerProps = {
   selectedSlice: PieSlice | undefined;
 };
 
+// Le mapping typeToIconNameMap n'est peut-être plus nécessaire si categoryDetailsMap est suffisant,
+// mais gardons-le si vous l'utilisez ailleurs.
 const typeToIconNameMap = {
   transport: "flight",
   shopping: "shopping-cart",
   activities: "restaurant",
   housing: "home",
 };
+
 export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
   data,
-  size = CHART_SIZE + 25,
+  size = CHART_SIZE + 25, // La taille s'applique maintenant au conteneur parent
   onSlicePress,
   selectedSlice,
 }) => {
-  const center = size / 2;
-  const radius = size * 0.45;
-  const total = data.reduce((acc, item) => acc + item.value, 0);
-  let startAngle = 270;
+  const slicesWithData = useMemo(() => {
+    let startAngle = 270;
 
-  const getArcPath = (startAngle: number, sliceAngle: number) => {
-    const endAngle = startAngle + sliceAngle;
-    const startAngleRad = (startAngle * Math.PI) / 180;
-    const endAngleRad = (endAngle * Math.PI) / 180;
-    const x1 = center + radius * Math.cos(startAngleRad);
-    const y1 = center + radius * Math.sin(startAngleRad);
-    const x2 = center + radius * Math.cos(endAngleRad);
-    const y2 = center + radius * Math.sin(endAngleRad);
-    const largeArcFlag = sliceAngle > 180 ? 1 : 0;
-    return `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-  };
+    const center = size / 2; // Le centre du conteneur (et donc de l'SVG)
+    const radius = size * 0.45;
+    const total = data.reduce((acc, item) => acc + item.value, 0);
+
+    const getArcPath = (startAngle: number, sliceAngle: number) => {
+      const endAngle = startAngle + sliceAngle;
+      const startAngleRad = (startAngle * Math.PI) / 180;
+      const endAngleRad = (endAngle * Math.PI) / 180;
+      const x1 = center + radius * Math.cos(startAngleRad);
+      const y1 = center + radius * Math.sin(startAngleRad);
+      const x2 = center + radius * Math.cos(endAngleRad);
+      const y2 = center + radius * Math.sin(endAngleRad);
+      const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+      // Le chemin est toujours calculé par rapport au centre (size/2, size/2) du SVG
+      return `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+    };
+
+    return data.map((slice, index) => {
+      const sliceAngle = (slice.value / total) * 360;
+      const pathData = getArcPath(startAngle, sliceAngle);
+      const midAngle = startAngle + sliceAngle / 2;
+      const midAngleRad = (midAngle * Math.PI) / 180;
+
+      // Calcul de la position de l'icône
+      // Position relative au coin supérieur gauche du conteneur (0,0)
+      const iconDistanceFromCenter = radius - ICON_MARGIN; // Distance depuis le centre du cercle
+      const iconX =
+        center +
+        iconDistanceFromCenter * Math.cos(midAngleRad) -
+        ICON_WIDTH / 2; // Position X dans le conteneur
+      const iconY =
+        center +
+        iconDistanceFromCenter * Math.sin(midAngleRad) -
+        ICON_WIDTH / 2; // Position Y dans le conteneur
+      startAngle += sliceAngle;
+
+      // Récupérer le nom de l'icône
+      const iconName =
+        categoryDetailsMap[slice.type]?.iconName || "help-outline"; // Icône par défaut
+
+      return { ...slice, pathData, iconX, iconY, iconName };
+    });
+  }, [data, size]); // Les dépendances sont correctes
 
   return (
-    <Svg
-      width={size}
-      height={size}
-      style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: [{ translateX: -(size / 2) }, { translateY: -(size / 2) }],
-        zIndex: 1000,
-      }}
+    // Le conteneur parent qui positionne et dimensionne l'ensemble
+    <View
+      style={[
+        styles.chartContainer,
+        {
+          width: size,
+          height: size,
+          transform: [{ translateX: -(size / 2) }, { translateY: -(size / 2) }],
+        },
+      ]}
     >
-      {data
-        .filter((slice) => slice.value > 0)
-        .map((slice, index) => {
-          const sliceAngle = (slice.value / total) * 360;
-          const pathData = getArcPath(startAngle, sliceAngle);
-          const midAngle = startAngle + sliceAngle / 2;
-          const midAngleRad = (midAngle * Math.PI) / 180;
+      {/* L'élément SVG pour dessiner les parts */}
+      {/* Il prend toute la taille du conteneur parent */}
+      <Svg
+        width={size}
+        height={size}
+        style={{ position: "absolute", top: 0, left: 0 }}
+      >
+        {slicesWithData.map((slice, index) => (
+          // Chaque part est un élément Path à l'intérieur de l'SVG
+          <Path
+            key={`path-${index}`} // Clé unique pour chaque Path
+            d={slice.pathData}
+            opacity={selectedSlice?.label === slice.label ? 0.5 : 1}
+            fill={slice.color}
+            // La détection du toucher peut rester sur le Path si c'est suffisant
+            onPressIn={() => {
+              onSlicePress(slice);
+            }}
+          />
+        ))}
+      </Svg>
 
-          // Calcul de la position de l'icône à l'extérieur du cercle
-          const iconRadius = radius - ICON_MARGIN;
-          const iconX =
-            center + iconRadius * Math.cos(midAngleRad) - ICON_WIDTH / 2;
-          const iconY =
-            center + iconRadius * Math.sin(midAngleRad) - ICON_WIDTH / 2;
-          startAngle += sliceAngle;
-
-          // Calculate percentage
-          const percentage = (slice.value / total) * 100;
-          // Get icon name from categoryDetailsMap
-          const iconName =
-            categoryDetailsMap[slice.type]?.iconName || "help-outline"; // Default icon
-
-          return (
-            <React.Fragment key={index}>
-              <Path
-                d={pathData}
-                opacity={selectedSlice?.label === slice.label ? 0.5 : 1}
-                fill={slice.color}
-                onPressIn={() => {
-                  onSlicePress(slice);
-                }}
-              />
-
-              {/* Conditionally render icon if percentage > 10 */}
-              {percentage > 5 && (
-                <View
-                  style={[styles.iconContainer, { left: iconX, top: iconY }]}
-                >
-                  <MaterialIcons
-                    size={ICON_WIDTH}
-                    name={iconName}
-                    color={"white"}
-                  />
-                </View>
-              )}
-            </React.Fragment>
-          );
-        })}
-    </Svg>
+      {/* Maintenant, mappez à nouveau pour rendre les icônes comme des vues natives */}
+      {slicesWithData
+        .filter((slice) => parseFloat(slice.percentage) > 5)
+        .map((slice, index) => (
+          // Chaque icône est dans un conteneur View, positionné absolument
+          <View
+            key={`icon-${index}`} // Clé unique pour chaque conteneur d'icône
+            style={[
+              styles.iconContainer,
+              // Utilisez les positions calculées par rapport au conteneur parent
+              { left: slice.iconX, top: slice.iconY },
+            ]}
+            // Vous pouvez ajouter onPress ici aussi si vous voulez que l'icône elle-même soit cliquable
+            // onPress={() => onSlicePress(slice)}
+          >
+            <MaterialIcons
+              size={ICON_WIDTH}
+              name={slice.iconName}
+              color={"white"} // Ou la couleur de votre choix
+            />
+          </View>
+        ))}
+    </View>
   );
 };

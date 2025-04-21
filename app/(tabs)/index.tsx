@@ -22,26 +22,33 @@ export default function DashboardScreen() {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   const chartData = useMemo(() => {
-    // ... (calcul de chartData reste inchangé) ...
     if (!monthlyChartDataRaw) return [];
 
-    const totalValue = monthlyChartDataRaw.reduce(
-      (sum, item) => sum + item.value,
+    // Aggregate values by type
+    const aggregatedData: { [type: string]: number } = {};
+    monthlyChartDataRaw.forEach((item) => {
+      if (aggregatedData[item.type]) {
+        aggregatedData[item.type] += item.value;
+      } else {
+        aggregatedData[item.type] = item.value;
+      }
+    });
+
+    const totalValue = Object.values(aggregatedData).reduce(
+      (sum, value) => sum + value,
       0,
     );
 
-    return monthlyChartDataRaw.map((item) => ({
-      label: categoryDetailsMap[item.type]?.name || item.type,
-      value: item.value,
-      type: item.type,
+    return Object.entries(aggregatedData).map(([type, value]) => ({
+      label: categoryDetailsMap[type as Category]?.name || type,
+      value: value,
+      type: type,
       color:
-        colors.categories[item.type as keyof typeof colors.categories] ||
+        colors.categories[type as keyof typeof colors.categories] ||
         colors.primary.DEFAULT,
       percentage:
-        totalValue > 0
-          ? `${((item.value / totalValue) * 100).toFixed(0)}`
-          : "0",
-    }));
+        totalValue > 0 ? `${((value / totalValue) * 100).toFixed(0)}` : "0",
+    })) as PieSlice[];
   }, [monthlyChartDataRaw]);
 
   // --- Calcul de la carte "Autres Dépenses" ---
@@ -81,10 +88,9 @@ export default function DashboardScreen() {
       budgetAmount: "1000", // Pas de budget défini pour l'agrégat
       percentage: (otherSpendingTotal / 1000) * 100, // Pas de pourcentage calculable sans budget
       color: {
-        // Choisir une couleur par défaut ou spécifique pour "Autres"
-        bg: "bg-slate-500/20",
-        text: "text-slate-700",
-        progress: "bg-slate-500",
+        bg: colors.categories.flights,
+        text: colors.categories.flights,
+        progress: colors.categories.flights,
       },
     };
   }, [monthlyChartDataRaw, spendingCategories]); // Dépend des données brutes et des catégories affichées

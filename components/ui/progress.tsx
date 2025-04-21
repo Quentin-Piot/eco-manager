@@ -14,6 +14,7 @@ const Progress = React.forwardRef<
   ProgressPrimitive.RootRef,
   ProgressPrimitive.RootProps & {
     indicatorClassName?: string;
+    indicatorStyle?: Record<any, any>;
     noProgressText?: boolean;
     small?: boolean;
   }
@@ -23,6 +24,7 @@ const Progress = React.forwardRef<
       className,
       value,
       indicatorClassName,
+      indicatorStyle, // Destructure indicatorStyle
       noProgressText = false,
       small = false,
       ...props
@@ -42,6 +44,7 @@ const Progress = React.forwardRef<
         <Indicator
           value={Math.min(100, value as number)}
           className={indicatorClassName}
+          style={indicatorStyle} // Pass indicatorStyle to Indicator
         />
         {!noProgressText && !small && <Label value={value} />}
       </ProgressPrimitive.Root>
@@ -55,9 +58,11 @@ export { Progress };
 function Indicator({
   value,
   className,
+  style,
 }: {
   value: number | undefined | null;
   className?: string;
+  style?: Record<any, any>; // Add style prop to Indicator
 }) {
   const progress = useDerivedValue(() => value ?? 0);
 
@@ -77,7 +82,7 @@ function Indicator({
           "h-full w-full flex-1 bg-primary web:transition-all",
           className,
         )}
-        style={{ transform: `translateX(-${100 - (value ?? 0)}%)` }}
+        style={[{ transform: `translateX(-${100 - (value ?? 0)}%)` }, style]} // Merge transform and passed style
       >
         <ProgressPrimitive.Indicator
           className={cn("h-full w-full", className)}
@@ -85,12 +90,11 @@ function Indicator({
       </View>
     );
   }
-
   return (
     <ProgressPrimitive.Indicator asChild>
       <Animated.View
-        style={indicator}
-        className={cn("h-full bg-primary", className)}
+        className={cn("h-full bg-primary", className)} // Keep bg-primary as default
+        style={{ ...style, width: indicator.width }}
       />
     </ProgressPrimitive.Indicator>
   );

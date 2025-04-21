@@ -33,16 +33,17 @@ export function SpendingCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="px-0 items-center justify-center gap-1 pt-3">
-        <Progress
-          value={percentage}
-          className={`h-[12px] w-full ${color.progress}/20`}
-          indicatorClassName={color.progress}
-        />
         <Text
-          className={`rounded-full px-2 text-xs font-semibold ${color.text}`}
+          className={`rounded-full text-sm font-bold w-full text-left`}
+          style={{ color: color.text }} // Use inline style for text color
         >
           {currentAmount} / {budgetAmount}
         </Text>
+        <Progress
+          value={percentage}
+          className={`h-[12px] w-full`}
+          indicatorStyle={{ backgroundColor: color.progress }} // Use indicatorStyle for progress color
+        />
       </CardContent>
     </Card>
   );
