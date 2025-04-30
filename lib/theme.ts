@@ -50,6 +50,7 @@ export const colors = {
     activities: "#FB923C", // Orange
     other_expenses: "#F87171", // Red
     laundry: "#34D399", // Emerald
+    vacation: "#34D399", // Emerald
     drinks: "#FBBF24", // Amber
     coffee: "#A16207", // Brown/Dark Yellow
     groceries: "#3B82F6", // Blue
@@ -61,6 +62,7 @@ export const colors = {
     transport: "#2DD4BF", // Teal
     flights: "#14B8A6", // Teal
     restaurants: "#EF4444", // Red
+    income: "#EF4444", // Red
     // Revenue
     other_revenue: "#22C55E", // Green
     gifts: "#EAB308", // Yellow

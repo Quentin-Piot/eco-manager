@@ -9,32 +9,20 @@ const ICON_WIDTH = 20;
 const ICON_MARGIN = 30;
 
 const styles = StyleSheet.create({
-  // Style pour le conteneur parent qui contiendra l'SVG et les icônes
   chartContainer: {
-    position: "absolute", // Positionnez ce conteneur où vous voulez sur l'écran
+    position: "absolute",
     top: "50%",
     left: "50%",
-    // Le transform sera appliqué dynamiquement en fonction de la taille
   },
-  // Style pour chaque conteneur d'icône individuel
   iconContainer: {
-    position: "absolute", // Positionnement absolu à l'intérieur de chartContainer
+    position: "absolute",
     width: ICON_WIDTH,
     height: ICON_WIDTH,
     alignItems: "center",
     justifyContent: "center",
-    // Les propriétés `left` et `top` seront définies dynamiquement
   },
-  // Ce style n'est pas directement appliqué aux MaterialIcons,
-  // mais peut être utile si vous utilisez des Image ou d'autres composants.
-  // icon: {
-  //   width: "100%",
-  //   height: "100%",
-  //   resizeMode: "contain",
-  // },
 });
 
-// Gardez la fonction de calcul des points du gradient si elle est utilisée ailleurs
 const calculateGradientPoints = (
   radius: number,
   startAngle: number,
@@ -81,14 +69,14 @@ const typeToIconNameMap = {
 
 export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
   data,
-  size = CHART_SIZE + 25, // La taille s'applique maintenant au conteneur parent
+  size = CHART_SIZE + 25,
   onSlicePress,
   selectedSlice,
 }) => {
   const slicesWithData = useMemo(() => {
     let startAngle = 270;
 
-    const center = size / 2; // Le centre du conteneur (et donc de l'SVG)
+    const center = size / 2;
     const radius = size * 0.45;
     const total = data.reduce((acc, item) => acc + item.value, 0);
 
@@ -144,8 +132,6 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
         },
       ]}
     >
-      {/* L'élément SVG pour dessiner les parts */}
-      {/* Il prend toute la taille du conteneur parent */}
       <Svg
         width={size}
         height={size}
@@ -166,25 +152,20 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
         ))}
       </Svg>
 
-      {/* Maintenant, mappez à nouveau pour rendre les icônes comme des vues natives */}
       {slicesWithData
         .filter((slice) => parseFloat(slice.percentage) > 5)
         .map((slice, index) => (
-          // Chaque icône est dans un conteneur View, positionné absolument
           <View
-            key={`icon-${index}`} // Clé unique pour chaque conteneur d'icône
+            key={`icon-${index}`}
             style={[
               styles.iconContainer,
-              // Utilisez les positions calculées par rapport au conteneur parent
-              { left: slice.iconX, top: slice.iconY },
+              { left: slice.iconX, top: slice.iconY, pointerEvents: "none" },
             ]}
-            // Vous pouvez ajouter onPress ici aussi si vous voulez que l'icône elle-même soit cliquable
-            // onPress={() => onSlicePress(slice)}
           >
             <MaterialIcons
               size={ICON_WIDTH}
               name={slice.iconName}
-              color={"white"} // Ou la couleur de votre choix
+              color={"white"}
             />
           </View>
         ))}

@@ -90,11 +90,15 @@ function Indicator({
       </View>
     );
   }
+
   return (
     <ProgressPrimitive.Indicator asChild>
       <Animated.View
         className={cn("h-full bg-primary", className)} // Keep bg-primary as default
-        style={{ ...style, width: indicator.width }}
+        style={{
+          ...style,
+          width: `${progress.value}%`,
+        }}
       />
     </ProgressPrimitive.Indicator>
   );

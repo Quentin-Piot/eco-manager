@@ -2,10 +2,8 @@ import * as SelectPrimitive from "@rn-primitives/select";
 import * as React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { Check } from "~/lib/icons/Check";
-import { ChevronDown } from "~/lib/icons/ChevronDown";
-import { ChevronUp } from "~/lib/icons/ChevronUp";
 import { cn } from "~/lib/utils";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type Option = SelectPrimitive.Option;
 
@@ -29,7 +27,8 @@ const SelectTrigger = React.forwardRef<
     {...props}
   >
     <>{children}</>
-    <ChevronDown
+    <MaterialCommunityIcons
+      name={"chevron-down"}
       size={16}
       aria-hidden={true}
       className="text-foreground opacity-50"
@@ -56,7 +55,11 @@ const SelectScrollUpButton = ({
       )}
       {...props}
     >
-      <ChevronUp size={14} className="text-foreground" />
+      <MaterialCommunityIcons
+        name={"chevron-up"}
+        size={14}
+        className="text-foreground"
+      />
     </SelectPrimitive.ScrollUpButton>
   );
 };
@@ -79,7 +82,11 @@ const SelectScrollDownButton = ({
       )}
       {...props}
     >
-      <ChevronDown size={14} className="text-foreground" />
+      <MaterialCommunityIcons
+        name={"chevron-down"}
+        size={14}
+        className="text-foreground"
+      />
     </SelectPrimitive.ScrollDownButton>
   );
 };
@@ -159,7 +166,12 @@ const SelectItem = React.forwardRef<
   >
     <View className="absolute left-2 native:left-3.5 flex h-3.5 native:pt-px w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check size={16} strokeWidth={3} className="text-popover-foreground" />
+        <MaterialCommunityIcons
+          name={"check"}
+          size={16}
+          strokeWidth={3}
+          className="text-popover-foreground"
+        />
       </SelectPrimitive.ItemIndicator>
     </View>
     <SelectPrimitive.ItemText

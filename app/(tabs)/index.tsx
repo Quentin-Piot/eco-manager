@@ -5,106 +5,151 @@ import { View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
 import { PieChartTouchLayer, PieSlice } from "~/components/charts/category-pie";
-import { colors } from "~/lib/theme";
 import { SliceInfoModal } from "~/components/charts/slice-info-modal";
-import { Category, categoryDetailsMap } from "~/lib/types/categories"; // Importer Category
-import { useAccount } from "~/lib/context/account-context"; // Ajustez le chemin si nécessaire
-
-// Helper function pour formater en devise (simpliste)
-const formatCurrency = (value: number) => {
-  return `€${value.toFixed(2)}`; // Ajustez selon vos besoins de formatage
-};
+import {
+  mainCategoryDetailsMap,
+  MainExpenseCategory,
+} from "~/lib/types/categories";
+import {
+  SpendingCategoryWithValue,
+  useAccount,
+} from "~/lib/context/account-context";
+import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
+import { endOfMonth, isWithinInterval, startOfMonth } from "date-fns";
+import { colors } from "~/lib/theme";
 
 export default function DashboardScreen() {
-  const { accounts, spendingCategories, monthlyChartDataRaw } = useAccount();
+  const { accounts, spendingCategories, transactions, updateBudget } =
+    useAccount();
 
   const [selectedSlice, setSelectedSlice] = useState<PieSlice | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [isSliceModalVisible, setIsSliceModalVisible] =
+    useState<boolean>(false);
 
-  const chartData = useMemo(() => {
-    if (!monthlyChartDataRaw) return [];
+  const [isBudgetModalVisible, setIsBudgetModalVisible] =
+    useState<boolean>(false);
+  const [selectedCategoryForBudget, setSelectedCategoryForBudget] = useState<{
+    type: MainExpenseCategory;
+    currentBudget: number;
+  } | null>(null);
 
-    // Aggregate values by type
-    const aggregatedData: { [type: string]: number } = {};
-    monthlyChartDataRaw.forEach((item) => {
-      if (aggregatedData[item.type]) {
-        aggregatedData[item.type] += item.value;
-      } else {
-        aggregatedData[item.type] = item.value;
+  const chartData: PieSlice[] = useMemo(() => {
+    // Get current month's transactions
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    // Filter transactions for current month only
+    const currentMonthTransactions = transactions.filter((transaction) =>
+      isWithinInterval(transaction.date, { start: monthStart, end: monthEnd }),
+    );
+
+    // Group transactions by main category and sum values
+    const categoryTotals = new Map<MainExpenseCategory, number>();
+    currentMonthTransactions.forEach((transaction) => {
+      if (transaction.mainCategory !== "income") {
+        const category = transaction.mainCategory as MainExpenseCategory;
+        const currentTotal = categoryTotals.get(category) || 0;
+        categoryTotals.set(category, currentTotal + transaction.amountEUR);
       }
     });
 
-    const totalValue = Object.values(aggregatedData).reduce(
-      (sum, value) => sum + value,
+    // Calculate total spending
+    const totalSpending = Array.from(categoryTotals.values()).reduce(
+      (sum, amount) => sum + amount,
       0,
     );
 
-    return Object.entries(aggregatedData).map(([type, value]) => ({
-      label: categoryDetailsMap[type as Category]?.name || type,
-      value: value,
-      type: type,
-      color:
-        colors.categories[type as keyof typeof colors.categories] ||
-        colors.primary.DEFAULT,
-      percentage:
-        totalValue > 0 ? `${((value / totalValue) * 100).toFixed(0)}` : "0",
-    })) as PieSlice[];
-  }, [monthlyChartDataRaw]);
+    // Convert to PieSlice format
+    return Array.from(categoryTotals.entries())
+      .filter(([_, amount]) => amount > 0) // Only include categories with spending
+      .map(([category, amount]) => {
+        const percentage =
+          totalSpending > 0 ? ((amount / totalSpending) * 100).toFixed(1) : "0";
+        return {
+          label: mainCategoryDetailsMap[category].name,
+          value: amount,
+          color: colors.categories[category] || "#cccccc",
+          percentage: `${percentage}%`,
+          type: category,
+        };
+      });
+  }, [transactions]);
 
-  // --- Calcul de la carte "Autres Dépenses" ---
-  const otherSpendingCardData = useMemo(() => {
-    if (!monthlyChartDataRaw || !spendingCategories) {
-      return null; // Retourner null si les données ne sont pas prêtes
-    }
+  const spendingCategoriesWithValue: SpendingCategoryWithValue[] =
+    useMemo(() => {
+      // Get current month's transactions
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
 
-    // 1. Identifier les types de catégories déjà affichées
-    const displayedCategoryTypes = new Set(
-      spendingCategories.map((cat) => cat.type),
-    );
+      // Filter transactions for current month only
+      const currentMonthTransactions = transactions.filter((transaction) =>
+        isWithinInterval(transaction.date, {
+          start: monthStart,
+          end: monthEnd,
+        }),
+      );
 
-    // 2. Calculer la somme des "Autres" dépenses
-    let otherSpendingTotal = 0;
-    monthlyChartDataRaw.forEach((item) => {
-      // Vérifier si la catégorie n'est PAS affichée ET si c'est une dépense
-      if (
-        !displayedCategoryTypes.has(item.type) &&
-        categoryDetailsMap[item.type]?.type === "expense"
-      ) {
-        otherSpendingTotal += item.value;
-      }
-    });
+      // Create a map to store total spending by category
+      const categorySpending = new Map<MainExpenseCategory, number>();
 
-    // 3. Si aucune autre dépense, ne pas afficher la carte
-    if (otherSpendingTotal <= 0) {
-      return null;
-    }
+      // Sum up spending by main category
+      currentMonthTransactions.forEach((transaction) => {
+        if (transaction.mainCategory !== "income") {
+          const category = transaction.mainCategory as MainExpenseCategory;
+          const currentAmount = categorySpending.get(category) || 0;
+          categorySpending.set(category, currentAmount + transaction.amountEUR);
+        }
+      });
 
-    // 4. Préparer les données pour la carte
-    return {
-      // Utiliser 'other_expenses' comme type logique si pertinent, sinon juste pour l'affichage
-      type: "other_expenses" as Category,
-      title: categoryDetailsMap.other_expenses.name, // "Autres dépenses"
-      currentAmount: formatCurrency(otherSpendingTotal),
-      budgetAmount: "1000", // Pas de budget défini pour l'agrégat
-      percentage: (otherSpendingTotal / 1000) * 100, // Pas de pourcentage calculable sans budget
-      color: {
-        bg: colors.categories.flights,
-        text: colors.categories.flights,
-        progress: colors.categories.flights,
-      },
-    };
-  }, [monthlyChartDataRaw, spendingCategories]); // Dépend des données brutes et des catégories affichées
+      // Convert spending categories to SpendingCategoryWithValue format
+      return spendingCategories.map((category) => {
+        const currentAmount = categorySpending.get(category.type) || 0;
+        const percentage =
+          category.budgetAmount > 0
+            ? Math.min(
+                100,
+                Math.round((currentAmount / category.budgetAmount) * 100),
+              )
+            : 0;
+
+        return {
+          type: category.type,
+          budgetAmount: category.budgetAmount,
+          currentAmount: currentAmount.toFixed(2),
+          percentage,
+        };
+      });
+    }, [spendingCategories, transactions]);
 
   const handleSlicePress = (slice: PieSlice) => {
     setSelectedSlice(slice);
-    setIsModalVisible(true);
+    setIsSliceModalVisible(true);
+  };
+
+  const handleSpendingCardPress = (category: {
+    type: MainExpenseCategory;
+    budgetAmount: number;
+  }) => {
+    setSelectedCategoryForBudget({
+      type: category.type,
+      currentBudget: category.budgetAmount,
+    });
+    setIsBudgetModalVisible(true);
+  };
+
+  const handleSaveBudget = (
+    categoryType: MainExpenseCategory,
+    newBudget: number,
+  ) => {
+    updateBudget(categoryType, newBudget);
+    setIsBudgetModalVisible(false);
   };
 
   return (
     <MainLayout pageName={"Tableau de bord"}>
-      {/* Bank Account Cards */}
       <View className="flex-row flex-wrap gap-3 w-full mb-4">
-        {/* ... BankAccountCard ... */}
         <View className="flex-1 basis-[45%]">
           <BankAccountCard accounts={accounts} type="current" />
         </View>
@@ -113,9 +158,7 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Monthly Spending Overview Card */}
       <Card className={"py-6 mb-4"}>
-        {/* ... CardHeader, CardContent, Chart ... */}
         <CardHeader>
           <CardTitle>Aperçu des Dépenses Mensuelles</CardTitle>
         </CardHeader>
@@ -128,43 +171,36 @@ export default function DashboardScreen() {
         </CardContent>
       </Card>
 
-      {/* Spending Category Cards */}
       <View className="flex-row flex-wrap gap-3 mb-4">
-        {/* Cartes existantes */}
-        {spendingCategories.map((category) => (
+        {spendingCategoriesWithValue.map((category) => (
           <SpendingCard
-            key={category.type} // Utiliser category.type comme clé unique
-            title={category.title}
+            key={category.type}
             currentAmount={category.currentAmount}
             budgetAmount={category.budgetAmount}
             percentage={category.percentage}
-            color={category.color}
+            category={category.type}
+            onPress={() => handleSpendingCardPress(category)}
           />
         ))}
-        {/* Nouvelle carte "Autres Dépenses" si elle existe */}
-        {otherSpendingCardData && (
-          <SpendingCard
-            key="other-spending"
-            title={otherSpendingCardData.title}
-            currentAmount={otherSpendingCardData.currentAmount}
-            budgetAmount={otherSpendingCardData.budgetAmount}
-            percentage={otherSpendingCardData.percentage}
-            color={otherSpendingCardData.color}
-          />
-        )}
       </View>
 
-      {/* Modal */}
       <SliceInfoModal
-        isVisible={isModalVisible}
-        setIsModalVisible={setIsModalVisible}
+        isVisible={isSliceModalVisible}
+        setIsModalVisible={setIsSliceModalVisible}
         slice={selectedSlice}
+      />
+
+      <EditBudgetModal
+        isVisible={isBudgetModalVisible}
+        onClose={() => setIsBudgetModalVisible(false)}
+        categoryType={selectedCategoryForBudget?.type ?? null}
+        currentBudget={selectedCategoryForBudget?.currentBudget ?? null}
+        onSave={handleSaveBudget}
       />
     </MainLayout>
   );
 }
 
-// --- Chart Component Definition (inchangé) ---
 type ChartProps = {
   data: PieSlice[];
   onSlicePress: (slice: PieSlice) => void;
@@ -172,7 +208,6 @@ type ChartProps = {
 };
 
 const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
-  // ... (contenu du composant Chart inchangé) ...
   return (
     <View
       style={{

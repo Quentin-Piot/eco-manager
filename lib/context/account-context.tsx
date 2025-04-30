@@ -1,43 +1,158 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import { AccountDetails } from "@/components/ui/bank-account-card";
 import {
-  Category,
-  categoryDetailsMap,
-  ExpenseCategory,
+  MainCategory,
+  MainExpenseCategory,
+  Subcategory,
 } from "~/lib/types/categories";
 import { bankColors } from "~/lib/constants/bank-colors";
-import { colors } from "~/lib/theme"; // Import theme colors
 
-interface SpendingCategoryData {
-  type: Category;
-  title: string;
+export type SpendingCategory = {
+  type: MainExpenseCategory;
+  budgetAmount: number;
+};
+
+export type SpendingCategoryWithValue = SpendingCategory & {
   currentAmount: string;
-  budgetAmount: string;
   percentage: number;
-  color: {
-    bg: string; // Keep as string for potential opacity modifications
-    text: string;
-    progress: string;
-  };
-}
-
-interface ChartDataRaw {
-  type: ExpenseCategory;
-  value: number;
-  accountId: string;
-}
+};
 
 export interface AccountDetailsWithId extends AccountDetails {
   id: string;
 }
 
+export type ExpenseDataFormatted = {
+  id: string;
+  description: string;
+  amountEUR: number;
+  amountOriginal?: string;
+  date: Date;
+  accountId: string;
+  mainCategory: MainCategory;
+  subcategory: Subcategory;
+};
+
+export type TransactionsState = ExpenseDataFormatted[];
+
 type AccountContextType = {
   accounts: AccountDetailsWithId[];
-  spendingCategories: SpendingCategoryData[];
-  monthlyChartDataRaw: ChartDataRaw[];
+  spendingCategories: SpendingCategory[];
+  updateBudget: (categoryType: MainCategory, newBudget: number) => void;
+  transactions: TransactionsState;
+  setTransactions: React.Dispatch<React.SetStateAction<TransactionsState>>;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
+
+const initialSpendingCategories: SpendingCategory[] = [
+  {
+    type: "housing",
+    budgetAmount: 900,
+  },
+  {
+    type: "vacation",
+    budgetAmount: 250,
+  },
+  {
+    type: "shopping",
+    budgetAmount: 250,
+  },
+  {
+    type: "activities",
+    budgetAmount: 250,
+  },
+];
+
+const initialMockTransactions: TransactionsState = [
+  {
+    id: "1",
+    description: "Starbucks",
+    amountEUR: 4.19,
+    amountOriginal: "21,00 MYR",
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "cafe",
+  },
+  {
+    id: "2",
+    description: "Cinema",
+    amountEUR: 9.98,
+    amountOriginal: "50,00 MYR",
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "other",
+  },
+  {
+    id: "3",
+    description: "Dinner",
+    amountEUR: 5.19,
+    amountOriginal: "26,00 MYR",
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "restaurant",
+  },
+  {
+    id: "4",
+    description: "Local Cafe",
+    amountEUR: 1.6,
+    amountOriginal: "8,00 MYR",
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "cafe",
+  },
+  {
+    id: "5",
+    description: "",
+    amountEUR: 3.19,
+    amountOriginal: "16,00 MYR",
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "housing",
+    subcategory: "other",
+  },
+  {
+    id: "6",
+    description: "Hotel Night",
+    amountEUR: 15.5,
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "vacation",
+    subcategory: "accommodation",
+  },
+  {
+    id: "7",
+    description: "Bank Fee",
+    amountEUR: 3.7,
+    date: new Date(),
+    accountId: "mock-account-id-1",
+    mainCategory: "housing",
+    subcategory: "bills",
+  },
+  {
+    id: "8",
+    description: "Lunch",
+    amountEUR: 6.18,
+    amountOriginal: "31,00 MYR",
+    date: new Date(Date.now() - 86400000),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "restaurant",
+  },
+  {
+    id: "9",
+    description: "Morning Coffee",
+    amountEUR: 7.4,
+    amountOriginal: "37,00 MYR",
+    date: new Date(Date.now() - 86400000),
+    accountId: "mock-account-id-1",
+    mainCategory: "activities",
+    subcategory: "cafe",
+  },
+];
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [accounts] = useState<AccountDetailsWithId[]>([
@@ -73,7 +188,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       id: "acc-cash",
       title: "Espèces",
       amount: 50.0,
-      type: "current",
+      type: "cash",
       borderColor: bankColors[5].color,
     },
     {
@@ -99,77 +214,27 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
 
-  const [spendingCategories] = useState<SpendingCategoryData[]>([
-    {
-      type: "housing" as Category,
-      title: categoryDetailsMap.housing.name,
-      currentAmount: "€850",
-      budgetAmount: "€900",
-      percentage: 94,
-      color: {
-        bg: colors.categories.housing, // Add 20% opacity (33 in hex)
-        text: colors.categories.housing,
-        progress: colors.categories.housing,
-      },
-    },
-    {
-      type: "transport" as Category,
-      title: categoryDetailsMap.transport.name,
-      currentAmount: "€120",
-      budgetAmount: "€200",
-      percentage: 60,
-      color: {
-        bg: colors.categories.transport,
-        text: colors.categories.transport,
-        progress: colors.categories.transport,
-      },
-    },
-    {
-      type: "shopping" as Category,
-      title: categoryDetailsMap.shopping.name,
-      currentAmount: "€320",
-      budgetAmount: "€300",
-      percentage: 107,
-      color: {
-        bg: colors.categories.shopping,
-        text: colors.categories.shopping,
-        progress: colors.categories.shopping,
-      },
-    },
-    {
-      type: "activities" as Category,
-      title: categoryDetailsMap.activities.name,
-      currentAmount: "€180",
-      budgetAmount: "€250",
-      percentage: 72,
-      color: {
-        bg: colors.categories.activities,
-        text: colors.categories.activities,
-        progress: colors.categories.activities,
-      },
-    },
-  ]);
+  const [spendingCategories, setSpendingCategories] = useState<
+    SpendingCategory[]
+  >(initialSpendingCategories);
 
-  const [monthlyChartDataRaw] = useState<ChartDataRaw[]>([
-    { type: "housing", value: 850, accountId: "acc-joint" },
-    { type: "transport", value: 50, accountId: "acc-lcl" },
-    { type: "transport", value: 100, accountId: "acc-joint" },
-    { type: "shopping", value: 200, accountId: "acc-lcl" },
-    { type: "shopping", value: 120, accountId: "acc-bourso" },
-    { type: "activities", value: 180, accountId: "acc-joint" },
-    { type: "groceries", value: 150, accountId: "acc-joint" },
-    { type: "groceries", value: 60.5, accountId: "acc-lcl" },
-    { type: "restaurants", value: 70, accountId: "acc-lcl" },
-    { type: "restaurants", value: 45.75, accountId: "acc-revolut" },
-    { type: "entertainment", value: 75.0, accountId: "acc-bourso" },
-    { type: "coffee", value: 25.2, accountId: "acc-revolut" },
-    { type: "fees_charges", value: 15.0, accountId: "acc-lcl" },
-  ]);
+  const [transactions, setTransactions] = useState<TransactionsState>(
+    initialMockTransactions,
+  );
+
+  const updateBudget = useCallback(
+    (categoryType: MainCategory, newBudget: number) => {
+      console.log(categoryType, newBudget);
+    },
+    [],
+  );
 
   const contextValue: AccountContextType = {
     accounts,
     spendingCategories,
-    monthlyChartDataRaw,
+    updateBudget,
+    transactions,
+    setTransactions,
   };
 
   return (

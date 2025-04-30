@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type AccountType = "current" | "savings";
+export type AccountType = "current" | "savings" | "cash";
 
 export type AccountDetails = {
   title: string;
