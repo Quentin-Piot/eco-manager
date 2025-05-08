@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Crypto from "expo-crypto";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -118,12 +119,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     ) {
       return;
     }
+    // Note: The getCategoryKey function likely still uses the full key like "housing.rent".
+    // The change here is in how we get the details for display and selection.
     const categoryKey = getCategoryKey(
       selectedMainCategory,
       selectedSubcategory,
     );
     const expenseData: ExpenseData = {
-      id: `exp-<span class="math-inline">\{Date\.now\(\)\}\-</span>{Math.random().toString(16).slice(2)}`,
+      id: Crypto.randomUUID(),
       amount: parseFloat(amount.replace(",", ".")),
       remarks,
       date,
@@ -132,6 +135,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
     };
+    console.log(expenseData);
     onSubmit(expenseData);
     resetForm();
   };
@@ -193,7 +197,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 styles.categoryItem,
                 selectedMainCategory === key && styles.selectedCategoryItem,
               ]}
-              onPress={() => setSelectedMainCategory(key as MainCategory)}
+              onPress={() => setSelectedMainCategory(key as MainCategory)} // Use key (name) for selection logic
             >
               <View
                 style={[
@@ -213,7 +217,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 />
               </View>
               <UIText className="text-center text-xs mt-1 text-foreground dark:text-primary-foreground">
-                {details.name}
+                {details.label}
               </UIText>
             </TouchableOpacity>
           ))}
@@ -264,8 +268,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 selectedSubcategory === details.name &&
                   styles.selectedCategoryItem,
               ]}
-              onPress={() =>
-                setSelectedSubcategory(details.name as Subcategory)
+              onPress={
+                () => setSelectedSubcategory(details.name as Subcategory) // Use details.name for selection logic
               }
             >
               <View
@@ -285,14 +289,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 />
               </View>
               <UIText className="text-center text-xs mt-1 text-foreground dark:text-primary-foreground">
-                {details.name}
+                {details.label}
               </UIText>
             </TouchableOpacity>
           ))}
           {subcategories.length === 0 && (
             <UIText className="text-center text-muted-foreground p-4">
               Aucune sous-catégorie disponible pour{" "}
-              {mainCategoryDetailsMap[selectedMainCategory]?.name}.
+              {mainCategoryDetailsMap[selectedMainCategory]?.label}.
             </UIText>
           )}
         </ScrollView>

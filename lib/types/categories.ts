@@ -1,7 +1,5 @@
-// Need to import MaterialIcons for the type
 import { MaterialIcons } from "@expo/vector-icons";
 
-// Définition des catégories principales de dépenses
 export type MainExpenseCategory =
   | "housing"
   | "transport"
@@ -9,7 +7,6 @@ export type MainExpenseCategory =
   | "activities"
   | "vacation";
 
-// Définition des sous-catégories pour chaque catégorie principale de dépenses
 export type HomeSubcategory =
   | "rent"
   | "insurance"
@@ -39,13 +36,10 @@ export type VacationSubcategory =
   | "groceries"
   | "other";
 
-// Définition des catégories principales de revenus
 export type MainRevenueCategory = "income";
 
-// Définition des sous-catégories pour chaque catégorie principale de revenus
 export type IncomeSubcategory = "salary" | "gift" | "other";
 
-// Type pour toutes les sous-catégories possibles
 export type Subcategory =
   | HomeSubcategory
   | TransportSubcategory
@@ -54,239 +48,278 @@ export type Subcategory =
   | VacationSubcategory
   | IncomeSubcategory;
 
-// Type pour toutes les catégories principales
 export type MainCategory = MainExpenseCategory | MainRevenueCategory;
 
-// Type pour le type de catégorie (dépense ou revenu)
 export type CategoryType = "expense" | "revenue";
 
-// Interface pour la structure complète d'une catégorie (principale + sous-catégorie)
 export interface CategoryPath {
   mainCategory: MainCategory;
   subcategory: Subcategory;
 }
 
-// Interface pour les détails d'une catégorie
 export interface CategoryDetails {
   name: string;
   type: CategoryType;
-  iconName: keyof typeof MaterialIcons.glyphMap; // Utilise les noms de MaterialIcons
+  label: string;
+  iconName: keyof typeof MaterialIcons.glyphMap;
 }
 
-// Interface pour les détails d'une sous-catégorie
 export interface SubcategoryDetails extends CategoryDetails {
   mainCategory: MainCategory;
 }
 
-// Type pour la compatibilité avec l'ancien système (pour la transition)
 export type Category = string;
 
-// Mapping des catégories principales vers leurs détails
 export const mainCategoryDetailsMap: Record<MainCategory, CategoryDetails> = {
-  // Dépenses
-  housing: { name: "Logement", type: "expense", iconName: "home" },
-  transport: { name: "Transport", type: "expense", iconName: "directions-bus" },
-  shopping: { name: "Achats", type: "expense", iconName: "shopping-bag" },
+  housing: {
+    name: "housing",
+    label: "Logement",
+    type: "expense",
+    iconName: "home",
+  },
+  transport: {
+    name: "transport",
+    label: "Transport",
+    type: "expense",
+    iconName: "directions-bus",
+  },
+  shopping: {
+    name: "shopping",
+    label: "Achats",
+    type: "expense",
+    iconName: "shopping-bag",
+  },
   activities: {
-    name: "Activités",
+    name: "activities",
+    label: "Activités",
     type: "expense",
     iconName: "directions-run",
   },
-  vacation: { name: "Vacances", type: "expense", iconName: "beach-access" },
-  // Revenus
-  income: { name: "Revenus", type: "revenue", iconName: "payments" },
+  vacation: {
+    name: "vacation",
+    label: "Vacances",
+    type: "expense",
+    iconName: "beach-access",
+  },
+  income: {
+    name: "income",
+    label: "Revenus",
+    type: "revenue",
+    iconName: "payments",
+  },
 };
 
-// Mapping des sous-catégories vers leurs détails
 export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
-  // Sous-catégories de Home
   "housing.rent": {
-    name: "Loyer",
+    name: "rent",
+    label: "Loyer",
     type: "expense",
     iconName: "house",
     mainCategory: "housing",
   },
   "housing.insurance": {
-    name: "Assurance",
+    name: "insurance",
+    label: "Assurance",
     type: "expense",
     iconName: "security",
     mainCategory: "housing",
   },
   "housing.subscriptions": {
-    name: "Abonnements",
+    name: "subscriptions",
+    label: "Abonnements",
     type: "expense",
     iconName: "subscriptions",
     mainCategory: "housing",
   },
   "housing.bills": {
-    name: "Factures",
+    name: "bills",
+    label: "Factures",
     type: "expense",
     iconName: "receipt",
     mainCategory: "housing",
   },
   "housing.medical": {
-    name: "Médical",
+    name: "medical",
+    label: "Médical",
     type: "expense",
     iconName: "medical-services",
     mainCategory: "housing",
   },
   "housing.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "expense",
     iconName: "more-horiz",
     mainCategory: "housing",
   },
 
-  // Sous-catégories de Transport
   "transport.public": {
-    name: "Transport public",
+    name: "public transport",
+    label: "Transport public",
     type: "expense",
     iconName: "directions-bus",
     mainCategory: "transport",
   },
   "transport.train": {
-    name: "Train",
+    name: "train",
+    label: "Train",
     type: "expense",
     iconName: "train",
     mainCategory: "transport",
   },
   "transport.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "expense",
     iconName: "more-horiz",
     mainCategory: "transport",
   },
 
-  // Sous-catégories de Shopping
   "shopping.food": {
-    name: "Alimentation",
+    name: "food",
+    label: "Alimentation",
     type: "expense",
     iconName: "restaurant",
     mainCategory: "shopping",
   },
   "shopping.clothing": {
-    name: "Vêtements",
+    name: "clothing",
+    label: "Vêtements",
     type: "expense",
     iconName: "checkroom",
     mainCategory: "shopping",
   },
   "shopping.pharmacy": {
-    name: "Pharmacie",
+    name: "pharmacy",
+    label: "Pharmacie",
     type: "expense",
     iconName: "local-pharmacy",
     mainCategory: "shopping",
   },
   "shopping.purchase": {
-    name: "Achats",
+    name: "purchase",
+    label: "Achats",
     type: "expense",
     iconName: "shopping-cart",
     mainCategory: "shopping",
   },
   "shopping.gifts": {
-    name: "Cadeaux",
+    name: "gifts",
+    label: "Cadeaux",
     type: "expense",
     iconName: "card-giftcard",
     mainCategory: "shopping",
   },
   "shopping.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "expense",
     iconName: "more-horiz",
     mainCategory: "shopping",
   },
 
-  // Sous-catégories d'Activities
   "activities.restaurant": {
-    name: "Restaurant",
+    name: "restaurant",
+    label: "Restaurant",
     type: "expense",
     iconName: "restaurant",
     mainCategory: "activities",
   },
   "activities.cafe": {
-    name: "Café",
+    name: "café",
+    label: "Café",
     type: "expense",
     iconName: "local-cafe",
     mainCategory: "activities",
   },
   "activities.drinks": {
-    name: "Boissons",
+    name: "drinks",
+    label: "Boissons",
     type: "expense",
     iconName: "local-bar",
     mainCategory: "activities",
   },
   "activities.sport": {
-    name: "Sport",
+    name: "sport",
+    label: "Sport",
     type: "expense",
     iconName: "sports",
     mainCategory: "activities",
   },
   "activities.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "expense",
     iconName: "more-horiz",
     mainCategory: "activities",
   },
 
-  // Sous-catégories de Vacation
   "vacation.transport": {
-    name: "Transport",
+    name: "transport",
+    label: "Transport",
     type: "expense",
     iconName: "flight",
     mainCategory: "vacation",
   },
   "vacation.accommodation": {
-    name: "Hébergement",
+    name: "accommodation",
+    label: "Hébergement",
     type: "expense",
     iconName: "hotel",
     mainCategory: "vacation",
   },
   "vacation.activities": {
-    name: "Activités",
+    name: "activities",
+    label: "Activités",
     type: "expense",
     iconName: "local-activity",
     mainCategory: "vacation",
   },
   "vacation.restaurant": {
-    name: "Restaurant",
+    name: "restaurant",
+    label: "Restaurant",
     type: "expense",
     iconName: "restaurant",
     mainCategory: "vacation",
   },
   "vacation.groceries": {
-    name: "Courses",
+    name: "groceries",
+    label: "Courses",
     type: "expense",
     iconName: "shopping-cart",
     mainCategory: "vacation",
   },
   "vacation.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "expense",
     iconName: "more-horiz",
     mainCategory: "vacation",
   },
 
-  // Sous-catégories d'Income
   "income.salary": {
-    name: "Salaire",
+    name: "salary",
+    label: "Salaire",
     type: "revenue",
     iconName: "payments",
     mainCategory: "income",
   },
   "income.gift": {
-    name: "Cadeau",
+    name: "gift",
+    label: "Cadeau",
     type: "revenue",
     iconName: "card-giftcard",
     mainCategory: "income",
   },
   "income.other": {
-    name: "Autres",
+    name: "other",
+    label: "Autres",
     type: "revenue",
     iconName: "more-horiz",
     mainCategory: "income",
   },
 };
 
-// Fonction utilitaire pour créer une clé de catégorie complète
 export function getCategoryKey(
   mainCategory: MainCategory,
   subcategory: Subcategory,
@@ -294,7 +327,6 @@ export function getCategoryKey(
   return `${mainCategory}.${subcategory}`;
 }
 
-// Fonction utilitaire pour obtenir les détails d'une catégorie complète
 export function getCategoryDetails(
   mainCategory: MainCategory,
   subcategory: Subcategory,
@@ -303,48 +335,97 @@ export function getCategoryDetails(
   return subcategoryDetailsMap[key];
 }
 
-// Pour la compatibilité avec l'ancien système
 export const categoryDetailsMap: Record<string, CategoryDetails> = {
-  // Conversion des anciennes catégories vers les nouvelles
-  shopping: mainCategoryDetailsMap.shopping,
-  housing: mainCategoryDetailsMap.housing,
-  vacation: mainCategoryDetailsMap.vacation,
-  activities: mainCategoryDetailsMap.activities,
+  shopping: {
+    ...mainCategoryDetailsMap.shopping,
+    name: "shopping",
+  },
+  housing: {
+    ...mainCategoryDetailsMap.housing,
+    name: "housing",
+  },
+  vacation: {
+    ...mainCategoryDetailsMap.vacation,
+    name: "vacation",
+  },
+  activities: {
+    ...mainCategoryDetailsMap.activities,
+    name: "activities",
+  },
   other_expenses: {
-    name: "Autres dépenses",
+    name: "other expenses",
+    label: "Autres dépenses",
     type: "expense",
     iconName: "receipt-long",
   },
-  laundry: subcategoryDetailsMap["housing.other"],
-  drinks: subcategoryDetailsMap["activities.drinks"],
-  coffee: subcategoryDetailsMap["activities.cafe"],
-  groceries: subcategoryDetailsMap["shopping.food"],
+  laundry: {
+    ...subcategoryDetailsMap["housing.other"],
+    name: "laundry",
+  },
+  drinks: {
+    ...subcategoryDetailsMap["activities.drinks"],
+    name: "drinks",
+  },
+  coffee: {
+    ...subcategoryDetailsMap["activities.cafe"],
+    name: "coffee",
+  },
+  groceries: {
+    ...subcategoryDetailsMap["shopping.food"],
+    name: "groceries",
+  },
   entertainment: {
-    name: "Divertissement",
+    name: "entertainment",
+    label: "Divertissement",
     type: "expense",
     iconName: "local-play",
   },
   fees_charges: {
-    name: "Frais & Charges",
+    name: "fees & charges",
+    label: "Frais & Charges",
     type: "expense",
     iconName: "attach-money",
   },
   exchange_fees: {
-    name: "Frais de change",
+    name: "exchange fees",
+    label: "Frais de change",
     type: "expense",
     iconName: "currency-exchange",
   },
-  accommodation: subcategoryDetailsMap["vacation.accommodation"],
-  tourism: { name: "Tourisme", type: "expense", iconName: "map" },
-  transport: mainCategoryDetailsMap.transport,
-  flights: subcategoryDetailsMap["vacation.transport"],
-  restaurants: subcategoryDetailsMap["activities.restaurant"],
-  // Revenus
+  accommodation: {
+    ...subcategoryDetailsMap["vacation.accommodation"],
+    name: "accommodation",
+  },
+  tourism: {
+    name: "tourism",
+    label: "Tourisme",
+    type: "expense",
+    iconName: "map",
+  },
+  transport: {
+    ...mainCategoryDetailsMap.transport,
+    name: "transport",
+  },
+  flights: {
+    ...subcategoryDetailsMap["vacation.transport"],
+    name: "flights",
+  },
+  restaurants: {
+    ...subcategoryDetailsMap["activities.restaurant"],
+    name: "restaurants",
+  },
   other_revenue: {
-    name: "Autre revenu",
+    name: "other revenue",
+    label: "Autre revenu",
     type: "revenue",
     iconName: "account-balance-wallet",
   },
-  gifts: subcategoryDetailsMap["income.gift"],
-  salary: subcategoryDetailsMap["income.salary"],
+  gifts: {
+    ...subcategoryDetailsMap["income.gift"],
+    name: "gifts",
+  },
+  salary: {
+    ...subcategoryDetailsMap["income.salary"],
+    name: "salary",
+  },
 };
