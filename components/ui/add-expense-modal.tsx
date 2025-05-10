@@ -41,6 +41,7 @@ export type ExpenseData = {
   accountId: string;
   mainCategory: MainCategory;
   subcategory: Subcategory;
+  type: "expense" | "income";
 };
 
 const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
@@ -49,7 +50,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   onSubmit,
   accounts,
 }) => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // Commencer à l'étape 0 pour le choix du type
+  const [transactionType, setTransactionType] = useState<"expense" | "income">(
+    "expense",
+  );
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
   const [date, setDate] = useState(new Date());
@@ -91,8 +95,18 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   }, [availableAccounts, selectedAccountId, isVisible, paymentMethod]);
 
   const handleNextStep = () => {
-    if (step === 1 && amount && selectedAccountId) {
-      setStep(2);
+    if (step === 0) {
+      setStep(1);
+      if (transactionType === "income") {
+        setSelectedMainCategory("income");
+      }
+    } else if (step === 1 && amount && selectedAccountId) {
+      if (transactionType === "income" && selectedMainCategory) {
+        setStep(3);
+        setSelectedSubcategory("salary");
+      } else {
+        setStep(2);
+      }
     } else if (step === 2 && selectedMainCategory) {
       setStep(3);
     } else if (step === 3 && selectedSubcategory) {
@@ -101,12 +115,20 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   };
 
   const handlePreviousStep = () => {
-    if (step === 2) {
+    if (step === 1) {
+      setStep(0);
+    } else if (step === 2) {
       setStep(1);
-      setSelectedMainCategory(null);
+      if (transactionType === "expense") {
+        setSelectedMainCategory(null);
+      }
     } else if (step === 3) {
-      setStep(2);
-      setSelectedSubcategory(null);
+      if (transactionType === "expense") {
+        setStep(2);
+        setSelectedSubcategory(null);
+      } else {
+        setStep(1);
+      }
     }
   };
 
@@ -134,14 +156,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       accountId: selectedAccountId,
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
+      type: transactionType,
     };
-    console.log(expenseData);
     onSubmit(expenseData);
     resetForm();
   };
 
   const resetForm = () => {
-    setStep(1);
+    setStep(0);
+    setTransactionType("expense");
     setAmount("");
     setRemarks("");
     setDate(new Date());
@@ -185,11 +208,16 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         Choisir une catégorie principale
       </UIText>
       <UIText className="text-sm text-muted-foreground mb-4">
-        Sélectionnez la catégorie principale de votre dépense.
+        Sélectionnez la catégorie principale de votre{" "}
+        {transactionType === "expense" ? "dépense" : "revenu"}.
       </UIText>
       <ScrollView contentContainerStyle={styles.categoryGrid}>
         {Object.entries(mainCategoryDetailsMap)
-          .filter(([_, details]) => details.type === "expense")
+          .filter(([_, details]) =>
+            transactionType === "expense"
+              ? details.type === "expense"
+              : details.type === "revenue",
+          )
           .map(([key, details]) => (
             <TouchableOpacity
               key={key}
@@ -322,12 +350,84 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     );
   };
 
+  const renderTransactionTypeSelector = () => (
+    <>
+      <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+        Type de transaction
+      </UIText>
+      <UIText className="text-sm text-muted-foreground mb-4">
+        Sélectionnez le type de transaction que vous souhaitez ajouter.
+      </UIText>
+      <View className="flex-row gap-4 mb-6">
+        <TouchableOpacity
+          onPress={() => setTransactionType("expense")}
+          className={cn(
+            "flex-1 p-4 rounded-lg border items-center",
+            transactionType === "expense"
+              ? "border-primary bg-primary/10"
+              : "border-border",
+          )}
+        >
+          <View
+            className="w-12 h-12 rounded-full justify-center items-center mb-2"
+            style={{ backgroundColor: colors.secondary.DEFAULT }}
+          >
+            <MaterialIcons
+              name="arrow-upward"
+              size={24}
+              color={colors.primary.foreground}
+            />
+          </View>
+          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
+            Dépense
+          </UIText>
+          <UIText className="text-xs text-center text-muted-foreground mt-1">
+            Argent sortant
+          </UIText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setTransactionType("income")}
+          className={cn(
+            "flex-1 p-4 rounded-lg border items-center",
+            transactionType === "income"
+              ? "border-primary bg-primary/10"
+              : "border-border",
+          )}
+        >
+          <View
+            className="w-12 h-12 rounded-full justify-center items-center mb-2"
+            style={{ backgroundColor: colors.secondary.DEFAULT }}
+          >
+            <MaterialIcons
+              name="arrow-downward"
+              size={24}
+              color={colors.primary.foreground}
+            />
+          </View>
+          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
+            Revenu
+          </UIText>
+          <UIText className="text-xs text-center text-muted-foreground mt-1">
+            Argent entrant
+          </UIText>
+        </TouchableOpacity>
+      </View>
+
+      <Button onPress={handleNextStep}>
+        <UIText className="text-primary-foreground">Suivant</UIText>
+      </Button>
+    </>
+  );
+
   return (
     <BottomModal visible={isVisible} onRequestClose={onClose}>
+      {step === 0 && renderTransactionTypeSelector()}
       {step === 1 && (
         <>
           <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
-            Ajouter une dépense
+            Ajouter{" "}
+            {transactionType === "expense" ? "une dépense" : "un revenu"}
           </UIText>
 
           <View className="mb-4">

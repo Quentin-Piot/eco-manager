@@ -62,7 +62,12 @@ export const TransactionItem = ({
           </Text>
         </View>
         <View className="items-end">
-          <Text className="text-base font-semibold text-foreground">
+          <Text
+            className={`text-base font-semibold ${item.mainCategory === "income" || item.type === "income" ? "text-green-600" : "text-foreground"}`}
+          >
+            {item.mainCategory === "income" || item.type === "income"
+              ? "+"
+              : ""}
             € {item.amountEUR.toFixed(2).replace(".", ",")}
           </Text>
           {item.amountOriginal && (

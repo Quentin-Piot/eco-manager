@@ -42,14 +42,17 @@ export default function DetailsScreen() {
 
     transactions.forEach((t) => {
       const transactionDate = new Date(t.date);
+      const isIncome = t.mainCategory === "income" || t.type === "income";
+      const amount = isIncome ? -t.amountEUR : t.amountEUR; // Les revenus sont comptés négativement pour le total des dépenses
+
       if (isToday(transactionDate)) {
-        todaySum += t.amountEUR;
+        todaySum += amount;
       }
       if (
         transactionDate.getMonth() === now.getMonth() &&
         transactionDate.getFullYear() === now.getFullYear()
       ) {
-        monthSum += t.amountEUR;
+        monthSum += amount;
       }
     });
 
@@ -90,6 +93,7 @@ export default function DetailsScreen() {
       accountId: newExpense.accountId,
       mainCategory: newExpense.mainCategory,
       subcategory: newExpense.subcategory,
+      type: newExpense.type,
     };
 
     setTransactions((prevTransactions) => [
@@ -112,7 +116,7 @@ export default function DetailsScreen() {
 
   return (
     <MainLayout
-      pageName={"Dépenses Détaillées"}
+      pageName={"Transactions Détaillées"}
       fab={
         <TouchableOpacity
           onPress={() => setIsModalVisible(true)}
@@ -128,7 +132,7 @@ export default function DetailsScreen() {
           <View className="p-4 flex-row justify-between items-center">
             <View>
               <Text className="text-sm text-muted-foreground">
-                Dépenses du mois
+                Transactions du mois
               </Text>
               <Text className="text-2xl font-bold text-foreground">
                 € {currentMonthTotal.toFixed(2).replace(".", ",")}

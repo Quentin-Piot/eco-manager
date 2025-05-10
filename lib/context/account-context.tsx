@@ -30,6 +30,7 @@ export type ExpenseDataFormatted = {
   accountId: string;
   mainCategory: MainCategory;
   subcategory: Subcategory;
+  type?: "expense" | "income";
 };
 
 export type TransactionsState = ExpenseDataFormatted[];
@@ -77,6 +78,7 @@ const initialMockTransactions: TransactionsState = [
     accountId: "mock-account-id-1",
     mainCategory: "activities",
     subcategory: "cafe",
+    type: "expense",
   },
   {
     id: "2",
@@ -227,9 +229,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateBudget = useCallback(
-    (categoryType: MainCategory, newBudget: number) => {
-      console.log(categoryType, newBudget);
-    },
+    (categoryType: MainCategory, newBudget: number) => {},
+
     [],
   );
 

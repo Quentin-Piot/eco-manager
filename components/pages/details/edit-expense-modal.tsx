@@ -47,6 +47,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("card");
+  const [transactionType, setTransactionType] = useState<"expense" | "income">(
+    "expense",
+  );
   const [selectedMainCategory, setSelectedMainCategory] =
     useState<MainCategory | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] =
@@ -66,6 +69,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       setSelectedMainCategory(transaction.mainCategory);
       setSelectedSubcategory(transaction.subcategory);
       setSelectedAccountId(transaction.accountId);
+
+      // Déterminer le type de transaction (dépense ou revenu)
+      setTransactionType(
+        transaction.mainCategory === "income" ? "income" : "expense",
+      );
 
       // Déterminer le mode de paiement en fonction du type de compte
       const account = accounts.find((acc) => acc.id === transaction.accountId);
@@ -137,6 +145,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       accountId: selectedAccountId,
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
+      type: transactionType,
     };
 
     updateTransaction(transaction.id, updatedTransaction);
@@ -179,11 +188,16 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         Modifier la catégorie principale
       </UIText>
       <UIText className="text-sm text-muted-foreground mb-4">
-        Sélectionnez la catégorie principale de votre dépense.
+        Sélectionnez la catégorie principale de votre{" "}
+        {transactionType === "expense" ? "dépense" : "revenu"}.
       </UIText>
       <ScrollView contentContainerStyle={styles.categoryGrid}>
         {Object.entries(mainCategoryDetailsMap)
-          .filter(([_, details]) => details.type === "expense")
+          .filter(([_, details]) =>
+            transactionType === "expense"
+              ? details.type === "expense"
+              : details.type === "revenue",
+          )
           .map(([key, details]) => (
             <TouchableOpacity
               key={key}
@@ -321,7 +335,8 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       {step === 1 && (
         <>
           <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
-            Modifier la dépense
+            Modifier{" "}
+            {transactionType === "expense" ? "la dépense" : "le revenu"}
           </UIText>
 
           <View className="mb-4">
