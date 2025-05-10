@@ -67,7 +67,7 @@ export default function DashboardScreen() {
         const percentage =
           totalSpending > 0 ? ((amount / totalSpending) * 100).toFixed(1) : "0";
         return {
-          label: mainCategoryDetailsMap[category].name,
+          label: mainCategoryDetailsMap[category].label,
           value: amount,
           color: colors.categories[category] || "#cccccc",
           percentage: `${percentage}%`,

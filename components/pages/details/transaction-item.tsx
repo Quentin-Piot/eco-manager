@@ -63,12 +63,12 @@ export const TransactionItem = ({
         </View>
         <View className="items-end">
           <Text
-            className={`text-base font-semibold ${item.mainCategory === "income" || item.type === "income" ? "text-green-600" : "text-foreground"}`}
+            className={`text-base font-semibold ${item.mainCategory === "income" || item.type === "income" ? "text-green-600" : "text-red-600"}`}
           >
             {item.mainCategory === "income" || item.type === "income"
               ? "+"
-              : ""}
-            € {item.amountEUR.toFixed(2).replace(".", ",")}
+              : "-"}
+            {item.amountEUR.toFixed(2).replace(".", ",")} €
           </Text>
           {item.amountOriginal && (
             <Text className="text-xs text-muted-foreground mt-0.5">

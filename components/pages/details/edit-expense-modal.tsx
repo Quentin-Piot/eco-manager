@@ -1,31 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {
-  FlatList,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
-import { Text as UIText } from "~/components/ui/text";
-import {
-  MainCategory,
-  mainCategoryDetailsMap,
-  Subcategory,
-  subcategoryDetailsMap,
-} from "~/lib/types/categories";
-import { cn } from "~/lib/utils";
-import { colors } from "~/lib/theme";
-import { DatePickerModal } from "~/components/ui/date-picker-modal";
+import { Platform, StyleSheet } from "react-native";
 import { BottomModal } from "~/components/ui/custom-modal";
 import type {
   AccountDetailsWithId,
   ExpenseDataFormatted,
 } from "~/lib/context/account-context";
 import { useAccount } from "~/lib/context/account-context";
+import { MainCategory, Subcategory } from "~/lib/types/categories";
+import { TransactionForm } from "~/components/ui/transaction/transaction-form";
+import { CategorySelector } from "~/components/ui/transaction/category-selector";
+import { AccountSelector } from "~/components/ui/transaction/account-selector";
 
 interface EditExpenseModalProps {
   isVisible: boolean;
@@ -182,342 +166,64 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     setIsAccountSelectorVisible(false);
   };
 
-  const renderMainCategorySelector = () => (
-    <>
-      <UIText className="text-lg font-semibold mb-1 text-foreground dark:text-primary-foreground">
-        Modifier la catégorie principale
-      </UIText>
-      <UIText className="text-sm text-muted-foreground mb-4">
-        Sélectionnez la catégorie principale de votre{" "}
-        {transactionType === "expense" ? "dépense" : "revenu"}.
-      </UIText>
-      <ScrollView contentContainerStyle={styles.categoryGrid}>
-        {Object.entries(mainCategoryDetailsMap)
-          .filter(([_, details]) =>
-            transactionType === "expense"
-              ? details.type === "expense"
-              : details.type === "revenue",
-          )
-          .map(([key, details]) => (
-            <TouchableOpacity
-              key={key}
-              style={[
-                styles.categoryItem,
-                selectedMainCategory === key && styles.selectedCategoryItem,
-              ]}
-              onPress={() => setSelectedMainCategory(key as MainCategory)}
-            >
-              <View
-                style={[
-                  styles.categoryIconContainer,
-                  {
-                    backgroundColor:
-                      colors.categories[
-                        key as keyof typeof colors.categories
-                      ] || colors.muted.DEFAULT,
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name={details.iconName}
-                  size={24}
-                  color={colors.primary.foreground}
-                />
-              </View>
-              <UIText className="text-center text-xs mt-1 text-foreground dark:text-primary-foreground">
-                {details.label}
-              </UIText>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
-      <View className="flex-row gap-2 mt-4">
-        <Button
-          variant="outline"
-          onPress={handlePreviousStep}
-          className="flex-1"
-        >
-          <UIText className="text-foreground dark:text-primary-foreground">
-            Précédent
-          </UIText>
-        </Button>
-        <Button
-          onPress={handleNextStep}
-          disabled={!selectedMainCategory}
-          className="flex-1"
-        >
-          <UIText className="text-primary-foreground">Suivant</UIText>
-        </Button>
-      </View>
-    </>
-  );
-
-  const renderSubcategorySelector = () => {
-    if (!selectedMainCategory) {
-      return null;
-    }
-    const subcategories = Object.entries(subcategoryDetailsMap).filter(
-      ([key, details]) => details.mainCategory === selectedMainCategory,
-    );
-
-    return (
-      <>
-        <UIText className="text-lg font-semibold mb-1 text-foreground dark:text-primary-foreground">
-          Modifier la sous-catégorie
-        </UIText>
-        <UIText className="text-sm text-muted-foreground mb-4">
-          Sélectionnez la sous-catégorie de votre dépense.
-        </UIText>
-        <ScrollView contentContainerStyle={styles.categoryGrid}>
-          {subcategories.map(([key, details]) => (
-            <TouchableOpacity
-              key={key}
-              style={[
-                styles.categoryItem,
-                selectedSubcategory === details.name &&
-                  styles.selectedCategoryItem,
-              ]}
-              onPress={() =>
-                setSelectedSubcategory(details.name as Subcategory)
-              }
-            >
-              <View
-                style={[
-                  styles.categoryIconContainer,
-                  {
-                    backgroundColor:
-                      colors.categories[selectedMainCategory as MainCategory] ||
-                      colors.muted.DEFAULT,
-                  },
-                ]}
-              >
-                <MaterialIcons
-                  name={details.iconName}
-                  size={24}
-                  color={colors.primary.foreground}
-                />
-              </View>
-              <UIText className="text-center text-xs mt-1 text-foreground dark:text-primary-foreground">
-                {details.label}
-              </UIText>
-            </TouchableOpacity>
-          ))}
-          {subcategories.length === 0 && (
-            <UIText className="text-center text-muted-foreground p-4">
-              Aucune sous-catégorie disponible pour{" "}
-              {mainCategoryDetailsMap[selectedMainCategory]?.label}.
-            </UIText>
-          )}
-        </ScrollView>
-        <View className="flex-row gap-2 mt-4">
-          <Button
-            variant="outline"
-            onPress={handlePreviousStep}
-            className="flex-1"
-          >
-            <UIText className="text-foreground dark:text-primary-foreground">
-              Précédent
-            </UIText>
-          </Button>
-          <Button
-            onPress={handleNextStep}
-            disabled={!selectedSubcategory}
-            className="flex-1"
-          >
-            <UIText className="text-primary-foreground">Mettre à jour</UIText>
-          </Button>
-        </View>
-      </>
-    );
-  };
-
   return (
     <BottomModal visible={isVisible} onRequestClose={onClose}>
       {step === 1 && (
-        <>
-          <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
-            Modifier{" "}
-            {transactionType === "expense" ? "la dépense" : "le revenu"}
-          </UIText>
-
-          <View className="mb-4">
-            <UIText className="text-sm text-muted-foreground mb-1">
-              Montant
-            </UIText>
-            <Input
-              placeholder="0,00"
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-              className="text-2xl h-12"
-            />
-          </View>
-          <View className="mb-6">
-            <UIText className="text-sm text-muted-foreground mb-2">
-              Payé avec
-            </UIText>
-            <View className="flex-row gap-2">
-              <Button
-                variant={paymentMethod === "cash" ? "default" : "outline"}
-                onPress={() => setPaymentMethod("cash")}
-                className="flex-1 flex-row items-center gap-2"
-              >
-                <MaterialIcons
-                  name="account-balance-wallet"
-                  size={18}
-                  color={
-                    paymentMethod === "cash"
-                      ? colors.primary.foreground
-                      : colors.foreground
-                  }
-                />
-                <UIText
-                  className={cn(
-                    paymentMethod === "cash"
-                      ? "text-primary-foreground"
-                      : "text-foreground dark:text-primary-foreground",
-                  )}
-                >
-                  Espèces
-                </UIText>
-              </Button>
-              <Button
-                variant={paymentMethod === "card" ? "default" : "outline"}
-                onPress={() => setPaymentMethod("card")}
-                className="flex-1 flex-row items-center gap-2"
-              >
-                <MaterialIcons
-                  name="credit-card"
-                  size={18}
-                  color={
-                    paymentMethod === "card"
-                      ? colors.primary.foreground
-                      : colors.foreground
-                  }
-                />
-                <UIText
-                  className={cn(
-                    paymentMethod === "card"
-                      ? "text-primary-foreground"
-                      : "text-foreground dark:text-primary-foreground",
-                  )}
-                >
-                  Carte
-                </UIText>
-              </Button>
-            </View>
-          </View>
-          {
-            <View className="mb-4">
-              <UIText className="text-sm text-muted-foreground mb-1">
-                Compte
-              </UIText>
-              <TouchableOpacity
-                onPress={() => setIsAccountSelectorVisible(true)}
-                className="flex-row items-center justify-between bg-input dark:bg-input border disabled:bg-gray-300 border-border dark:border-border rounded-md p-3 h-12"
-                disabled={
-                  availableAccounts.length === 0 || paymentMethod === "cash"
-                }
-              >
-                <UIText
-                  className={cn(
-                    "text-foreground dark:text-primary-foreground",
-                    !selectedAccountId && "text-muted-foreground",
-                  )}
-                >
-                  {getSelectedAccountName()}
-                </UIText>
-                <MaterialIcons
-                  name="arrow-drop-down"
-                  size={24}
-                  color={colors.muted.foreground}
-                />
-              </TouchableOpacity>
-            </View>
-          }
-
-          <View className="mb-4">
-            <UIText className="text-sm text-muted-foreground mb-1">
-              Remarques (optionnel)
-            </UIText>
-            <Input
-              placeholder="Description..."
-              value={remarks}
-              onChangeText={setRemarks}
-              className="h-12"
-            />
-          </View>
-
-          <View className="mb-4">
-            <UIText className="text-sm text-muted-foreground mb-1">Date</UIText>
-            <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
-              className="flex-row items-center bg-input dark:bg-input border border-border dark:border-border rounded-md p-3 h-12"
-            >
-              <MaterialIcons
-                name="calendar-today"
-                size={20}
-                color={colors.muted.foreground}
-                className="mr-2"
-              />
-              <UIText className="text-foreground dark:text-primary-foreground">
-                {formatDate(date)}
-              </UIText>
-            </TouchableOpacity>
-            <DatePickerModal
-              isVisible={showDatePicker}
-              setIsModalVisible={setShowDatePicker}
-              selectedDate={date}
-              onDateChange={onDateChange}
-            />
-          </View>
-
-          <Button
-            onPress={handleNextStep}
-            disabled={!amount || !selectedAccountId}
-          >
-            <UIText className="text-primary-foreground">Suivant</UIText>
-          </Button>
-        </>
+        <TransactionForm
+          transactionType={transactionType}
+          amount={amount}
+          remarks={remarks}
+          date={date}
+          showDatePicker={showDatePicker}
+          paymentMethod={paymentMethod}
+          selectedAccountId={selectedAccountId}
+          availableAccounts={availableAccounts}
+          isAccountSelectorVisible={isAccountSelectorVisible}
+          onAmountChange={setAmount}
+          onRemarksChange={setRemarks}
+          onDateChange={onDateChange}
+          onPaymentMethodChange={setPaymentMethod}
+          onAccountSelect={handleAccountSelect}
+          onShowDatePicker={setShowDatePicker}
+          onShowAccountSelector={setIsAccountSelectorVisible}
+          onNext={handleNextStep}
+          isEdit
+        />
       )}
 
-      {step === 2 && renderMainCategorySelector()}
-      {step === 3 && renderSubcategorySelector()}
-
-      <BottomModal
-        visible={isAccountSelectorVisible}
-        onRequestClose={() => setIsAccountSelectorVisible(false)}
-      >
-        <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
-          Sélectionner un compte
-        </UIText>
-        <FlatList
-          data={availableAccounts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => handleAccountSelect(item.id)}
-              style={styles.accountItem}
-              className="flex-row items-center justify-between p-3 border-b border-border dark:border-border"
-            >
-              <UIText className="text-base text-foreground dark:text-primary-foreground">
-                {item.title}
-              </UIText>
-              {selectedAccountId === item.id && (
-                <MaterialIcons
-                  name="check-circle"
-                  size={20}
-                  color={colors.primary.DEFAULT}
-                />
-              )}
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            <UIText className="text-center text-muted-foreground p-4">
-              Aucun compte courant disponible.
-            </UIText>
-          }
+      {step === 2 && (
+        <CategorySelector
+          type="main"
+          transactionType={transactionType}
+          selectedMainCategory={selectedMainCategory}
+          selectedSubcategory={selectedSubcategory}
+          onSelectMainCategory={setSelectedMainCategory}
+          onPrevious={handlePreviousStep}
+          onNext={handleNextStep}
+          isEdit
         />
-      </BottomModal>
+      )}
+
+      {step === 3 && (
+        <CategorySelector
+          type="sub"
+          transactionType={transactionType}
+          selectedMainCategory={selectedMainCategory}
+          selectedSubcategory={selectedSubcategory}
+          onSelectSubcategory={setSelectedSubcategory}
+          onPrevious={handlePreviousStep}
+          onNext={handleNextStep}
+          isEdit
+        />
+      )}
+
+      <AccountSelector
+        isVisible={isAccountSelectorVisible}
+        onClose={() => setIsAccountSelectorVisible(false)}
+        accounts={availableAccounts}
+        selectedAccountId={selectedAccountId}
+        onSelect={handleAccountSelect}
+      />
     </BottomModal>
   );
 };
@@ -528,33 +234,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: Platform.OS === "android" ? 20 : 40,
   },
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
-    paddingBottom: 10,
-  },
-  categoryItem: {
-    width: "28%",
-    alignItems: "center",
-    marginBottom: 15,
-    padding: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  selectedCategoryItem: {
-    borderColor: colors.primary.DEFAULT,
-    backgroundColor: colors.primary.DEFAULT + "1A",
-  },
-  categoryIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  accountItem: {},
 });
 
 export default EditExpenseModal;

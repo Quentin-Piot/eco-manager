@@ -46,7 +46,7 @@ export const SliceInfoModal: React.FC<SliceInfoModalProps> = ({
               className="text-2xl font-semibold text-foreground" // Adjusted styling
               style={{ fontFamily: "Geist-SemiBold" }} // Use specific font weight if available
             >
-              {categoryDetailsMap[slice.type].name}
+              {categoryDetailsMap[slice.type].label}
             </Text>
           </View>
         )}

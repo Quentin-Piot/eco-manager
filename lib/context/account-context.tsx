@@ -229,8 +229,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateBudget = useCallback(
-    (categoryType: MainCategory, newBudget: number) => {},
-
+    (categoryType: MainCategory, newBudget: number) => {
+      console.log(categoryType, newBudget);
+    },
     [],
   );
 

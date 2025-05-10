@@ -51,7 +51,7 @@ export function EditBudgetModal({
     <BottomModal visible={isVisible} onRequestClose={onClose}>
       <Text className="text-lg font-semibold mb-1 text-foreground dark:text-primary-foreground">
         Modifier le budget pour{" "}
-        {categoryDetailsMap[categoryType].name ?? "Catégorie"}
+        {categoryDetailsMap[categoryType].label ?? "Catégorie"}
       </Text>
 
       <Input
