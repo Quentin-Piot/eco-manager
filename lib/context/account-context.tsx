@@ -40,6 +40,10 @@ type AccountContextType = {
   updateBudget: (categoryType: MainCategory, newBudget: number) => void;
   transactions: TransactionsState;
   setTransactions: React.Dispatch<React.SetStateAction<TransactionsState>>;
+  updateTransaction: (
+    id: string,
+    updatedTransaction: ExpenseDataFormatted,
+  ) => void;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
@@ -229,12 +233,24 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const updateTransaction = useCallback(
+    (id: string, updatedTransaction: ExpenseDataFormatted) => {
+      setTransactions((prevTransactions) =>
+        prevTransactions.map((transaction) =>
+          transaction.id === id ? updatedTransaction : transaction,
+        ),
+      );
+    },
+    [],
+  );
+
   const contextValue: AccountContextType = {
     accounts,
     spendingCategories,
     updateBudget,
     transactions,
     setTransactions,
+    updateTransaction,
   };
 
   return (

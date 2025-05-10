@@ -151,6 +151,7 @@ export default function DetailsScreen() {
                   key={item.id}
                   item={item}
                   account={accountsMap.get(item.accountId)}
+                  accounts={accounts}
                 />
               ))}
             </Card>
