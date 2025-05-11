@@ -65,12 +65,12 @@ export default function DashboardScreen() {
       .filter(([_, amount]) => amount > 0) // Only include categories with spending
       .map(([category, amount]) => {
         const percentage =
-          totalSpending > 0 ? ((amount / totalSpending) * 100).toFixed(1) : "0";
+          totalSpending > 0 ? (amount / totalSpending) * 100 : 0;
         return {
           label: mainCategoryDetailsMap[category].label,
           value: amount,
           color: colors.categories[category] || "#cccccc",
-          percentage: `${percentage}%`,
+          percentage: percentage,
           type: category,
         };
       });

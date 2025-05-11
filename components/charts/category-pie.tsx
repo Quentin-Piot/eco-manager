@@ -48,7 +48,7 @@ export type PieSlice = {
   label: string;
   value: number;
   color: string;
-  percentage: string;
+  percentage: number;
   type: Category;
 };
 type PieChartTouchLayerProps = {
@@ -153,7 +153,7 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
       </Svg>
 
       {slicesWithData
-        .filter((slice) => parseFloat(slice.percentage) > 5)
+        .filter((slice) => slice.percentage > 5)
         .map((slice, index) => (
           <View
             key={`icon-${index}`}

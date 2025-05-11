@@ -1,21 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet } from "react-native";
+import * as Crypto from "expo-crypto";
 import { BottomModal } from "~/components/ui/custom-modal";
 import type { AccountDetailsWithId } from "~/lib/context/account-context";
-import {
-  getCategoryKey,
-  MainCategory,
-  Subcategory,
-} from "~/lib/types/categories";
+import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
 import { AccountSelector } from "~/components/ui/transaction/account-selector";
-import { Text } from "~/components/ui/text";
-import { MaterialIcons } from "@expo/vector-icons";
-import { colors } from "~/lib/theme";
-import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
-import * as Crypto from "expo-crypto";
 
 interface AddExpenseModalProps {
   isVisible: boolean;
@@ -196,12 +187,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const renderTransactionTypeSelector = () => (
     <>
-      <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+      <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
         Type de transaction
-      </Text>
-      <Text className="text-sm text-muted-foreground mb-4">
+      </UIText>
+      <UIText className="text-sm text-muted-foreground mb-4">
         Sélectionnez le type de transaction que vous souhaitez ajouter.
-      </Text>
+      </UIText>
       <View className="flex-row gap-4 mb-6">
         <TouchableOpacity
           onPress={() => setTransactionType("expense")}
@@ -222,12 +213,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               color={colors.primary.foreground}
             />
           </View>
-          <Text className="text-center font-medium text-foreground dark:text-primary-foreground">
+          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
             Dépense
-          </Text>
-          <Text className="text-xs text-center text-muted-foreground mt-1">
+          </UIText>
+          <UIText className="text-xs text-center text-muted-foreground mt-1">
             Argent sortant
-          </Text>
+          </UIText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -249,17 +240,17 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               color={colors.primary.foreground}
             />
           </View>
-          <Text className="text-center font-medium text-foreground dark:text-primary-foreground">
+          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
             Revenu
-          </Text>
-          <Text className="text-xs text-center text-muted-foreground mt-1">
+          </UIText>
+          <UIText className="text-xs text-center text-muted-foreground mt-1">
             Argent entrant
-          </Text>
+          </UIText>
         </TouchableOpacity>
       </View>
 
       <Button onPress={handleNextStep}>
-        <Text className="text-primary-foreground">Suivant</Text>
+        <UIText className="text-primary-foreground">Suivant</UIText>
       </Button>
     </>
   );

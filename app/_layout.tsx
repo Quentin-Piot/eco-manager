@@ -19,6 +19,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "~/components/ui/toast";
 import { AccountProvider } from "~/lib/context/account-context";
+import { BackgroundProvider } from "~/lib/context/background";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -50,16 +51,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AccountProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
+      <BackgroundProvider>
+        <AccountProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
 
-        <PortalHost />
-        <Toast config={toastConfig} />
-      </AccountProvider>
+          <PortalHost />
+          <Toast config={toastConfig} />
+        </AccountProvider>
+      </BackgroundProvider>
     </ThemeProvider>
   );
 }

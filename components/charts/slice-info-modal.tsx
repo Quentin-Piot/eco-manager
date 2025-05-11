@@ -20,7 +20,7 @@ export const SliceInfoModal: React.FC<SliceInfoModalProps> = ({
 }) => {
   // Helper function to format currency
   const formatCurrency = (value: number) => {
-    return `€${value.toFixed(2).replace(".", ",")}`; // Example: €1,250.75 -> €1 250,75 (adjust locale/formatting as needed)
+    return `${value.toFixed(2).replace(".", ",")}€`; // Example: €1,250.75 -> €1 250,75 (adjust locale/formatting as needed)
   };
 
   return (
@@ -79,7 +79,7 @@ export const SliceInfoModal: React.FC<SliceInfoModalProps> = ({
               Part des dépenses :
             </Text>
             <Text className="text-xl font-semibold text-foreground">
-              {slice.percentage}%
+              {slice.percentage.toFixed(0)}%
             </Text>
           </View>
 

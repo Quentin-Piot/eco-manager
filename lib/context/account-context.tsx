@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { AccountDetails } from "@/components/ui/bank-account-card";
 import {
   MainCategory,
@@ -48,25 +54,6 @@ type AccountContextType = {
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
-
-const initialSpendingCategories: SpendingCategory[] = [
-  {
-    type: "housing",
-    budgetAmount: 900,
-  },
-  {
-    type: "vacation",
-    budgetAmount: 250,
-  },
-  {
-    type: "shopping",
-    budgetAmount: 250,
-  },
-  {
-    type: "activities",
-    budgetAmount: 250,
-  },
-];
 
 const initialMockTransactions: TransactionsState = [
   {
@@ -220,9 +207,27 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
 
-  const [spendingCategories, setSpendingCategories] = useState<
-    SpendingCategory[]
-  >(initialSpendingCategories);
+  const spendingCategories = useMemo<SpendingCategory[]>(
+    () => [
+      {
+        type: "housing",
+        budgetAmount: 900,
+      },
+      {
+        type: "vacation",
+        budgetAmount: 250,
+      },
+      {
+        type: "shopping",
+        budgetAmount: 250,
+      },
+      {
+        type: "activities",
+        budgetAmount: 250,
+      },
+    ],
+    [],
+  );
 
   const [transactions, setTransactions] = useState<TransactionsState>(
     initialMockTransactions,

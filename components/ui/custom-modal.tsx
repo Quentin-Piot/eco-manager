@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { useEffect } from "react";
 import {
   Dimensions,
   Modal,
@@ -11,6 +12,7 @@ import { cn } from "~/lib/utils";
 import { Card } from "~/components/ui/card";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { useBackground } from "~/lib/context/background";
 
 type CustomModalProps = ModalProps & {
   noCloseButton?: boolean;
@@ -18,14 +20,25 @@ type CustomModalProps = ModalProps & {
 
 export const CustomModal: React.FC<CustomModalProps> = ({
   children,
+  visible,
   ...props
 }) => {
+  const { addBlur, removeBlur } = useBackground();
+
+  useEffect(() => {
+    if (visible) {
+      addBlur();
+    } else {
+      removeBlur();
+    }
+  }, [visible, addBlur, removeBlur]);
   return (
     <View className="flex-1 justify-center items-center h-0">
       <Modal
         animationType="slide"
         transparent={true}
         presentationStyle="overFullScreen"
+        visible={visible}
         {...props}
       >
         {children}
@@ -47,8 +60,10 @@ export const BottomModal: React.FC<BottomModalProps> = ({
 }) => {
   const { className, ...rest } = props;
 
+  const { removeBlur } = useBackground();
   const handleOnRequestClose = () => {
     if (onRequestClose) {
+      removeBlur();
       onRequestClose();
     }
   };
