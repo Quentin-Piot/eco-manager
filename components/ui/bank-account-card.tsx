@@ -29,7 +29,10 @@ export function BankAccountCard({
   className,
 }: BankAccountCardProps) {
   const totalAmount = accounts
-    .filter((account) => account.type === type)
+    .filter((account) => {
+      if (type === "savings") return account.type === "savings";
+      return account.type !== "savings";
+    })
     .reduce((sum, account) => sum + account.amount, 0);
 
   const title = type === "current" ? "Comptes courants" : "Épargnes";
@@ -67,7 +70,10 @@ export function BankAccountCard({
       >
         <View className="gap-2">
           {accounts
-            .filter((account) => account.type === type)
+            .filter((account) => {
+              if (type === "savings") return account.type === "savings";
+              return account.type !== "savings";
+            })
             .map((account, index) => (
               <View
                 key={index}

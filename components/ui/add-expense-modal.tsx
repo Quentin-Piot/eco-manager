@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
-import * as Crypto from "expo-crypto";
 import { BottomModal } from "~/components/ui/custom-modal";
-import type {
-  AccountDetailsWithId,
-  ExpenseData,
+import {
+  type AccountDetailsWithId,
+  useAccount,
 } from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
@@ -19,16 +18,15 @@ import { Button } from "~/components/ui/button";
 interface AddExpenseModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onSubmit: (expense: ExpenseData) => void;
   accounts: AccountDetailsWithId[];
 }
 
 const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   isVisible,
   onClose,
-  onSubmit,
   accounts,
 }) => {
+  const { addTransaction } = useAccount();
   const [step, setStep] = useState(0);
   const [transactionType, setTransactionType] = useState<"expense" | "income">(
     "expense",
@@ -121,8 +119,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       return;
     }
 
-    const expenseData: ExpenseData = {
-      id: Crypto.randomUUID(),
+    const transactionData = {
       amount: parseAmount(amount),
       remarks: remarks,
       date,
@@ -132,7 +129,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       subcategory: selectedSubcategory,
       type: transactionType,
     };
-    onSubmit(expenseData);
+    addTransaction(transactionData);
     resetForm();
   };
 

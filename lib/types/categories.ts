@@ -19,7 +19,6 @@ export type ShoppingSubcategory =
   | "food"
   | "clothing"
   | "pharmacy"
-  | "purchase"
   | "gifts"
   | "other";
 export type ActivitiesSubcategory =
@@ -194,13 +193,6 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     label: "Pharmacie",
     type: "expense",
     iconName: "local-pharmacy",
-    mainCategory: "shopping",
-  },
-  "shopping.purchase": {
-    name: "purchase",
-    label: "Achats",
-    type: "expense",
-    iconName: "shopping-cart",
     mainCategory: "shopping",
   },
   "shopping.gifts": {

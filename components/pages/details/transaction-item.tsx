@@ -68,11 +68,6 @@ export const TransactionItem = ({
           >
             {formatAmountWithSign(item.amount, item.type)}
           </Text>
-          {item.amountOriginal && (
-            <Text className="text-xs text-muted-foreground mt-0.5">
-              {item.amountOriginal}
-            </Text>
-          )}
         </View>
       </TouchableOpacity>
 

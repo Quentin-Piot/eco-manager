@@ -86,7 +86,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </View>
       <View className="mb-6">
         <UIText className="text-sm text-muted-foreground mb-2">
-          Payé avec
+          {transactionType === "expense" ? "Payé avec" : "Comtpte concerné"}
         </UIText>
         <View className="flex-row gap-2">
           <Button
@@ -144,12 +144,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <UIText className="text-sm text-muted-foreground mb-1">Compte</UIText>
         <TouchableOpacity
           onPress={() => onShowAccountSelector(true)}
-          className="flex-row items-center justify-between bg-input dark:bg-input border disabled:bg-gray-300 border-border dark:border-border rounded-md p-3 h-12"
+          className="flex-row items-center justify-between bg-white dark:bg-input  disabled:bg-gray-300 border-none rounded-md p-3 h-12"
           disabled={availableAccounts.length === 0 || paymentMethod === "cash"}
         >
           <UIText
             className={cn(
-              "text-foreground dark:text-primary-foreground",
+              " dark:text-primary-foreground",
               !selectedAccountId && "text-muted-foreground",
             )}
           >
@@ -179,7 +179,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <UIText className="text-sm text-muted-foreground mb-1">Date</UIText>
         <TouchableOpacity
           onPress={() => onShowDatePicker(true)}
-          className="flex-row items-center bg-input dark:bg-input border border-border dark:border-border rounded-md p-3 h-12"
+          className="flex-row bg-white items-center  dark:bg-input  rounded-md p-3 h-12"
         >
           <MaterialIcons
             name="calendar-today"
@@ -187,7 +187,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             color={colors.muted.foreground}
             className="mr-2"
           />
-          <UIText className="text-foreground dark:text-primary-foreground">
+          <UIText className="text-lg dark:text-primary-foreground">
             {formatDate(date)}
           </UIText>
         </TouchableOpacity>

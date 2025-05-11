@@ -3,7 +3,6 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import { getUserData, saveUserData } from "~/lib/storage/user-storage";
@@ -14,6 +13,7 @@ import {
   Subcategory,
 } from "~/lib/types/categories";
 import { bankColors } from "~/lib/constants/bank-colors";
+import * as Crypto from "expo-crypto";
 
 export type SpendingCategory = {
   type: MainExpenseCategory;
@@ -49,7 +49,7 @@ type AccountContextType = {
   spendingCategories: SpendingCategory[];
   updateBudget: (categoryType: MainCategory, newBudget: number) => void;
   transactions: TransactionsState;
-  setTransactions: React.Dispatch<React.SetStateAction<TransactionsState>>;
+  addTransaction: (transaction: Omit<ExpenseData, "id">) => void;
   updateTransaction: (id: string, updatedTransaction: ExpenseData) => void;
   deleteTransaction: (id: string) => void;
 };
@@ -167,6 +167,27 @@ const initialMockTransactions: TransactionsState = [
 ];
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
+  const [spendingCategories, setSpendingCategories] = useState<
+    SpendingCategory[]
+  >([
+    {
+      type: "housing",
+      budgetAmount: 900,
+    },
+    {
+      type: "vacation",
+      budgetAmount: 250,
+    },
+    {
+      type: "shopping",
+      budgetAmount: 250,
+    },
+    {
+      type: "activities",
+      budgetAmount: 250,
+    },
+  ]);
+
   const [accounts, setAccounts] = useState<AccountDetailsWithId[]>([
     {
       id: "acc-lcl",
@@ -226,28 +247,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
 
-  const spendingCategories = useMemo<SpendingCategory[]>(
-    () => [
-      {
-        type: "housing",
-        budgetAmount: 900,
-      },
-      {
-        type: "vacation",
-        budgetAmount: 250,
-      },
-      {
-        type: "shopping",
-        budgetAmount: 250,
-      },
-      {
-        type: "activities",
-        budgetAmount: 250,
-      },
-    ],
-    [],
-  );
-
   const [transactions, setTransactions] = useState<TransactionsState>([]);
 
   // Charger les données du storage au démarrage
@@ -293,34 +292,102 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
-      console.log(categoryType, newBudget);
-    },
-    [],
-  );
-
-  const updateTransaction = useCallback(
-    (id: string, updatedTransaction: ExpenseData) => {
-      setTransactions((prevTransactions) =>
-        prevTransactions.map((transaction) =>
-          transaction.id === id ? updatedTransaction : transaction,
+      setSpendingCategories((prevCategories) =>
+        prevCategories.map((category) =>
+          category.type === categoryType
+            ? { ...category, budgetAmount: newBudget }
+            : category,
         ),
       );
     },
     [],
   );
 
-  const deleteTransaction = useCallback((id: string) => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.filter((tx) => tx.id !== id),
-    );
-  }, []);
+  const updateAccountBalance = useCallback(
+    (accountId: string, amount: number, type: "expense" | "income") => {
+      setAccounts((prevAccounts) =>
+        prevAccounts.map((account) =>
+          account.id === accountId
+            ? {
+                ...account,
+                amount:
+                  type === "expense"
+                    ? account.amount - amount
+                    : account.amount + amount,
+              }
+            : account,
+        ),
+      );
+    },
+    [],
+  );
+
+  const addTransaction = useCallback(
+    (transaction: Omit<ExpenseData, "id">) => {
+      const newTransaction: ExpenseData = {
+        ...transaction,
+        id: Crypto.randomUUID(),
+      };
+      setTransactions((prev) => [...prev, newTransaction]);
+      updateAccountBalance(
+        transaction.accountId,
+        transaction.amount,
+        transaction.type,
+      );
+    },
+    [updateAccountBalance],
+  );
+
+  const updateTransaction = useCallback(
+    (id: string, updatedTransaction: ExpenseData) => {
+      setTransactions((prevTransactions) => {
+        const oldTransaction = prevTransactions.find((t) => t.id === id);
+        if (oldTransaction) {
+          // Annuler l'ancienne transaction
+          updateAccountBalance(
+            oldTransaction.accountId,
+            oldTransaction.amount,
+            oldTransaction.type === "expense" ? "income" : "expense",
+          );
+          // Appliquer la nouvelle transaction
+          updateAccountBalance(
+            updatedTransaction.accountId,
+            updatedTransaction.amount,
+            updatedTransaction.type,
+          );
+        }
+        return prevTransactions.map((transaction) =>
+          transaction.id === id ? updatedTransaction : transaction,
+        );
+      });
+    },
+    [updateAccountBalance],
+  );
+
+  const deleteTransaction = useCallback(
+    (id: string) => {
+      setTransactions((prevTransactions) => {
+        const transactionToDelete = prevTransactions.find((t) => t.id === id);
+        if (transactionToDelete) {
+          // Annuler la transaction en inversant son effet sur le solde
+          updateAccountBalance(
+            transactionToDelete.accountId,
+            transactionToDelete.amount,
+            transactionToDelete.type === "expense" ? "income" : "expense",
+          );
+        }
+        return prevTransactions.filter((t) => t.id !== id);
+      });
+    },
+    [updateAccountBalance],
+  );
 
   const contextValue: AccountContextType = {
     accounts,
     spendingCategories,
     updateBudget,
     transactions,
-    setTransactions,
+    addTransaction,
     updateTransaction,
     deleteTransaction,
   };
