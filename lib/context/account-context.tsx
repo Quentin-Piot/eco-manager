@@ -2,9 +2,11 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import { getUserData, saveUserData } from "~/lib/storage/user-storage";
 import { AccountDetails } from "@/components/ui/bank-account-card";
 import {
   MainCategory,
@@ -27,19 +29,20 @@ export interface AccountDetailsWithId extends AccountDetails {
   id: string;
 }
 
-export type ExpenseDataFormatted = {
+export type ExpenseData = {
   id: string;
-  description: string;
-  amountEUR: number;
+  remarks: string;
+  amount: number;
   amountOriginal?: string;
   date: Date;
+  paymentMethod: "cash" | "card";
   accountId: string;
   mainCategory: MainCategory;
   subcategory: Subcategory;
-  type?: "expense" | "income";
+  type: "expense" | "income";
 };
 
-export type TransactionsState = ExpenseDataFormatted[];
+export type TransactionsState = ExpenseData[];
 
 type AccountContextType = {
   accounts: AccountDetailsWithId[];
@@ -47,108 +50,124 @@ type AccountContextType = {
   updateBudget: (categoryType: MainCategory, newBudget: number) => void;
   transactions: TransactionsState;
   setTransactions: React.Dispatch<React.SetStateAction<TransactionsState>>;
-  updateTransaction: (
-    id: string,
-    updatedTransaction: ExpenseDataFormatted,
-  ) => void;
+  updateTransaction: (id: string, updatedTransaction: ExpenseData) => void;
+  deleteTransaction: (id: string) => void;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
+// Ces données ne seront utilisées que si aucune donnée n'est trouvée dans le stockage
 const initialMockTransactions: TransactionsState = [
   {
     id: "1",
-    description: "Starbucks",
-    amountEUR: 4.19,
+    remarks: "Starbucks",
+    amount: 4.19,
     amountOriginal: "21,00 MYR",
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
     type: "expense",
   },
   {
     id: "2",
-    description: "Cinema",
-    amountEUR: 9.98,
+    remarks: "Cinema",
+    amount: 9.98,
     amountOriginal: "50,00 MYR",
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "other",
+    type: "expense",
   },
   {
     id: "3",
-    description: "Dinner",
-    amountEUR: 5.19,
+    remarks: "Dinner",
+    amount: 5.19,
     amountOriginal: "26,00 MYR",
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
+    type: "expense",
   },
   {
     id: "4",
-    description: "Local Cafe",
-    amountEUR: 1.6,
+    remarks: "Local Cafe",
+    amount: 1.6,
     amountOriginal: "8,00 MYR",
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
+    type: "expense",
   },
   {
     id: "5",
-    description: "",
-    amountEUR: 3.19,
+    remarks: "",
+    amount: 3.19,
     amountOriginal: "16,00 MYR",
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "other",
+    type: "expense",
   },
   {
     id: "6",
-    description: "Hotel Night",
-    amountEUR: 15.5,
+    remarks: "Hotel Night",
+    amount: 15.5,
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "vacation",
     subcategory: "accommodation",
+    type: "expense",
   },
   {
     id: "7",
-    description: "Bank Fee",
-    amountEUR: 3.7,
+    remarks: "Bank Fee",
+    amount: 3.7,
     date: new Date(),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "bills",
+    type: "expense",
   },
   {
     id: "8",
-    description: "Lunch",
-    amountEUR: 6.18,
+    remarks: "Lunch",
+    amount: 6.18,
     amountOriginal: "31,00 MYR",
     date: new Date(Date.now() - 86400000),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
+    type: "expense",
   },
   {
     id: "9",
-    description: "Morning Coffee",
-    amountEUR: 7.4,
+    remarks: "Morning Coffee",
+    amount: 7.4,
     amountOriginal: "37,00 MYR",
     date: new Date(Date.now() - 86400000),
     accountId: "mock-account-id-1",
+    paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
+    type: "expense",
   },
 ];
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
-  const [accounts] = useState<AccountDetailsWithId[]>([
+  const [accounts, setAccounts] = useState<AccountDetailsWithId[]>([
     {
       id: "acc-lcl",
       title: "LCL",
@@ -229,9 +248,48 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const [transactions, setTransactions] = useState<TransactionsState>(
-    initialMockTransactions,
-  );
+  const [transactions, setTransactions] = useState<TransactionsState>([]);
+
+  // Charger les données du storage au démarrage
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await getUserData();
+        if (userData) {
+          setAccounts(userData.accounts);
+          setTransactions(userData.transactions);
+        } else {
+          // Utiliser les données mock uniquement au premier démarrage
+          setTransactions(initialMockTransactions);
+        }
+      } catch (error) {
+        console.error(
+          "Erreur lors du chargement des données utilisateur:",
+          error,
+        );
+        // En cas d'erreur, utiliser les données mock
+        setTransactions(initialMockTransactions);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  // Sauvegarder les données à chaque modification des transactions
+  useEffect(() => {
+    const saveData = async () => {
+      try {
+        await saveUserData(accounts, transactions);
+      } catch (error) {
+        console.error(
+          "Erreur lors de la sauvegarde des données utilisateur:",
+          error,
+        );
+      }
+    };
+
+    saveData();
+  }, [accounts, transactions]);
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
@@ -241,7 +299,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateTransaction = useCallback(
-    (id: string, updatedTransaction: ExpenseDataFormatted) => {
+    (id: string, updatedTransaction: ExpenseData) => {
       setTransactions((prevTransactions) =>
         prevTransactions.map((transaction) =>
           transaction.id === id ? updatedTransaction : transaction,
@@ -251,6 +309,12 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const deleteTransaction = useCallback((id: string) => {
+    setTransactions((prevTransactions) =>
+      prevTransactions.filter((tx) => tx.id !== id),
+    );
+  }, []);
+
   const contextValue: AccountContextType = {
     accounts,
     spendingCategories,
@@ -258,6 +322,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     transactions,
     setTransactions,
     updateTransaction,
+    deleteTransaction,
   };
 
   return (

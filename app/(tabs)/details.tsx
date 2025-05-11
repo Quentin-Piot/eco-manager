@@ -7,20 +7,19 @@ import {
   View,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Card } from "~/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import React, { useMemo, useState } from "react";
-import AddExpenseModal, {
-  ExpenseData,
-} from "~/components/ui/add-expense-modal";
+import AddExpenseModal from "~/components/ui/add-expense-modal";
 import type {
   AccountDetailsWithId,
-  ExpenseDataFormatted,
+  ExpenseData,
 } from "~/lib/context/account-context";
 import { useAccount } from "~/lib/context/account-context";
 import { format, isToday, isYesterday } from "date-fns";
 import { TransactionItem } from "~/components/pages/details/transaction-item";
 import { fr } from "date-fns/locale/fr";
 import { capitalizeFirstLetter } from "~/lib/utils";
+import { useBackground } from "~/lib/context/background";
 
 /**
  * Formats a date object to a string in the format "yyyy-MM-dd"
@@ -37,9 +36,6 @@ interface SummaryCardProps {
   valueColorClass?: string;
 }
 
-/**
- * Reusable component for displaying a financial summary card with a modern look.
- */
 const SummaryCard: React.FC<SummaryCardProps> = ({
   title,
   value,
@@ -47,15 +43,17 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   valueColorClass,
 }) => {
   return (
-    <Card className={"flex-1 basis-[30%] bg-card/80 border-border/50"}>
-      <View className="p-3">
-        <Text className="text-sm text-muted-foreground font-medium mb-1">
+    <Card className={"flex-1 basis-[30%]"}>
+      <CardHeader className="flex-row items-center justify-between space-y-0 mb-2">
+        <CardTitle className="text-sm font-medium text-primary-darker">
           {title}
-        </Text>
-        <Text className={`text-lg font-bold ${valueColorClass || ""}`}>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pl-0 pb-2 pt-0">
+        <Text className={`text-xl font-bold ${valueColorClass || ""}`}>
           {value.toFixed(0).replace(".", ",")} €
         </Text>
-      </View>
+      </CardContent>
     </Card>
   );
 };
@@ -73,9 +71,6 @@ const BalanceCard: React.FC<{ balance: number }> = ({ balance }) => {
   );
 };
 
-/**
- * Component specifically for displaying the expenses summary.
- */
 const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
   monthly,
   today,
@@ -89,10 +84,6 @@ const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
     />
   );
 };
-
-/**
- * Component specifically for displaying the income summary.
- */
 const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
   monthly,
   today,
@@ -107,22 +98,17 @@ const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
   );
 };
 
-/**
- * DetailsScreen component displays transaction details with daily and monthly summaries
- * Provides functionality to add new expenses/incomes
- */
 export default function DetailsScreen() {
   const { accounts, transactions, setTransactions } = useAccount();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const { removeBlur } = useBackground();
 
-  // Create a map of accounts for quick lookup by ID
   const accountsMap = useMemo(() => {
     const map = new Map<string, AccountDetailsWithId>();
     accounts?.forEach((acc) => map.set(acc.id, acc));
     return map;
   }, [accounts]);
 
-  // Calculate financial metrics and group transactions by date
   const {
     todayExpenses,
     todayIncomes,
@@ -131,20 +117,17 @@ export default function DetailsScreen() {
     monthlyBalance,
     groupedTransactions,
   } = useMemo(() => {
-    // Initialize counters
     let todayExpensesSum = 0;
     let todayIncomesSum = 0;
     let currentMonthExpenses = 0;
     let currentMonthIncomes = 0;
     const now = new Date();
 
-    // Process all transactions
     transactions.forEach((t) => {
       const transactionDate = new Date(t.date);
       const isIncome = t.mainCategory === "income" || t.type === "income";
-      const amount = t.amountEUR;
+      const amount = t.amount;
 
-      // Today's totals
       if (isToday(transactionDate)) {
         if (isIncome) {
           todayIncomesSum += amount;
@@ -153,7 +136,6 @@ export default function DetailsScreen() {
         }
       }
 
-      // Current month totals
       if (
         transactionDate.getMonth() === now.getMonth() &&
         transactionDate.getFullYear() === now.getFullYear()
@@ -166,11 +148,9 @@ export default function DetailsScreen() {
       }
     });
 
-    // Calculate balances
     const currentMonthlyBalance = currentMonthIncomes - currentMonthExpenses;
 
-    // Group transactions by date
-    const grouped: Record<any, ExpenseDataFormatted[]> = {};
+    const grouped: Record<any, ExpenseData[]> = {};
     transactions
       .slice()
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -178,7 +158,6 @@ export default function DetailsScreen() {
         const transactionDate = new Date(t.date);
         let groupKey;
 
-        // Use readable keys for today and yesterday
         if (isToday(transactionDate)) {
           groupKey = "today";
         } else if (isYesterday(transactionDate)) {
@@ -203,33 +182,12 @@ export default function DetailsScreen() {
     };
   }, [transactions]);
 
-  /**
-   * Handles adding a new expense/income transaction
-   * Formats the data and adds it to the transactions state
-   */
   const handleAddExpense = (newExpense: ExpenseData) => {
-    const formattedExpense: ExpenseDataFormatted = {
-      id: newExpense.id,
-      description: newExpense.remarks,
-      amountEUR: newExpense.amount,
-      date: newExpense.date,
-      accountId: newExpense.accountId,
-      mainCategory: newExpense.mainCategory,
-      subcategory: newExpense.subcategory,
-      type: newExpense.type,
-    };
-
-    setTransactions((prevTransactions) => [
-      formattedExpense,
-      ...prevTransactions,
-    ]);
+    setTransactions((prevTransactions) => [newExpense, ...prevTransactions]);
+    removeBlur();
     setIsModalVisible(false);
   };
 
-  /**
-   * Formats date keys into human-readable text
-   * Handles special cases for today and yesterday
-   */
   const formatDateDisplay = (dateKey: string): string => {
     if (dateKey === "today") {
       return "Aujourd'hui";
@@ -241,7 +199,6 @@ export default function DetailsScreen() {
     return capitalizeFirstLetter(format(date, "EEEE d MMMM", { locale: fr }));
   };
 
-  // Render the component
   return (
     <MainLayout
       pageName={"Transactions Détaillées"}
@@ -256,7 +213,6 @@ export default function DetailsScreen() {
       }
     >
       <ScrollView>
-        {/* Financial summary cards */}
         <Text className="text-lg font-semibold text-foreground mb-2 px-1">
           Résumé mensuel
         </Text>
@@ -266,7 +222,6 @@ export default function DetailsScreen() {
           <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
         </View>
 
-        {/* Transaction list grouped by date */}
         {Object.entries(groupedTransactions).map(([dateGroup, items]) => (
           <View key={dateGroup} className="mb-4">
             <Text className="text-lg font-semibold text-foreground mb-2 px-1">
@@ -286,7 +241,6 @@ export default function DetailsScreen() {
         ))}
       </ScrollView>
 
-      {/* Add expense/income modal */}
       <AddExpenseModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}

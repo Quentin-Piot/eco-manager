@@ -28,6 +28,7 @@ interface TransactionFormProps {
   onShowAccountSelector: (show: boolean) => void;
   onNext: () => void;
   isEdit?: boolean;
+  onDelete?: () => void;
 }
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -48,6 +49,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   onShowDatePicker,
   onShowAccountSelector,
   onNext,
+  onDelete,
   isEdit = false,
 }) => {
   const getSelectedAccountName = () => {
@@ -197,9 +199,21 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         />
       </View>
 
-      <Button onPress={onNext} disabled={!amount || !selectedAccountId}>
-        <UIText className="text-primary-foreground">Suivant</UIText>
-      </Button>
+      <View className={"w-full flex-row gap-3"}>
+        {isEdit && onDelete && (
+          <Button onPress={onDelete} className={"bg-red-600 flex-1"}>
+            <UIText className="text-primary-foreground">Supprimer</UIText>
+          </Button>
+        )}
+
+        <Button
+          onPress={onNext}
+          disabled={!amount || !selectedAccountId}
+          className={"flex-1"}
+        >
+          <UIText className="text-primary-foreground">Suivant</UIText>
+        </Button>
+      </View>
     </>
   );
 };

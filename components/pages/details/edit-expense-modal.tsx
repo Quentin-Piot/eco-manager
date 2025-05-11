@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
 import { BottomModal } from "~/components/ui/custom-modal";
 import type {
   AccountDetailsWithId,
-  ExpenseDataFormatted,
+  ExpenseData,
 } from "~/lib/context/account-context";
 import { useAccount } from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
 import { AccountSelector } from "~/components/ui/transaction/account-selector";
+import { useBackground } from "~/lib/context/background";
 
 interface EditExpenseModalProps {
   isVisible: boolean;
   onClose: () => void;
-  transaction: ExpenseDataFormatted;
+  transaction: ExpenseData;
   accounts: AccountDetailsWithId[];
 }
 
@@ -24,7 +24,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   transaction,
   accounts,
 }) => {
-  const { updateTransaction } = useAccount();
+  const { updateTransaction, deleteTransaction } = useAccount();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -43,23 +43,21 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   );
   const [isAccountSelectorVisible, setIsAccountSelectorVisible] =
     useState(false);
+  const { removeBlur } = useBackground();
 
   // Initialiser les états avec les valeurs de la transaction existante
   useEffect(() => {
     if (isVisible && transaction) {
-      setAmount(transaction.amountEUR.toString().replace(".", ","));
-      setRemarks(transaction.description || "");
+      setAmount(transaction.amount.toString().replace(".", ","));
+      setRemarks(transaction.remarks || "");
       setDate(new Date(transaction.date));
       setSelectedMainCategory(transaction.mainCategory);
       setSelectedSubcategory(transaction.subcategory);
       setSelectedAccountId(transaction.accountId);
 
       // Déterminer le type de transaction (dépense ou revenu)
-      setTransactionType(
-        transaction.mainCategory === "income" ? "income" : "expense",
-      );
+      setTransactionType(transaction.type);
 
-      // Déterminer le mode de paiement en fonction du type de compte
       const account = accounts.find((acc) => acc.id === transaction.accountId);
       setPaymentMethod(account?.type === "cash" ? "cash" : "card");
     }
@@ -121,15 +119,16 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       return;
     }
 
-    const updatedTransaction: ExpenseDataFormatted = {
+    const updatedTransaction: ExpenseData = {
       ...transaction,
-      description: remarks,
-      amountEUR: parseFloat(amount.replace(",", ".")),
+      remarks: remarks,
+      amount: parseFloat(amount.replace(",", ".")),
       date,
       accountId: selectedAccountId,
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
       type: transactionType,
+      paymentMethod: paymentMethod,
     };
 
     updateTransaction(transaction.id, updatedTransaction);
@@ -138,6 +137,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
   const resetForm = () => {
     setStep(1);
+    removeBlur();
     onClose();
   };
 
@@ -146,19 +146,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     setDate(currentDate);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const getSelectedAccountName = () => {
-    const account = availableAccounts.find(
-      (acc) => acc.id === selectedAccountId,
-    );
-    return account ? account.title : "Sélectionner un compte";
+  const handleDeleteTransaction = () => {
+    deleteTransaction(transaction.id);
+    resetForm();
   };
 
   const handleAccountSelect = (accountId: string) => {
@@ -188,6 +178,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
           onShowAccountSelector={setIsAccountSelectorVisible}
           onNext={handleNextStep}
           isEdit
+          onDelete={handleDeleteTransaction}
         />
       )}
 
@@ -227,13 +218,5 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     </BottomModal>
   );
 };
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-    padding: 20,
-    paddingBottom: Platform.OS === "android" ? 20 : 40,
-  },
-});
 
 export default EditExpenseModal;

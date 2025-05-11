@@ -50,7 +50,7 @@ export default function DashboardScreen() {
       if (transaction.mainCategory !== "income") {
         const category = transaction.mainCategory as MainExpenseCategory;
         const currentTotal = categoryTotals.get(category) || 0;
-        categoryTotals.set(category, currentTotal + transaction.amountEUR);
+        categoryTotals.set(category, currentTotal + transaction.amount);
       }
     });
 
@@ -99,7 +99,7 @@ export default function DashboardScreen() {
         if (transaction.mainCategory !== "income") {
           const category = transaction.mainCategory as MainExpenseCategory;
           const currentAmount = categorySpending.get(category) || 0;
-          categorySpending.set(category, currentAmount + transaction.amountEUR);
+          categorySpending.set(category, currentAmount + transaction.amount);
         }
       });
 

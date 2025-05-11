@@ -1,12 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AccountDetailsWithId } from "~/lib/context/account-context";
-import { ExpenseData } from "~/components/ui/add-expense-modal";
+import {
+  AccountDetailsWithId,
+  TransactionsState,
+} from "~/lib/context/account-context";
 
 export const USER_DATA_KEY = "user_data";
 
 export const saveUserData = async (
   accounts: AccountDetailsWithId[],
-  transactions: ExpenseData[],
+  transactions: TransactionsState,
 ): Promise<void> => {
   try {
     const serializedData = JSON.stringify({
@@ -22,7 +24,7 @@ export const saveUserData = async (
 
 export const getUserData = async (): Promise<{
   accounts: AccountDetailsWithId[];
-  transactions: ExpenseData[];
+  transactions: TransactionsState;
 } | null> => {
   try {
     const data = await AsyncStorage.getItem(USER_DATA_KEY);
@@ -37,7 +39,7 @@ export const getUserData = async (): Promise<{
       })),
     };
   } catch (error) {
-    console.error("Error getting user streak:", error);
+    console.error("Error getting user data:", error);
     throw error;
   }
 };

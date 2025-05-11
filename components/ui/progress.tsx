@@ -82,7 +82,7 @@ function Indicator({
           "h-full w-full flex-1 bg-primary web:transition-all",
           className,
         )}
-        style={[{ transform: `translateX(-${100 - (value ?? 0)}%)` }, style]} // Merge transform and passed style
+        style={[indicator, style]} // Merge transform and passed style
       >
         <ProgressPrimitive.Indicator
           className={cn("h-full w-full", className)}
@@ -93,13 +93,9 @@ function Indicator({
 
   return (
     <ProgressPrimitive.Indicator asChild>
-      <Animated.View
-        className={cn("h-full bg-primary", className)} // Keep bg-primary as default
-        style={{
-          ...style,
-          width: `${progress.value}%`,
-        }}
-      />
+      <Animated.View className={cn("h-full", className)} style={indicator}>
+        <View className={"w-full h-full"} style={style}></View>
+      </Animated.View>
     </ProgressPrimitive.Indicator>
   );
 }

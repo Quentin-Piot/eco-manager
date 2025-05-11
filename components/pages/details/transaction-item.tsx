@@ -1,6 +1,6 @@
 import type {
   AccountDetailsWithId,
-  ExpenseDataFormatted,
+  ExpenseData,
 } from "~/lib/context/account-context";
 import { getCategoryDetails } from "~/lib/types/categories";
 import React, { useMemo, useState } from "react";
@@ -8,9 +8,10 @@ import { colors } from "~/lib/theme";
 import { Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import EditExpenseModal from "./edit-expense-modal";
+import { formatAmountWithSign } from "~/lib/utils";
 
 type TransactionItemProps = {
-  item: ExpenseDataFormatted;
+  item: ExpenseData;
   account?: AccountDetailsWithId;
   accounts?: AccountDetailsWithId[];
 };
@@ -52,7 +53,7 @@ export const TransactionItem = ({
             className="text-base font-medium text-foreground"
             numberOfLines={1}
           >
-            {item.description || categoryInfo?.label}
+            {item.remarks || categoryInfo?.label}
           </Text>
           <Text
             className="text-xs text-muted-foreground mt-0.5"
@@ -63,12 +64,9 @@ export const TransactionItem = ({
         </View>
         <View className="items-end">
           <Text
-            className={`text-base font-semibold ${item.mainCategory === "income" || item.type === "income" ? "text-green-600" : "text-red-600"}`}
+            className={`text-base font-semibold ${item.type === "income" ? "text-green-600" : "text-red-600"}`}
           >
-            {item.mainCategory === "income" || item.type === "income"
-              ? "+"
-              : "-"}
-            {item.amountEUR.toFixed(2).replace(".", ",")} €
+            {formatAmountWithSign(item.amount, item.type)}
           </Text>
           {item.amountOriginal && (
             <Text className="text-xs text-muted-foreground mt-0.5">

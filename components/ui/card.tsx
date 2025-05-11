@@ -10,7 +10,7 @@ const Card = React.forwardRef<ViewRef, ViewProps>(
       ref={ref}
       className={cn(
         "px-3 py-2",
-        "rounded-lg border-l-muted-darker/10 border-t-muted-darker/10 border-b-muted-darker/10 border-r-muted-darker/10 border-[1px]  bg-white",
+        "rounded-lg border-[1px]  bg-white border-gray-200",
         "dark:bg-background-dark dark:border-muted-darker/90 dark:border-2 dark:shadow-none",
         className,
       )}

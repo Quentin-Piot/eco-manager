@@ -43,6 +43,7 @@ export function SpendingCard({
     }
   }, [category]);
   if (!category) return null;
+
   return (
     <TouchableOpacity
       onPress={onPress}

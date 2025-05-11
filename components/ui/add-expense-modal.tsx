@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { BottomModal } from "~/components/ui/custom-modal";
-import type { AccountDetailsWithId } from "~/lib/context/account-context";
+import type {
+  AccountDetailsWithId,
+  ExpenseData,
+} from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
 import { AccountSelector } from "~/components/ui/transaction/account-selector";
+import { Text } from "~/components/ui/text";
+import { cn, parseAmount } from "~/lib/utils";
+import { colors } from "~/lib/theme";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Button } from "~/components/ui/button";
 
 interface AddExpenseModalProps {
   isVisible: boolean;
@@ -14,18 +22,6 @@ interface AddExpenseModalProps {
   onSubmit: (expense: ExpenseData) => void;
   accounts: AccountDetailsWithId[];
 }
-
-export type ExpenseData = {
-  id: string;
-  amount: number;
-  remarks: string;
-  date: Date;
-  paymentMethod: "cash" | "card";
-  accountId: string;
-  mainCategory: MainCategory;
-  subcategory: Subcategory;
-  type: "expense" | "income";
-};
 
 const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   isVisible,
@@ -124,18 +120,13 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     ) {
       return;
     }
-    // Note: The getCategoryKey function likely still uses the full key like "housing.rent".
-    // The change here is in how we get the details for display and selection.
-    const categoryKey = getCategoryKey(
-      selectedMainCategory,
-      selectedSubcategory,
-    );
+
     const expenseData: ExpenseData = {
       id: Crypto.randomUUID(),
-      amount: parseFloat(amount.replace(",", ".")),
-      remarks,
+      amount: parseAmount(amount),
+      remarks: remarks,
       date,
-      paymentMethod,
+      paymentMethod: paymentMethod,
       accountId: selectedAccountId,
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
@@ -165,21 +156,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setDate(currentDate);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const getSelectedAccountName = () => {
-    const account = availableAccounts.find(
-      (acc) => acc.id === selectedAccountId,
-    );
-    return account ? account.title : "Sélectionner un compte";
-  };
-
   const handleAccountSelect = (accountId: string) => {
     setSelectedAccountId(accountId);
     setIsAccountSelectorVisible(false);
@@ -187,12 +163,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const renderTransactionTypeSelector = () => (
     <>
-      <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+      <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
         Type de transaction
-      </UIText>
-      <UIText className="text-sm text-muted-foreground mb-4">
+      </Text>
+      <Text className="text-sm text-muted-foreground mb-4">
         Sélectionnez le type de transaction que vous souhaitez ajouter.
-      </UIText>
+      </Text>
       <View className="flex-row gap-4 mb-6">
         <TouchableOpacity
           onPress={() => setTransactionType("expense")}
@@ -213,12 +189,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               color={colors.primary.foreground}
             />
           </View>
-          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
+          <Text className="text-center font-medium text-foreground dark:text-primary-foreground">
             Dépense
-          </UIText>
-          <UIText className="text-xs text-center text-muted-foreground mt-1">
+          </Text>
+          <Text className="text-xs text-center text-muted-foreground mt-1">
             Argent sortant
-          </UIText>
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -240,17 +216,17 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               color={colors.primary.foreground}
             />
           </View>
-          <UIText className="text-center font-medium text-foreground dark:text-primary-foreground">
+          <Text className="text-center font-medium text-foreground dark:text-primary-foreground">
             Revenu
-          </UIText>
-          <UIText className="text-xs text-center text-muted-foreground mt-1">
+          </Text>
+          <Text className="text-xs text-center text-muted-foreground mt-1">
             Argent entrant
-          </UIText>
+          </Text>
         </TouchableOpacity>
       </View>
 
       <Button onPress={handleNextStep}>
-        <UIText className="text-primary-foreground">Suivant</UIText>
+        <Text className="text-primary-foreground">Suivant</Text>
       </Button>
     </>
   );
@@ -314,25 +290,4 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     </BottomModal>
   );
 };
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-    padding: 20,
-    paddingBottom: Platform.OS === "android" ? 20 : 40,
-  },
-  selectedCategoryItem: {
-    borderColor: colors.primary.DEFAULT,
-    backgroundColor: colors.primary.DEFAULT + "1A",
-  },
-  categoryIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  accountItem: {},
-});
-
 export default AddExpenseModal;
