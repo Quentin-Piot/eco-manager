@@ -1,55 +1,70 @@
-# Welcome to your Expo app 👋
+# Eco Manager 🌱
 
-This is an [Expo](https://expo.dev) project created with [
-`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Eco Manager is a mobile application designed to help you manage your bank accounts and track your expenses efficiently.
+Built with Expo and React Native, it offers a user-friendly interface for personal finance management.
 
-## Get started
+## Features
+
+### Bank Account Management
+
+- Create multiple bank accounts (Current, Savings, Cash)
+- Customize account colors for easy identification
+- View and edit account details
+- Track account balances in real-time
+- Delete accounts (with transaction handling)
+
+### Transaction Management
+
+- Add new transactions with detailed information
+- Categorize transactions for better organization
+- Update existing transaction details
+- Delete unwanted transactions
+- Real-time balance updates
+
+### Spending Categories
+
+- Pre-defined spending categories
+- Track expenses by category
+- Monitor spending patterns
+
+## Technical Stack
+
+- **Framework**: [Expo](https://expo.dev)
+- **UI Framework**: React Native
+- **Navigation**: Expo Router (file-based routing)
+- **Storage**: AsyncStorage for local data persistence
+
+## Getting Started
 
 1. Install dependencies
-
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. Start the development server
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Open the app in your preferred environment:
+    - iOS Simulator
+    - Android Emulator
+    - Expo Go on your physical device
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Development
 
-You can start developing by editing the files inside the **app** directory. This project
-uses [file-based routing](https://docs.expo.dev/router/introduction).
+The application uses a file-based routing system through Expo Router. Main components are organized in the `app`
+directory:
 
-## Get a fresh project
+- Account management components
+- Transaction handling
+- Category management
+- Context providers for state management
 
-When you're ready, run:
+## Contributing
 
-```bash
-npm run reset-project
-```
+This project is maintained by Quentin Piot. Feel free to contribute by submitting issues or pull requests.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you
-can start developing.
+## License
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with
-  our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll
-  create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is licensed under the MIT License - see the LICENSE file for details.
