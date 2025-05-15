@@ -62,7 +62,6 @@ type AccountContextType = {
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
-// Ces données ne seront utilisées que si aucune donnée n'est trouvée dans le stockage
 const initialMockTransactions: TransactionsState = [
   {
     id: "1",
@@ -255,7 +254,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const [transactions, setTransactions] = useState<TransactionsState>([]);
 
-  // Charger les données du storage au démarrage
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -264,7 +262,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           setAccounts(userData.accounts);
           setTransactions(userData.transactions);
         } else {
-          // Utiliser les données mock uniquement au premier démarrage
           setTransactions(initialMockTransactions);
         }
       } catch (error) {
@@ -272,7 +269,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           "Erreur lors du chargement des données utilisateur:",
           error,
         );
-        // En cas d'erreur, utiliser les données mock
         setTransactions(initialMockTransactions);
       }
     };
@@ -280,7 +276,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, []);
 
-  // Sauvegarder les données à chaque modification des transactions
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -349,13 +344,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setTransactions((prevTransactions) => {
         const oldTransaction = prevTransactions.find((t) => t.id === id);
         if (oldTransaction) {
-          // Annuler l'ancienne transaction
           updateAccountBalance(
             oldTransaction.accountId,
             oldTransaction.amount,
             oldTransaction.type === "expense" ? "income" : "expense",
           );
-          // Appliquer la nouvelle transaction
           updateAccountBalance(
             updatedTransaction.accountId,
             updatedTransaction.amount,
@@ -375,7 +368,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setTransactions((prevTransactions) => {
         const transactionToDelete = prevTransactions.find((t) => t.id === id);
         if (transactionToDelete) {
-          // Annuler la transaction en inversant son effet sur le solde
           updateAccountBalance(
             transactionToDelete.accountId,
             transactionToDelete.amount,
@@ -412,17 +404,12 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const deleteAccount = useCallback(
     (id: string) => {
-      // Vérifier si des transactions utilisent ce compte
       const hasTransactions = transactions.some((t) => t.accountId === id);
       if (hasTransactions) {
-        // Option 1: Empêcher la suppression
         console.warn(
           "Impossible de supprimer un compte avec des transactions associées",
         );
         return false;
-
-        // Option 2 (alternative): Supprimer toutes les transactions associées
-        // setTransactions(prev => prev.filter(t => t.accountId !== id));
       }
 
       setAccounts((prev) => prev.filter((account) => account.id !== id));
