@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { BottomModal } from "~/components/ui/custom-modal";
 import {
@@ -46,7 +46,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [isAccountSelectorVisible, setIsAccountSelectorVisible] =
     useState(false);
 
-  const availableAccounts = React.useMemo(() => {
+  const availableAccounts = useMemo(() => {
     return (
       accounts?.filter((acc) =>
         paymentMethod === "card" ? acc.type === "current" : acc.type === "cash",

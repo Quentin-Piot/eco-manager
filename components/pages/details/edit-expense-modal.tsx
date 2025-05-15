@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BottomModal } from "~/components/ui/custom-modal";
 import type {
   AccountDetailsWithId,
@@ -55,7 +55,6 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       setSelectedSubcategory(transaction.subcategory);
       setSelectedAccountId(transaction.accountId);
 
-      // Déterminer le type de transaction (dépense ou revenu)
       setTransactionType(transaction.type);
 
       const account = accounts.find((acc) => acc.id === transaction.accountId);
@@ -63,7 +62,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     }
   }, [isVisible, transaction, accounts]);
 
-  const availableAccounts = React.useMemo(() => {
+  const availableAccounts = useMemo(() => {
     return (
       accounts?.filter((acc) =>
         paymentMethod === "card" ? acc.type === "current" : acc.type === "cash",

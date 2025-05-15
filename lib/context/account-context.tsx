@@ -52,6 +52,12 @@ type AccountContextType = {
   addTransaction: (transaction: Omit<ExpenseData, "id">) => void;
   updateTransaction: (id: string, updatedTransaction: ExpenseData) => void;
   deleteTransaction: (id: string) => void;
+  addAccount: (account: Omit<AccountDetailsWithId, "id">) => void;
+  updateAccount: (
+    id: string,
+    updatedAccount: Omit<AccountDetailsWithId, "id">,
+  ) => void;
+  deleteAccount: (id: string) => void;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
@@ -382,6 +388,49 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     [updateAccountBalance],
   );
 
+  const addAccount = useCallback(
+    (account: Omit<AccountDetailsWithId, "id">) => {
+      const newAccount: AccountDetailsWithId = {
+        ...account,
+        id: Crypto.randomUUID(),
+      };
+      setAccounts((prev) => [...prev, newAccount]);
+    },
+    [],
+  );
+
+  const updateAccount = useCallback(
+    (id: string, updatedAccount: Omit<AccountDetailsWithId, "id">) => {
+      setAccounts((prevAccounts) =>
+        prevAccounts.map((account) =>
+          account.id === id ? { ...updatedAccount, id } : account,
+        ),
+      );
+    },
+    [],
+  );
+
+  const deleteAccount = useCallback(
+    (id: string) => {
+      // Vérifier si des transactions utilisent ce compte
+      const hasTransactions = transactions.some((t) => t.accountId === id);
+      if (hasTransactions) {
+        // Option 1: Empêcher la suppression
+        console.warn(
+          "Impossible de supprimer un compte avec des transactions associées",
+        );
+        return false;
+
+        // Option 2 (alternative): Supprimer toutes les transactions associées
+        // setTransactions(prev => prev.filter(t => t.accountId !== id));
+      }
+
+      setAccounts((prev) => prev.filter((account) => account.id !== id));
+      return true;
+    },
+    [transactions],
+  );
+
   const contextValue: AccountContextType = {
     accounts,
     spendingCategories,
@@ -390,6 +439,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    addAccount,
+    updateAccount,
+    deleteAccount,
   };
 
   return (
