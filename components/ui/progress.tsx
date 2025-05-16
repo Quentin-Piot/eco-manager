@@ -83,7 +83,7 @@ function Indicator({
           className,
         )}
         style={[
-          Platform.OS !== "web" ? indicator : { width: `${progress.value}%` },
+          Platform.OS !== "web" ? indicator : { width: `${value}%` },
           style,
         ]} // Merge transform and passed style
       >

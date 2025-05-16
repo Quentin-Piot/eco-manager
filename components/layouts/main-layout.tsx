@@ -14,13 +14,15 @@ function MainLayout({
       edges={["right", "left", "top", "bottom"]}
       className={cn(`flex-1 px-0 bg-background,relative`)}
     >
-      <ScrollView className={cn(`w-full h-full px-4`)}>
-        <View className="flex-row items-center justify-between mb-4 pt-2">
-          <Text className="text-2xl font-bold">{pageName}</Text>
+      <ScrollView className={cn(`w-full h-full`)}>
+        <View className="flex-row items-center justify-between mb-4 px-4 py-3 border-b-[1px] border-b-gray-300 bg-white">
+          <Text className="text-primary text-center w-full text-lg font-semibold">
+            {pageName}
+          </Text>
         </View>
         <View
           className={cn(
-            `gap-3 w-full`,
+            `gap-3 w-full px-4`,
             Platform.OS === "ios" ? "pb-16" : "mb-4",
           )}
         >
