@@ -1,15 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { BottomModal } from "~/components/ui/custom-modal";
+import { BottomModal, FullScreenModal } from "~/components/ui/custom-modal";
 import type {
   AccountDetailsWithId,
   ExpenseData,
 } from "~/lib/context/account-context";
-import { useAccount } from "~/lib/context/account-context";
+import { RecurrenceType, useAccount } from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
 import { AccountSelector } from "~/components/ui/transaction/account-selector";
 import { useBackground } from "~/lib/context/background";
+import { calculateNextRecurrenceDate } from "~/lib/utils/date";
+import { Button } from "~/components/ui/button";
+import { View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 interface EditExpenseModalProps {
   isVisible: boolean;
@@ -43,6 +47,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   );
   const [isAccountSelectorVisible, setIsAccountSelectorVisible] =
     useState(false);
+  const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
+  const [isRecurrenceSelectorVisible, setIsRecurrenceSelectorVisible] =
+    useState(false);
   const { removeBlur } = useBackground();
 
   // Initialiser les états avec les valeurs de la transaction existante
@@ -56,6 +63,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       setSelectedAccountId(transaction.accountId);
 
       setTransactionType(transaction.type);
+      setRecurrence(transaction.recurrence);
 
       const account = accounts.find((acc) => acc.id === transaction.accountId);
       setPaymentMethod(account?.type === "cash" ? "cash" : "card");
@@ -128,6 +136,11 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
       subcategory: selectedSubcategory,
       type: transactionType,
       paymentMethod: paymentMethod,
+      recurrence: recurrence,
+      nextRecurrenceDate:
+        recurrence !== "none"
+          ? calculateNextRecurrenceDate(date, recurrence)
+          : undefined,
     };
 
     updateTransaction(transaction.id, updatedTransaction);
@@ -145,8 +158,26 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     setDate(currentDate);
   };
 
+  const [showDeleteOptions, setShowDeleteOptions] = useState(false);
+
   const handleDeleteTransaction = () => {
-    deleteTransaction(transaction.id);
+    // If this is a recurring transaction, ask if they want to delete all recurrences
+    if (transaction.recurrence !== "none" || transaction.recurrenceGroup) {
+      setShowDeleteOptions(true);
+    } else {
+      // For non-recurring transactions, just delete it directly
+      deleteTransaction(transaction.id);
+      resetForm();
+    }
+  };
+
+  const handleDeleteSingle = () => {
+    deleteTransaction(transaction.id, false);
+    resetForm();
+  };
+
+  const handleDeleteAll = () => {
+    deleteTransaction(transaction.id, true);
     resetForm();
   };
 
@@ -156,65 +187,106 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   };
 
   return (
-    <BottomModal visible={isVisible} onRequestClose={onClose}>
-      {step === 1 && (
-        <TransactionForm
-          transactionType={transactionType}
-          amount={amount}
-          remarks={remarks}
-          date={date}
-          showDatePicker={showDatePicker}
-          paymentMethod={paymentMethod}
+    <>
+      <FullScreenModal
+        visible={showDeleteOptions}
+        onRequestClose={() => setShowDeleteOptions(false)}
+      >
+        <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+          Supprimer la transaction
+        </Text>
+        <Text className="text-sm text-muted-foreground mb-6">
+          Cette transaction fait partie d'une série récurrente. Que
+          souhaitez-vous supprimer ?
+        </Text>
+
+        <View className="gap-4">
+          <Button onPress={handleDeleteSingle} className="mb-3">
+            <Text className="text-primary-foreground">
+              Supprimer uniquement cette transaction
+            </Text>
+          </Button>
+
+          <Button onPress={handleDeleteAll} className="bg-red-600">
+            <Text className="text-primary-foreground">
+              Supprimer toutes les transactions récurrentes
+            </Text>
+          </Button>
+
+          <Button
+            variant="outline"
+            onPress={() => setShowDeleteOptions(false)}
+            className="mt-3"
+          >
+            <Text>Annuler</Text>
+          </Button>
+        </View>
+      </FullScreenModal>
+      <BottomModal visible={isVisible} onRequestClose={onClose}>
+        {step === 1 && (
+          <TransactionForm
+            transactionType={transactionType}
+            amount={amount}
+            remarks={remarks}
+            date={date}
+            showDatePicker={showDatePicker}
+            paymentMethod={paymentMethod}
+            selectedAccountId={selectedAccountId}
+            availableAccounts={availableAccounts}
+            isAccountSelectorVisible={isAccountSelectorVisible}
+            onAmountChange={setAmount}
+            onRemarksChange={setRemarks}
+            onDateChange={onDateChange}
+            onPaymentMethodChange={setPaymentMethod}
+            onAccountSelect={handleAccountSelect}
+            onShowDatePicker={setShowDatePicker}
+            onShowAccountSelector={setIsAccountSelectorVisible}
+            onNext={handleNextStep}
+            recurrence={recurrence}
+            onRecurrenceChange={setRecurrence}
+            isRecurrenceSelectorVisible={isRecurrenceSelectorVisible}
+            onShowRecurrenceSelector={setIsRecurrenceSelectorVisible}
+            isEdit
+            onDelete={handleDeleteTransaction}
+          />
+        )}
+
+        {step === 2 && (
+          <CategorySelector
+            type="main"
+            transactionType={transactionType}
+            selectedMainCategory={selectedMainCategory}
+            selectedSubcategory={selectedSubcategory}
+            onSelectMainCategory={setSelectedMainCategory}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+            isEdit
+          />
+        )}
+
+        {step === 3 && (
+          <CategorySelector
+            type="sub"
+            transactionType={transactionType}
+            selectedMainCategory={selectedMainCategory}
+            selectedSubcategory={selectedSubcategory}
+            onSelectSubcategory={setSelectedSubcategory}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+            isEdit
+          />
+        )}
+
+        <AccountSelector
+          isVisible={isAccountSelectorVisible}
+          onClose={() => setIsAccountSelectorVisible(false)}
+          accounts={availableAccounts}
           selectedAccountId={selectedAccountId}
-          availableAccounts={availableAccounts}
-          isAccountSelectorVisible={isAccountSelectorVisible}
-          onAmountChange={setAmount}
-          onRemarksChange={setRemarks}
-          onDateChange={onDateChange}
-          onPaymentMethodChange={setPaymentMethod}
-          onAccountSelect={handleAccountSelect}
-          onShowDatePicker={setShowDatePicker}
-          onShowAccountSelector={setIsAccountSelectorVisible}
-          onNext={handleNextStep}
-          isEdit
-          onDelete={handleDeleteTransaction}
+          onSelect={handleAccountSelect}
         />
-      )}
-
-      {step === 2 && (
-        <CategorySelector
-          type="main"
-          transactionType={transactionType}
-          selectedMainCategory={selectedMainCategory}
-          selectedSubcategory={selectedSubcategory}
-          onSelectMainCategory={setSelectedMainCategory}
-          onPrevious={handlePreviousStep}
-          onNext={handleNextStep}
-          isEdit
-        />
-      )}
-
-      {step === 3 && (
-        <CategorySelector
-          type="sub"
-          transactionType={transactionType}
-          selectedMainCategory={selectedMainCategory}
-          selectedSubcategory={selectedSubcategory}
-          onSelectSubcategory={setSelectedSubcategory}
-          onPrevious={handlePreviousStep}
-          onNext={handleNextStep}
-          isEdit
-        />
-      )}
-
-      <AccountSelector
-        isVisible={isAccountSelectorVisible}
-        onClose={() => setIsAccountSelectorVisible(false)}
-        accounts={availableAccounts}
-        selectedAccountId={selectedAccountId}
-        onSelect={handleAccountSelect}
-      />
-    </BottomModal>
+      </BottomModal>
+      {/* Modal for recurring transaction delete options */}
+    </>
   );
 };
 

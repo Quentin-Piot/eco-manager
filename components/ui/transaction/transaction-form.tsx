@@ -1,13 +1,17 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Text as UIText } from "~/components/ui/text";
+import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 import { colors } from "~/lib/theme";
 import { DatePickerModal } from "~/components/ui/date-picker-modal";
-import type { AccountDetailsWithId } from "~/lib/context/account-context";
+import {
+  AccountDetailsWithId,
+  RecurrenceType,
+} from "~/lib/context/account-context";
+import { RecurrenceSelector } from "~/components/ui/transaction/recurrence-selector";
 
 interface TransactionFormProps {
   transactionType: "expense" | "income";
@@ -19,6 +23,9 @@ interface TransactionFormProps {
   selectedAccountId: string | null;
   availableAccounts: AccountDetailsWithId[];
   isAccountSelectorVisible: boolean;
+  recurrence: RecurrenceType;
+  isRecurrenceSelectorVisible: boolean;
+  onShowRecurrenceSelector: (show: boolean) => void;
   onAmountChange: (value: string) => void;
   onRemarksChange: (value: string) => void;
   onDateChange: (date: Date | undefined) => void;
@@ -26,6 +33,7 @@ interface TransactionFormProps {
   onAccountSelect: (accountId: string) => void;
   onShowDatePicker: (show: boolean) => void;
   onShowAccountSelector: (show: boolean) => void;
+  onRecurrenceChange: (recurrence: RecurrenceType) => void;
   onNext: () => void;
   isEdit?: boolean;
   onDelete?: () => void;
@@ -41,6 +49,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   selectedAccountId,
   availableAccounts,
   isAccountSelectorVisible,
+  recurrence,
   onAmountChange,
   onRemarksChange,
   onDateChange,
@@ -48,9 +57,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   onAccountSelect,
   onShowDatePicker,
   onShowAccountSelector,
+  onRecurrenceChange,
   onNext,
   onDelete,
   isEdit = false,
+  isRecurrenceSelectorVisible,
+  onShowRecurrenceSelector,
 }) => {
   const getSelectedAccountName = () => {
     const account = availableAccounts.find(
@@ -69,13 +81,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
   return (
     <>
-      <UIText className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+      <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
         {isEdit ? "Modifier" : "Ajouter"}{" "}
         {transactionType === "expense" ? "une dépense" : "un revenu"}
-      </UIText>
+      </Text>
 
       <View className="mb-4">
-        <UIText className="text-sm text-muted-foreground mb-1">Montant</UIText>
+        <Text className="text-sm text-muted-foreground mb-1">Montant</Text>
         <Input
           placeholder="0,00"
           keyboardType="numeric"
@@ -85,9 +97,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         />
       </View>
       <View className="mb-6">
-        <UIText className="text-sm text-muted-foreground mb-2">
-          {transactionType === "expense" ? "Payé avec" : "Comtpte concerné"}
-        </UIText>
+        <Text className="text-sm text-muted-foreground mb-2">
+          {transactionType === "expense" ? "Payé avec" : "Compte concerné"}
+        </Text>
         <View className="flex-row gap-2">
           <Button
             variant={paymentMethod === "cash" ? "default" : "outline"}
@@ -103,7 +115,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   : colors.foreground
               }
             />
-            <UIText
+            <Text
               className={cn(
                 paymentMethod === "cash"
                   ? "text-primary-foreground"
@@ -111,7 +123,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               )}
             >
               Espèces
-            </UIText>
+            </Text>
           </Button>
           <Button
             variant={paymentMethod === "card" ? "default" : "outline"}
@@ -127,7 +139,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   : colors.foreground
               }
             />
-            <UIText
+            <Text
               className={cn(
                 paymentMethod === "card"
                   ? "text-primary-foreground"
@@ -135,26 +147,26 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               )}
             >
               Carte
-            </UIText>
+            </Text>
           </Button>
         </View>
       </View>
 
       <View className="mb-4">
-        <UIText className="text-sm text-muted-foreground mb-1">Compte</UIText>
+        <Text className="text-sm text-muted-foreground mb-1">Compte</Text>
         <TouchableOpacity
           onPress={() => onShowAccountSelector(true)}
           className="flex-row items-center justify-between bg-white dark:bg-input  disabled:bg-gray-300 border-none rounded-md p-3 h-12"
           disabled={availableAccounts.length === 0 || paymentMethod === "cash"}
         >
-          <UIText
+          <Text
             className={cn(
               " dark:text-primary-foreground",
               !selectedAccountId && "text-muted-foreground",
             )}
           >
             {getSelectedAccountName()}
-          </UIText>
+          </Text>
           <MaterialIcons
             name="arrow-drop-down"
             size={24}
@@ -164,9 +176,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </View>
 
       <View className="mb-4">
-        <UIText className="text-sm text-muted-foreground mb-1">
+        <Text className="text-sm text-muted-foreground mb-1">
           Remarques (optionnel)
-        </UIText>
+        </Text>
         <Input
           placeholder="Description..."
           value={remarks}
@@ -176,7 +188,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </View>
 
       <View className="mb-4">
-        <UIText className="text-sm text-muted-foreground mb-1">Date</UIText>
+        <Text className="text-sm text-muted-foreground mb-1">Date</Text>
         <TouchableOpacity
           onPress={() => onShowDatePicker(true)}
           className="flex-row bg-white items-center  dark:bg-input  rounded-md p-3 h-12"
@@ -187,9 +199,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             color={colors.muted.foreground}
             className="mr-2"
           />
-          <UIText className="text-lg dark:text-primary-foreground">
+          <Text className="text-lg dark:text-primary-foreground">
             {formatDate(date)}
-          </UIText>
+          </Text>
         </TouchableOpacity>
         <DatePickerModal
           isVisible={showDatePicker}
@@ -199,10 +211,44 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         />
       </View>
 
+      <View className="mb-4">
+        <Text className="text-sm text-muted-foreground mb-1">Récurrence</Text>
+        <TouchableOpacity
+          onPress={() => onShowRecurrenceSelector(true)}
+          className="flex-row items-center justify-between bg-white dark:bg-input rounded-md p-3 h-12"
+        >
+          <Text className="dark:text-primary-foreground">
+            {recurrence === "none"
+              ? "Aucune"
+              : recurrence === "daily"
+                ? "Journalière"
+                : recurrence === "weekly"
+                  ? "Hebdomadaire"
+                  : recurrence === "monthly"
+                    ? "Mensuelle"
+                    : "Annuelle"}
+          </Text>
+          <MaterialIcons
+            name="arrow-drop-down"
+            size={24}
+            color={colors.muted.foreground}
+          />
+        </TouchableOpacity>
+        <RecurrenceSelector
+          isVisible={isRecurrenceSelectorVisible}
+          onClose={() => onShowRecurrenceSelector(false)}
+          selectedRecurrence={recurrence}
+          onSelect={(value) => {
+            onRecurrenceChange(value);
+            onShowRecurrenceSelector(false);
+          }}
+        />
+      </View>
+
       <View className={"w-full flex-row gap-3"}>
         {isEdit && onDelete && (
           <Button onPress={onDelete} className={"bg-red-600 flex-1"}>
-            <UIText className="text-primary-foreground">Supprimer</UIText>
+            <Text className="text-primary-foreground">Supprimer</Text>
           </Button>
         )}
 
@@ -211,7 +257,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           disabled={!amount || !selectedAccountId}
           className={"flex-1"}
         >
-          <UIText className="text-primary-foreground">Suivant</UIText>
+          <Text className="text-primary-foreground">Suivant</Text>
         </Button>
       </View>
     </>

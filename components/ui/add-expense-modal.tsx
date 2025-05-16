@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
+import { calculateNextRecurrenceDate } from "~/lib/utils/date";
 import { BottomModal } from "~/components/ui/custom-modal";
 import {
   type AccountDetailsWithId,
+  RecurrenceType,
   useAccount,
 } from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
@@ -44,6 +46,9 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     null,
   );
   const [isAccountSelectorVisible, setIsAccountSelectorVisible] =
+    useState(false);
+  const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
+  const [isRecurrenceSelectorVisible, setIsRecurrenceSelectorVisible] =
     useState(false);
 
   const availableAccounts = useMemo(() => {
@@ -119,6 +124,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       return;
     }
 
+    const nextRecurrenceDate = calculateNextRecurrenceDate(date, recurrence);
+
     const transactionData = {
       amount: parseAmount(amount),
       remarks: remarks,
@@ -128,6 +135,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
       type: transactionType,
+      recurrence,
+      nextRecurrenceDate,
     };
     addTransaction(transactionData);
     resetForm();
@@ -145,6 +154,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setSelectedAccountId(
       availableAccounts.length > 0 ? availableAccounts[0].id : null,
     );
+    setRecurrence("none");
     onClose();
   };
 
@@ -242,6 +252,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           selectedAccountId={selectedAccountId}
           availableAccounts={availableAccounts}
           isAccountSelectorVisible={isAccountSelectorVisible}
+          recurrence={recurrence}
+          isRecurrenceSelectorVisible={isRecurrenceSelectorVisible}
+          onShowRecurrenceSelector={setIsRecurrenceSelectorVisible}
+          onRecurrenceChange={setRecurrence}
           onAmountChange={setAmount}
           onRemarksChange={setRemarks}
           onDateChange={onDateChange}
