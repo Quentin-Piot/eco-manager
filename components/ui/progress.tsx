@@ -82,7 +82,10 @@ function Indicator({
           "h-full w-full flex-1 bg-primary web:transition-all",
           className,
         )}
-        style={[indicator, style]} // Merge transform and passed style
+        style={[
+          Platform.OS !== "web" ? indicator : { width: `${progress.value}%` },
+          style,
+        ]} // Merge transform and passed style
       >
         <ProgressPrimitive.Indicator
           className={cn("h-full w-full", className)}

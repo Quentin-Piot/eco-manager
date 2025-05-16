@@ -145,7 +145,7 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
             opacity={selectedSlice?.label === slice.label ? 0.5 : 1}
             fill={slice.color}
             // La détection du toucher peut rester sur le Path si c'est suffisant
-            onPressIn={() => {
+            onPress={() => {
               onSlicePress(slice);
             }}
           />

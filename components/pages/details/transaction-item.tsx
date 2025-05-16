@@ -63,11 +63,25 @@ export const TransactionItem = ({
           </Text>
         </View>
         <View className="items-end">
-          <Text
-            className={`text-base font-semibold ${item.type === "income" ? "text-green-600" : "text-red-600"}`}
-          >
-            {formatAmountWithSign(item.amount, item.type)}
-          </Text>
+          <View className="items-end">
+            <View className="flex-row items-center">
+              <View className="flex-row items-center">
+                {item.recurrence && item.recurrence !== "none" && (
+                  <MaterialIcons
+                    name="replay"
+                    size={16}
+                    color={colors.muted.foreground}
+                    style={{ marginRight: 4 }}
+                  />
+                )}
+                <Text
+                  className={`text-base font-semibold ${item.type === "income" ? "text-green-600" : "text-red-600"}`}
+                >
+                  {formatAmountWithSign(item.amount, item.type)}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
 

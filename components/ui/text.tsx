@@ -19,7 +19,7 @@ const Text = React.forwardRef<
     if (isBold) return "Geist-Bold";
     const isSemiBold = className?.includes("font-semibold");
     if (isSemiBold) return "Geist-SemiBold";
-    return "Geist";
+    return "Geist-Regular";
   }, [className]);
 
   return (
@@ -33,7 +33,7 @@ const Text = React.forwardRef<
         className?.includes("text-muted-darker") ? "dark:text-muted" : "",
         className,
       )}
-      style={[{ fontFamily }, style]} // Merge fontFamily and passed style
+      style={[{ fontFamily }, style]} // Merge fontFamily and passed styleFrom props
       ref={ref}
       {...props}
     />

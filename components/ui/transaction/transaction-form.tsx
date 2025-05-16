@@ -49,7 +49,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   selectedAccountId,
   availableAccounts,
   isAccountSelectorVisible,
-  recurrence,
+  recurrence = "none",
   onAmountChange,
   onRemarksChange,
   onDateChange,

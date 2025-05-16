@@ -99,7 +99,7 @@ const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
 };
 
 export default function DetailsScreen() {
-  const { accounts, transactions, setTransactions } = useAccount();
+  const { accounts, transactions } = useAccount();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { removeBlur } = useBackground();
 
@@ -182,12 +182,6 @@ export default function DetailsScreen() {
     };
   }, [transactions]);
 
-  const handleAddExpense = (newExpense: ExpenseData) => {
-    setTransactions((prevTransactions) => [newExpense, ...prevTransactions]);
-    removeBlur();
-    setIsModalVisible(false);
-  };
-
   const formatDateDisplay = (dateKey: string): string => {
     if (dateKey === "today") {
       return "Aujourd'hui";
@@ -243,8 +237,10 @@ export default function DetailsScreen() {
 
       <AddExpenseModal
         isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onSubmit={handleAddExpense}
+        onClose={() => {
+          setIsModalVisible(false);
+          removeBlur();
+        }}
         accounts={accounts || []}
       />
     </MainLayout>
