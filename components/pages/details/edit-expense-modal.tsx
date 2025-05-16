@@ -9,7 +9,6 @@ import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
 import { AccountSelector } from "~/components/ui/transaction/account-selector";
-import { useBackground } from "~/lib/context/background";
 import { calculateNextRecurrenceDate } from "~/lib/utils/date";
 import { Button } from "~/components/ui/button";
 import { View } from "react-native";
@@ -50,7 +49,6 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
   const [isRecurrenceSelectorVisible, setIsRecurrenceSelectorVisible] =
     useState(false);
-  const { removeBlur } = useBackground();
 
   // Initialiser les états avec les valeurs de la transaction existante
   useEffect(() => {
@@ -149,7 +147,6 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
   const resetForm = () => {
     setStep(1);
-    removeBlur();
     onClose();
   };
 
@@ -188,40 +185,6 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
   return (
     <>
-      <FullScreenModal
-        visible={showDeleteOptions}
-        onRequestClose={() => setShowDeleteOptions(false)}
-      >
-        <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
-          Supprimer la transaction
-        </Text>
-        <Text className="text-sm text-muted-foreground mb-6">
-          Cette transaction fait partie d'une série récurrente. Que
-          souhaitez-vous supprimer ?
-        </Text>
-
-        <View className="gap-4">
-          <Button onPress={handleDeleteSingle} className="mb-3">
-            <Text className="text-primary-foreground">
-              Supprimer uniquement cette transaction
-            </Text>
-          </Button>
-
-          <Button onPress={handleDeleteAll} className="bg-red-600">
-            <Text className="text-primary-foreground">
-              Supprimer toutes les transactions récurrentes
-            </Text>
-          </Button>
-
-          <Button
-            variant="outline"
-            onPress={() => setShowDeleteOptions(false)}
-            className="mt-3"
-          >
-            <Text>Annuler</Text>
-          </Button>
-        </View>
-      </FullScreenModal>
       <BottomModal visible={isVisible} onRequestClose={onClose}>
         {step === 1 && (
           <TransactionForm
@@ -284,6 +247,40 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
           selectedAccountId={selectedAccountId}
           onSelect={handleAccountSelect}
         />
+        <FullScreenModal
+          visible={showDeleteOptions}
+          onRequestClose={() => setShowDeleteOptions(false)}
+        >
+          <Text className="text-lg font-semibold mb-4 text-foreground dark:text-primary-foreground">
+            Supprimer la transaction
+          </Text>
+          <Text className="text-sm text-muted-foreground mb-6">
+            Cette transaction fait partie d'une série récurrente. Que
+            souhaitez-vous supprimer ?
+          </Text>
+
+          <View className="gap-4">
+            <Button onPress={handleDeleteSingle} className="mb-3">
+              <Text className="text-primary-foreground">
+                Supprimer uniquement cette transaction
+              </Text>
+            </Button>
+
+            <Button onPress={handleDeleteAll} className="bg-red-600">
+              <Text className="text-primary-foreground">
+                Supprimer toutes les transactions récurrentes
+              </Text>
+            </Button>
+
+            <Button
+              variant="outline"
+              onPress={() => setShowDeleteOptions(false)}
+              className="mt-3"
+            >
+              <Text>Annuler</Text>
+            </Button>
+          </View>
+        </FullScreenModal>
       </BottomModal>
       {/* Modal for recurring transaction delete options */}
     </>

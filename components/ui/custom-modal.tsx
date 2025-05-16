@@ -26,13 +26,23 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 }) => {
   const { addBlur, removeBlur } = useBackground();
 
+  const [hasAddedBlur, setHasAddedBlur] = useState(false);
+
   useEffect(() => {
     if (visible) {
       addBlur();
-    } else {
-      removeBlur();
+      setHasAddedBlur(true);
     }
-  }, [visible, addBlur, removeBlur]);
+  }, [visible, addBlur, removeBlur, setHasAddedBlur]);
+
+  useEffect(() => {
+    return () => {
+      if (hasAddedBlur && visible) {
+        removeBlur();
+        setHasAddedBlur(false);
+      }
+    };
+  }, [hasAddedBlur, removeBlur, visible]);
   return (
     <View className="flex-1 justify-center items-center h-0">
       <Modal
@@ -183,10 +193,7 @@ export const FullScreenModal = ({
   cardClassname,
   ...props
 }: CustomModalProps & { cardClassname?: string }) => {
-  const { removeBlur } = useBackground();
-
   const onClose = (e: NativeSyntheticEvent<any>): void => {
-    removeBlur();
     if (onRequestClose) {
       onRequestClose(e);
     }
@@ -195,7 +202,7 @@ export const FullScreenModal = ({
     <CustomModal
       animationType={"fade"}
       presentationStyle={"overFullScreen"}
-      onRequestClose={onRequestClose}
+      onRequestClose={onClose}
       {...props}
     >
       <BlurView
