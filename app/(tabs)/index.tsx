@@ -1,6 +1,6 @@
 import { BankAccountCard } from "@/components/ui/bank-account-card";
 import { SpendingCard } from "@/components/ui/spending-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
@@ -17,6 +17,7 @@ import {
 import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
 import { endOfMonth, isWithinInterval, startOfMonth } from "date-fns";
 import { colors } from "~/lib/theme";
+import { Container } from "~/components/ui/container";
 
 export default function DashboardScreen() {
   const { accounts, spendingCategories, transactions, updateBudget } =
@@ -149,19 +150,16 @@ export default function DashboardScreen() {
 
   return (
     <MainLayout pageName={"Tableau de bord"}>
-      <View className="flex-row flex-wrap gap-3 w-full mb-4">
+      <Container title={"Comptes"} className="flex-row flex-wrap gap-3 w-full">
         <View className="flex-1 basis-[45%]">
           <BankAccountCard accounts={accounts} type="current" />
         </View>
         <View className="flex-1 basis-[45%]">
           <BankAccountCard accounts={accounts} type="savings" />
         </View>
-      </View>
+      </Container>
 
-      <Card className={"py-6 mb-4"}>
-        <CardHeader>
-          <CardTitle>Aperçu des Dépenses Mensuelles</CardTitle>
-        </CardHeader>
+      <Card className={"py-6"} title={"Aperçu des Dépenses Mensuelles"}>
         <CardContent>
           <Chart
             data={chartData}
@@ -171,7 +169,7 @@ export default function DashboardScreen() {
         </CardContent>
       </Card>
 
-      <View className="flex-row flex-wrap gap-3 mb-4">
+      <Container title={"Budgets"} className="flex-row flex-wrap gap-3">
         {spendingCategoriesWithValue.map((category) => (
           <SpendingCard
             key={category.type}
@@ -182,7 +180,7 @@ export default function DashboardScreen() {
             onPress={() => handleSpendingCardPress(category)}
           />
         ))}
-      </View>
+      </Container>
 
       <SliceInfoModal
         isVisible={isSliceModalVisible}

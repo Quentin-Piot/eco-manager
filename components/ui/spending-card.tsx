@@ -52,7 +52,7 @@ export function SpendingCard({
     >
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-          <CardTitle className="text-base font-medium text-primary-darker">
+          <CardTitle className="text-base font-medium text-muted-foreground">
             {categoryDetailsMap[category].label}
           </CardTitle>
         </CardHeader>

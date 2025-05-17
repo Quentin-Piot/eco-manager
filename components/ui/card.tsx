@@ -1,22 +1,30 @@
 import type { TextRef, ViewRef } from "@rn-primitives/types";
 import * as React from "react";
+import { Fragment } from "react";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
 import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
-const Card = React.forwardRef<ViewRef, ViewProps>(
-  ({ className, style, ...props }, ref) => (
-    <View
-      ref={ref}
-      className={cn(
-        "px-3 py-2",
-        "rounded-lg border-[1px]  bg-white border-gray-200",
-        "dark:bg-background-dark dark:border-muted-darker/90 dark:border-2 dark:shadow-none",
-        className,
+const Card = React.forwardRef<ViewRef, ViewProps & { title?: string }>(
+  ({ className, style, title, ...props }, ref) => (
+    <Fragment>
+      {title && (
+        <Text className={"mt-3 font-semibold text-lg text-primary-darker"}>
+          {title}
+        </Text>
       )}
-      {...props}
-      style={style}
-    />
+      <View
+        ref={ref}
+        className={cn(
+          "px-3 py-2",
+          "rounded-lg border-[1px]  bg-white border-gray-200",
+          "dark:bg-background-dark dark:border-muted-darker/90 dark:border-2 dark:shadow-none",
+          className,
+        )}
+        {...props}
+        style={style}
+      />
+    </Fragment>
   ),
 );
 Card.displayName = "Card";
@@ -42,12 +50,9 @@ const CardTitle = React.forwardRef<TextRef, TextProps>(
       aria-level={3}
       ref={ref}
       className={cn(
-        "text-lg text-primary-darker font-bold leading-none tracking-tight",
+        "text-lg text-primary-darker font-semibold leading-none tracking-tight",
         className,
       )}
-      style={{
-        fontFamily: "Geist-Bold",
-      }}
       {...props}
     />
   ),
@@ -71,7 +76,7 @@ CardDescription.displayName = "CardDescription";
 
 const CardContent = React.forwardRef<ViewRef, ViewProps>(
   ({ className, ...props }, ref) => (
-    <TextClassContext.Provider value="text-card-foreground">
+    <TextClassContext.Provider value="text-foreground">
       <View ref={ref} className={cn("p-6 pt-0", className)} {...props} />
     </TextClassContext.Provider>
   ),

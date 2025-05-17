@@ -25,7 +25,7 @@ const Text = React.forwardRef<
   return (
     <Component
       className={cn(
-        "text-base text-black  web:select-text",
+        "text-base text-foreground  web:select-text",
         textClass,
         className?.includes("text-red") ? "" : "dark:text-white",
         className?.includes("text-primary") ? "dark:text-primary" : "",

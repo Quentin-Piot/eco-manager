@@ -1,11 +1,5 @@
 import MainLayout from "~/components/layouts/main-layout";
-import {
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import React, { useMemo, useState } from "react";
@@ -20,6 +14,7 @@ import { TransactionItem } from "~/components/pages/details/transaction-item";
 import { fr } from "date-fns/locale/fr";
 import { capitalizeFirstLetter } from "~/lib/utils";
 import { useBackground } from "~/lib/context/background";
+import { Container } from "~/components/ui/container";
 
 /**
  * Formats a date object to a string in the format "yyyy-MM-dd"
@@ -206,21 +201,33 @@ export default function DetailsScreen() {
         </TouchableOpacity>
       }
     >
-      <ScrollView>
-        <Text className="text-lg font-semibold text-foreground mb-2 px-1">
-          Résumé mensuel
-        </Text>
-        <View className="flex-row flex-wrap gap-3 w-full mb-4">
-          <BalanceCard balance={monthlyBalance} />
-          <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
-          <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
-        </View>
+      <Container
+        title={"Résumé mensuel"}
+        className="flex-row flex-wrap gap-3 w-full mb-4"
+      >
+        <BalanceCard balance={monthlyBalance} />
+        <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
+        <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
+      </Container>
 
+      <Container title={""}>
         {Object.entries(groupedTransactions).map(([dateGroup, items]) => (
           <View key={dateGroup} className="mb-4">
-            <Text className="text-lg font-semibold text-foreground mb-2 px-1">
-              {formatDateDisplay(dateGroup)}
-            </Text>
+            <View className={"flex-row items-center justify-between mb-2"}>
+              <Text className="text-sm font-semibold text-muted-foreground">
+                {formatDateDisplay(dateGroup)}
+              </Text>
+              <Text className="text-sm text-muted-foreground">
+                {items
+                  .reduce(
+                    (acc, v) =>
+                      v.type === "expense" ? acc - v.amount : acc + v.amount,
+                    0,
+                  )
+                  .toFixed(2)}{" "}
+                €
+              </Text>
+            </View>
             <Card className="px-4 py-0">
               {items.map((item) => (
                 <TransactionItem
@@ -233,7 +240,7 @@ export default function DetailsScreen() {
             </Card>
           </View>
         ))}
-      </ScrollView>
+      </Container>
 
       <AddExpenseModal
         isVisible={isModalVisible}

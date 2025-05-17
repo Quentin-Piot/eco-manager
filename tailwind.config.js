@@ -9,17 +9,17 @@ module.exports = {
     extend: {
       colors: {
         border: "#7FB3D5",
-        input: "#EDF1F4FF",
+        input: "#81aecc",
         ring: "#4382ac",
         background: {
           DEFAULT: "#fbfbfb",
           dark: "#17202A",
         },
-        foreground: "#21618C",
+        foreground: "#292929",
         primary: {
           DEFAULT: "#4382ac",
           foreground: "#FFFFFF",
-          light: "#EDF1F4FF",
+          light: "#81aecc",
           dark: "#2980B9",
           darker: "#1A5276",
         },
@@ -37,7 +37,7 @@ module.exports = {
           light: "#edf3f6",
           DEFAULT: "#D4E6F1",
           darker: "#566573",
-          foreground: "#797D7F",
+          foreground: "#656e6e",
         },
         accent: {
           DEFAULT: "#AED6F1",

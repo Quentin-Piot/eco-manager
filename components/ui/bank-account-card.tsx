@@ -89,7 +89,7 @@ export function BankAccountCard({
         <TooltipTrigger>
           <Card style={[styles.card, borderColor]} className={className}>
             <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-              <CardTitle className="text-sm font-medium text-primary-darker">
+              <CardTitle className="text-sm font-semibold text-muted-foreground">
                 {title}
               </CardTitle>
               <TouchableOpacity onPress={handleAddAccount}>
@@ -97,11 +97,9 @@ export function BankAccountCard({
               </TouchableOpacity>
             </CardHeader>
             <CardContent className="pl-0">
-              <Text className="w-full text-xl font-bold text-left">
-                {totalAmount.toLocaleString("fr-FR", {
-                  style: "currency",
-                  currency: "EUR",
-                })}
+              <Text className="w-full text-center">
+                <Text className={"font-semibold text-base"}>€ </Text>
+                <Text className="text-xl font-semibold">{totalAmount}</Text>
               </Text>
             </CardContent>
           </Card>
