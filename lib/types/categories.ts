@@ -331,18 +331,22 @@ export const categoryDetailsMap: Record<string, CategoryDetails> = {
   shopping: {
     ...mainCategoryDetailsMap.shopping,
     name: "shopping",
+    iconName: "shopping-bag",
   },
   housing: {
     ...mainCategoryDetailsMap.housing,
     name: "housing",
+    iconName: "home",
   },
   vacation: {
     ...mainCategoryDetailsMap.vacation,
     name: "vacation",
+    iconName: "beach-access",
   },
   activities: {
     ...mainCategoryDetailsMap.activities,
     name: "activities",
+    iconName: "directions-run",
   },
   other_expenses: {
     name: "other expenses",

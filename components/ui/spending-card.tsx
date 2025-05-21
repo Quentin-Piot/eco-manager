@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "~/lib/utils";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import {
   categoryDetailsMap,
   MainExpenseCategory,
 } from "~/lib/types/categories";
 import { colors } from "~/lib/theme";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type SpendingCardProps = {
   category: MainExpenseCategory;
@@ -27,7 +28,10 @@ export function SpendingCard({
   percentage = 0,
   onPress,
 }: SpendingCardProps) {
+  const categoryInfo = categoryDetailsMap[category];
   const color: string = useMemo(() => {
+    // Keep the color logic from the previous version, assuming it's correctly mapped
+    // from `colors.categories` based on the category type.
     switch (category) {
       case "housing":
         return colors.categories.housing;
@@ -35,45 +39,72 @@ export function SpendingCard({
         return colors.categories.activities;
       case "transport":
         return colors.categories.transport;
-
       case "vacation":
         return colors.categories.vacation;
       case "shopping":
         return colors.categories.shopping;
+      default:
+        return colors.primary.DEFAULT; // Fallback color if category is not found
     }
   }, [category]);
-  if (!category) return null;
+
+  if (!categoryInfo) return null;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       className={cn("flex-1 basis-[48%]", className)}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-          <CardTitle className="text-base font-medium text-muted-foreground">
-            {categoryDetailsMap[category].label}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0 items-center justify-center gap-1 pt-3">
-          {budgetAmount ? (
-            <Text
-              className={`rounded-full text-sm font-bold w-full text-left`}
-              style={{ color: color }}
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <View className="flex-row items-center">
+            <MaterialIcons
+              name={categoryInfo.iconName}
+              size={20}
+              color={color}
+            />
+            <CardTitle
+              className="ml-2 text-base font-semibold text-neutral-800 dark:text-neutral-100"
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
-              {currentAmount} / {budgetAmount}
-            </Text>
+              {categoryInfo.label}
+            </CardTitle>
+          </View>
+        </CardHeader>
+        <CardContent className="pt-0 pb-2 px-1">
+          {budgetAmount !== undefined && budgetAmount > 0 ? (
+            <View className="flex-row items-baseline justify-start mb-1">
+              <Text
+                className="text-lg font-bold text-neutral-900 dark:text-neutral-50"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                € {currentAmount}
+              </Text>
+              <Text
+                className="text-base font-semibold text-neutral-500 dark:text-neutral-400 pl-1"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                /€ {budgetAmount}
+              </Text>
+            </View>
           ) : (
-            <Text className={`rounded-full text-xl font-bold w-full text-left`}>
-              {currentAmount}€
+            <Text
+              className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 mb-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              € {currentAmount}
             </Text>
           )}
           {!isNaN(percentage) && (
             <Progress
               value={percentage}
-              className={`h-[12px] w-full`}
-              indicatorStyle={{ backgroundColor: color }}
+              className={`h-3 w-full rounded-full`}
+              indicatorStyle={{ backgroundColor: color, borderRadius: 999 }}
             />
           )}
         </CardContent>

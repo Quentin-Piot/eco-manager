@@ -51,10 +51,10 @@ export function BankAccountCard({
   );
 
   const title = type === "current" ? "Comptes courants" : "Épargnes";
-  const borderColor =
+  const iconColor =
     type === "current"
-      ? { borderLeftColor: "#3b82f6" } // blue
-      : { borderLeftColor: "#22c55e" }; // green
+      ? "#007AFF" // iOS Blue
+      : "#34C759"; // iOS Green
 
   const handleAddAccount = () => {
     setSelectedAccount(undefined);
@@ -87,19 +87,21 @@ export function BankAccountCard({
     <>
       <Tooltip>
         <TooltipTrigger>
-          <Card style={[styles.card, borderColor]} className={className}>
-            <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-              <CardTitle className="text-sm font-semibold text-muted-foreground">
+          <Card className={className}>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
                 {title}
               </CardTitle>
-              <TouchableOpacity onPress={handleAddAccount}>
-                <Ionicons name="add-circle-outline" size={20} color="#3b82f6" />
+              <TouchableOpacity
+                onPress={handleAddAccount}
+                className="p-1 -mr-2"
+              >
+                <Ionicons name="add-circle" size={24} color={iconColor} />
               </TouchableOpacity>
             </CardHeader>
-            <CardContent className="pl-0">
-              <Text className="w-full text-center">
-                <Text className={"font-semibold text-base"}>€ </Text>
-                <Text className="text-xl font-semibold">{totalAmount}</Text>
+            <CardContent className="pt-0 pb-2">
+              <Text className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+                € {totalAmount.toLocaleString("fr-FR")}
               </Text>
             </CardContent>
           </Card>
@@ -110,15 +112,16 @@ export function BankAccountCard({
             right: type === "current" ? 0 : 10,
             top: 190,
           }}
+          className="flex-1 w-96 rounded-xl p-4 bg-white/90 dark:bg-neutral-800/90 shadow-lg border border-neutral-200/50 dark:border-neutral-700/50"
         >
           <View className="gap-2">
             {filteredAccounts.length > 0 ? (
               filteredAccounts.map((account, index) => (
                 <View
                   key={index}
-                  className="flex-row justify-between items-center"
+                  className="flex-row justify-between items-center py-1"
                 >
-                  <View className="flex-row items-center">
+                  <View className="flex-row items-center flex-1 pr-2">
                     <View
                       style={[
                         styles.colorIndicator,
@@ -127,12 +130,12 @@ export function BankAccountCard({
                         },
                       ]}
                     />
-                    <Text className="text-sm text-popover-foreground mr-4">
+                    <Text className="text-base text-neutral-800 dark:text-neutral-100 flex-shrink text-nowrap">
                       {account.title}
                     </Text>
                   </View>
                   <View className="flex-row items-center">
-                    <Text className="text-sm font-semibold text-popover-foreground mr-2">
+                    <Text className="text-base font-semibold text-neutral-800 dark:text-neutral-100 mr-2">
                       {account.amount.toLocaleString("fr-FR", {
                         style: "currency",
                         currency: "EUR",
@@ -140,33 +143,38 @@ export function BankAccountCard({
                     </Text>
                     <TouchableOpacity
                       onPress={() => handleEditAccount(account)}
-                      className="mr-1"
+                      className="p-1"
                     >
-                      <Ionicons name="pencil" size={16} color="#3b82f6" />
+                      <Ionicons
+                        name="pencil-outline"
+                        size={18}
+                        color="#007AFF"
+                      />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleDeleteAccount(account)}
+                      className="p-1 ml-1"
                     >
                       <Ionicons
                         name="trash-outline"
-                        size={16}
-                        color="#ef4444"
+                        size={18}
+                        color="#FF3B30"
                       />
                     </TouchableOpacity>
                   </View>
                 </View>
               ))
             ) : (
-              <Text className="text-sm text-gray-500 italic">
+              <Text className="text-sm text-neutral-500 italic text-center py-2">
                 Aucun compte {type === "current" ? "courant" : "d'épargne"}
               </Text>
             )}
             <TouchableOpacity
               onPress={handleAddAccount}
-              className="flex-row items-center justify-center mt-2 py-2 bg-gray-100 rounded-md"
+              className="flex-row items-center justify-center mt-3 py-2 bg-neutral-100/70 dark:bg-neutral-700/70 rounded-lg"
             >
-              <Ionicons name="add" size={16} color="#3b82f6" />
-              <Text className="text-sm text-primary ml-1">
+              <Ionicons name="add" size={20} color="#007AFF" />
+              <Text className="text-base text-primary ml-1 text-neutral-800 dark:text-neutral-100">
                 Ajouter un compte {type === "current" ? "courant" : "d'épargne"}
               </Text>
             </TouchableOpacity>
@@ -184,13 +192,10 @@ export function BankAccountCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderLeftWidth: 4,
-  },
   colorIndicator: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    marginRight: 6,
+    marginRight: 8,
   },
 });

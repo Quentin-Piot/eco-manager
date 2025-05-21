@@ -1,6 +1,6 @@
 import MainLayout from "~/components/layouts/main-layout";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons"; // Keep Ionicons for iOS style
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import React, { useMemo, useState } from "react";
 import AddExpenseModal from "~/components/ui/add-expense-modal";
@@ -16,10 +16,6 @@ import { capitalizeFirstLetter } from "~/lib/utils";
 import { useBackground } from "~/lib/context/background";
 import { Container } from "~/components/ui/container";
 
-/**
- * Formats a date object to a string in the format "yyyy-MM-dd"
- * Used as a consistent key for grouping transactions
- */
 const formatDateKey = (date: Date): string => {
   return format(date, "yyyy-MM-dd");
 };
@@ -29,6 +25,8 @@ interface SummaryCardProps {
   value: number;
   todayValue?: number;
   valueColorClass?: string;
+  iconName?: keyof typeof Ionicons.glyphMap; // Use Ionicons
+  iconColor?: string;
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -36,35 +34,59 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   value,
   todayValue,
   valueColorClass,
+  iconName,
+  iconColor,
 }) => {
+  const formattedValue = value.toFixed(0).replace(".", ","); // Format for Euros
+
   return (
-    <Card className={"flex-1 basis-[30%]"}>
-      <CardHeader className="flex-row items-center justify-between space-y-0 mb-2">
-        <CardTitle className="text-sm font-medium text-primary-darker">
-          {title}
-        </CardTitle>
+    <Card className={"flex-1 basis-[48%]"}>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
+        <View className="flex-row items-center">
+          {iconName && (
+            <Ionicons // Use Ionicons
+              name={iconName}
+              size={18}
+              color={iconColor || "#6b7280"}
+              className="mr-1"
+            />
+          )}
+          <CardTitle
+            className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </CardTitle>
+        </View>
       </CardHeader>
-      <CardContent className="pl-0 pb-2 pt-0">
-        <Text className={`text-xl font-bold ${valueColorClass || ""}`}>
-          {value.toFixed(0).replace(".", ",")} €
+      <CardContent className="pt-0 pb-2">
+        <Text
+          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {/* Adjusted formatting based on title */}
+          {title === "Taux d'Épargne"
+            ? `${formattedValue}%`
+            : `${formattedValue} €`}
         </Text>
+        {todayValue !== undefined && (
+          <Text
+            className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {todayValue >= 0 ? "+" : ""}
+            {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
+          </Text>
+        )}
       </CardContent>
     </Card>
   );
 };
 
-/**
- * Component specifically for displaying the balance summary.
- */
-const BalanceCard: React.FC<{ balance: number }> = ({ balance }) => {
-  return (
-    <SummaryCard
-      title="Balance"
-      value={balance}
-      valueColorClass={balance >= 0 ? "text-green-600" : "text-red-600"}
-    />
-  );
-};
+// BalanceCard has been removed
 
 const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
   monthly,
@@ -75,7 +97,9 @@ const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
       title="Dépenses"
       value={monthly}
       todayValue={today}
-      valueColorClass="text-red-600"
+      valueColorClass="text-red-600 dark:text-red-400"
+      iconName="trending-down-outline"
+      iconColor="#EF4444"
     />
   );
 };
@@ -87,8 +111,54 @@ const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
     <SummaryCard
       title="Revenus"
       value={monthly}
+      todayValue={today} // Corrected: ensure todayValue is passed
+      valueColorClass="text-green-600 dark:text-green-400"
+      iconName="trending-up-outline"
+      iconColor="#22C55E"
+    />
+  );
+};
+
+const NetFlowCard: React.FC<{ monthly: number; today: number }> = ({
+  monthly,
+  today,
+}) => {
+  const color = monthly >= 0 ? "#007AFF" : "#EF4444";
+  return (
+    <SummaryCard
+      title="Flux Net"
+      value={monthly}
       todayValue={today}
-      valueColorClass="text-green-600"
+      valueColorClass={
+        monthly >= 0
+          ? "text-blue-600 dark:text-blue-400"
+          : "text-red-600 dark:text-red-400"
+      }
+      iconName="stats-chart-outline"
+      iconColor={color}
+    />
+  );
+};
+
+// New Remaining Budget Card
+const RemainingBudgetCard: React.FC<{
+  monthlyExpenses: number;
+  monthlySpendingTarget: number;
+}> = ({ monthlyExpenses, monthlySpendingTarget }) => {
+  const remaining = monthlySpendingTarget - monthlyExpenses;
+  const color = remaining >= 0 ? "#1D7BF2" : "#EF4444"; // Blue for positive, Red for negative (over budget)
+
+  return (
+    <SummaryCard
+      title="Budget Restant"
+      value={remaining}
+      valueColorClass={
+        remaining >= 0
+          ? "text-blue-600 dark:text-blue-400"
+          : "text-red-600 dark:text-red-400"
+      }
+      iconName="cash-outline" // Appropriate icon for budget
+      iconColor={color}
     />
   );
 };
@@ -97,6 +167,9 @@ export default function DetailsScreen() {
   const { accounts, transactions } = useAccount();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { removeBlur } = useBackground();
+
+  // Define a monthly spending target for demonstration. This should ideally come from user settings.
+  const monthlySpendingTarget = 2500; // Example: User aims to spend no more than 2500€ per month
 
   const accountsMap = useMemo(() => {
     const map = new Map<string, AccountDetailsWithId>();
@@ -109,8 +182,9 @@ export default function DetailsScreen() {
     todayIncomes,
     monthlyExpenses,
     monthlyIncomes,
-    monthlyBalance,
-    groupedTransactions,
+    monthlyNetFlow,
+    todayNetFlow,
+    groupedTransactions, // Ensure groupedTransactions is returned from useMemo
   } = useMemo(() => {
     let todayExpensesSum = 0;
     let todayIncomesSum = 0;
@@ -143,8 +217,10 @@ export default function DetailsScreen() {
       }
     });
 
-    const currentMonthlyBalance = currentMonthIncomes - currentMonthExpenses;
+    const currentMonthlyNetFlow = currentMonthIncomes - currentMonthExpenses;
+    const currentTodayNetFlow = todayIncomesSum - todayExpensesSum;
 
+    // Grouping transactions remains the same
     const grouped: Record<any, ExpenseData[]> = {};
     transactions
       .slice()
@@ -172,7 +248,8 @@ export default function DetailsScreen() {
       todayExpenses: todayExpensesSum,
       monthlyExpenses: currentMonthExpenses,
       monthlyIncomes: currentMonthIncomes,
-      monthlyBalance: currentMonthlyBalance,
+      monthlyNetFlow: currentMonthlyNetFlow,
+      todayNetFlow: currentTodayNetFlow,
       groupedTransactions: grouped,
     };
   }, [transactions]);
@@ -190,34 +267,60 @@ export default function DetailsScreen() {
 
   return (
     <MainLayout
-      pageName={"Transactions Détaillées"}
+      pageName={"Transactions"}
       fab={
         <TouchableOpacity
           onPress={() => setIsModalVisible(true)}
-          className="bg-primary p-3 rounded-full shadow-md absolute justify-center items-center right-6 w-12 h-12 z-10"
-          style={Platform.OS === "ios" ? { bottom: 120 } : { bottom: 45 }}
+          className="absolute justify-center items-center right-6 w-14 h-14 rounded-full z-10"
+          style={
+            Platform.OS === "ios"
+              ? {
+                  bottom: 100,
+                  backgroundColor: "#007AFF",
+                  shadowColor: "#007AFF",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
+                }
+              : { bottom: 45, backgroundColor: "#007AFF" }
+          }
         >
-          <MaterialIcons name="add" size={24} color="white" />
+          <MaterialIcons name="add" size={28} color="white" />
         </TouchableOpacity>
       }
     >
       <Container
         title={"Résumé mensuel"}
-        className="flex-row flex-wrap gap-3 w-full mb-4"
+        className="flex-row flex-wrap justify-between gap-3 w-full mb-4"
       >
-        <BalanceCard balance={monthlyBalance} />
+        {/* Replaced BalanceCard with RemainingBudgetCard */}
+        <RemainingBudgetCard
+          monthlyExpenses={monthlyExpenses}
+          monthlySpendingTarget={monthlySpendingTarget}
+        />
+        <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
         <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
         <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
+        {/* Corrected todayValue prop */}
       </Container>
 
-      <Container title={""}>
+      <Container title={"Historique des transactions"}>
         {Object.entries(groupedTransactions).map(([dateGroup, items]) => (
           <View key={dateGroup} className="mb-4">
-            <View className={"flex-row items-center justify-between mb-2"}>
-              <Text className="text-sm font-semibold text-muted-foreground">
+            <View className={"flex-row items-center justify-between mb-2 px-1"}>
+              <Text
+                className="text-base font-semibold text-neutral-700 dark:text-neutral-200"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {formatDateDisplay(dateGroup)}
               </Text>
-              <Text className="text-sm text-muted-foreground">
+              <Text
+                className="text-base font-semibold text-neutral-700 dark:text-neutral-200"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {items
                   .reduce(
                     (acc, v) =>
@@ -228,7 +331,7 @@ export default function DetailsScreen() {
                 €
               </Text>
             </View>
-            <Card className="px-4 py-0">
+            <Card className="px-0 py-0">
               {items.map((item) => (
                 <TransactionItem
                   key={item.id}

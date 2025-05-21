@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 type BankCardProps = {
   title: string;
@@ -16,14 +17,21 @@ export function BankCard({
   borderColor,
   className,
 }: BankCardProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   return (
-    <Card style={[styles.card, borderColor]} className={className}>
-      <CardHeader className="flex-row items-center justify-between space-y-0 mb-3">
-        <CardTitle className="text-sm font-medium text-muted-darker">
+    <Card className={className}>
+      <View
+        style={[styles.colorIndicator, borderColor]}
+        className="absolute left-0 top-0 bottom-0 rounded-l-xl"
+      />
+      <CardHeader className="flex-row items-center justify-between space-y-0 mb-2">
+        <CardTitle className="text-sm font-medium text-muted-darker ml-2">
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pl-0">
+      <CardContent className="pl-2">
         <Text className="w-full text-xl font-bold text-left">
           {amount.toLocaleString("fr-FR", {
             style: "currency",
@@ -36,7 +44,7 @@ export function BankCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderLeftWidth: 4,
+  colorIndicator: {
+    width: 6,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "./text";
 import { Input } from "./input";
 import { Button } from "./button";
@@ -10,6 +10,7 @@ import {
 } from "~/lib/context/account-context";
 import { bankColors } from "~/lib/constants/bank-colors";
 import { AccountType } from "./bank-account-card";
+import { Ionicons } from "@expo/vector-icons";
 
 type AccountModalProps = {
   isVisible: boolean;
@@ -55,13 +56,13 @@ export function AccountModal({
 
   const handleSubmit = () => {
     if (!title.trim()) {
-      alert("Veuillez entrer un nom de compte");
+      Alert.alert("Erreur", "Veuillez entrer un nom de compte");
       return;
     }
 
     const parsedAmount = parseFloat(amount.replace(",", "."));
     if (isNaN(parsedAmount)) {
-      alert("Veuillez entrer un montant valide");
+      Alert.alert("Erreur", "Veuillez entrer un montant valide");
       return;
     }
 
@@ -84,19 +85,39 @@ export function AccountModal({
 
   return (
     <BottomModal visible={isVisible} onRequestClose={onClose}>
-      <Text className="text-xl font-bold mb-4">
-        {account ? "Modifier le compte" : "Ajouter un compte"}
-      </Text>
-      <View className="mb-4">
-        <Text className="mb-1">Nom du compte</Text>
+      <View className="flex-row items-center justify-between pb-4 border-b border-b-neutral-200 dark:border-b-neutral-700">
+        <Text
+          className="text-xl font-bold text-neutral-900 dark:text-neutral-50"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {account ? "Modifier le compte" : "Ajouter un compte"}
+        </Text>
+        <TouchableOpacity onPress={onClose} className="p-1 -mr-2">
+          <Ionicons name="close-circle" size={28} color="#9CA3AF" />
+        </TouchableOpacity>
+      </View>
+      <View className="my-4">
+        <Text
+          className="mb-2 text-base text-neutral-700 dark:text-neutral-200"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          Nom du compte
+        </Text>
         <Input
           value={title}
           onChangeText={setTitle}
           placeholder="Ex: Compte courant"
+          className="bg-neutral-100/70 dark:bg-neutral-800/70 border-neutral-200 dark:border-neutral-700"
         />
       </View>
       <View className="mb-4">
-        <Text className="mb-1">
+        <Text
+          className="mb-2 text-base text-neutral-700 dark:text-neutral-200"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {account ? "Solde actuel (€)" : "Solde initial (€)"}
         </Text>
         <Input
@@ -104,20 +125,37 @@ export function AccountModal({
           onChangeText={setAmount}
           keyboardType="numeric"
           placeholder="0.00"
+          className="bg-neutral-100/70 dark:bg-neutral-800/70 border-neutral-200 dark:border-neutral-700"
         />
       </View>
 
       <View className="mb-4">
-        <Text className="mb-2">Type de compte</Text>
+        <Text
+          className="mb-2 text-base text-neutral-700 dark:text-neutral-200"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          Type de compte
+        </Text>
         <View className="flex-row gap-2">
           {["current", "savings", "cash"].map((accountType) => (
             <TouchableOpacity
               key={accountType}
               onPress={() => setType(accountType as AccountType)}
-              className={`py-2 px-3 rounded-full ${type === accountType ? "bg-primary" : "bg-gray-200"}`}
+              className={`py-2 px-4 rounded-full ${
+                type === accountType
+                  ? "bg-blue-500 dark:bg-blue-600"
+                  : "bg-neutral-200 dark:bg-neutral-700"
+              }`}
             >
               <Text
-                className={`${type === accountType ? "text-white" : "text-gray-700"}`}
+                className={`text-base text-nowrap font-medium ${
+                  type === accountType
+                    ? "text-white"
+                    : "text-neutral-700 dark:text-neutral-200"
+                }`}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {accountType === "current"
                   ? "Courant"
@@ -130,8 +168,14 @@ export function AccountModal({
         </View>
       </View>
       <View className="mb-6">
-        <Text className="mb-2">Couleur</Text>
-        <View className="flex-row flex-wrap gap-2">
+        <Text
+          className="mb-2 text-base text-neutral-700 dark:text-neutral-200"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          Couleur
+        </Text>
+        <View className="flex-row flex-wrap gap-3">
           {bankColors.map((color, index) => (
             <TouchableOpacity
               key={index}
@@ -145,12 +189,24 @@ export function AccountModal({
           ))}
         </View>
       </View>
-      <View className="flex-row justify-end gap-2">
-        <Button variant="outline" onPress={onClose}>
-          <Text>Annuler</Text>
+      <View className="flex-row justify-end gap-3">
+        <Button
+          variant="outline"
+          onPress={onClose}
+          className="border-neutral-300 dark:border-neutral-600 bg-transparent dark:bg-transparent"
+        >
+          <Text
+            className="text-neutral-700 dark:text-neutral-200"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            Annuler
+          </Text>
         </Button>
-        <Button onPress={handleSubmit}>
-          <Text>{account ? "Mettre à jour" : "Ajouter"}</Text>
+        <Button onPress={handleSubmit} className="bg-blue-500 dark:bg-blue-600">
+          <Text className="text-white" numberOfLines={1} ellipsizeMode="tail">
+            {account ? "Mettre à jour" : "Ajouter"}
+          </Text>
         </Button>
       </View>
     </BottomModal>
@@ -159,12 +215,19 @@ export function AccountModal({
 
 const styles = StyleSheet.create({
   colorCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.1)",
   },
   selectedColor: {
     borderWidth: 2,
-    borderColor: "#000",
+    borderColor: "#007AFF",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

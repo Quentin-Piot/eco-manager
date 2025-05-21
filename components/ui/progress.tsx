@@ -105,7 +105,7 @@ function Indicator({
 
 function Label({ value }: { value: number | undefined | null }) {
   return (
-    <View className="absolute inset-0 flex items-center justify-start top-[-1px]">
+    <View className="absolute inset-0 flex items-center justify-start top-[-2px]">
       <Text
         className={cn(
           "text-xs font-semibold",

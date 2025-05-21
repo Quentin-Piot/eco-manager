@@ -12,12 +12,12 @@ import {
   MainExpenseCategory,
   Subcategory,
 } from "~/lib/types/categories";
-import { bankColors } from "~/lib/constants/bank-colors";
 import * as Crypto from "expo-crypto";
 import {
   calculateNextRecurrenceDate,
   generateRecurringTransactionDates,
 } from "~/lib/utils/date";
+import { bankColors } from "../constants/bank-colors";
 
 export type SpendingCategory = {
   type: MainExpenseCategory;
@@ -31,6 +31,7 @@ export type SpendingCategoryWithValue = SpendingCategory & {
 
 export interface AccountDetailsWithId extends AccountDetails {
   id: string;
+  // isLiability?: boolean; // No longer needed if not calculating Net Worth
 }
 
 export type RecurrenceType = "none" | "daily" | "weekly" | "monthly" | "yearly";
@@ -80,7 +81,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 4.19,
     amountOriginal: "21,00 MYR",
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
@@ -93,7 +94,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 9.98,
     amountOriginal: "50,00 MYR",
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "other",
@@ -106,7 +107,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 5.19,
     amountOriginal: "26,00 MYR",
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
@@ -119,7 +120,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 1.6,
     amountOriginal: "8,00 MYR",
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
@@ -132,7 +133,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 3.19,
     amountOriginal: "16,00 MYR",
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "other",
@@ -144,7 +145,7 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Hotel Night",
     amount: 15.5,
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "vacation",
     subcategory: "accommodation",
@@ -156,7 +157,7 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Bank Fee",
     amount: 3.7,
     date: new Date(),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "bills",
@@ -172,7 +173,7 @@ const initialMockTransactions: TransactionsState = [
     amount: 6.18,
     amountOriginal: "31,00 MYR",
     date: new Date(Date.now() - 86400000),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
@@ -185,13 +186,40 @@ const initialMockTransactions: TransactionsState = [
     amount: 7.4,
     amountOriginal: "37,00 MYR",
     date: new Date(Date.now() - 86400000),
-    accountId: "mock-account-id-1",
+    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
     type: "expense",
     recurrence: "daily",
     nextRecurrenceDate: new Date(new Date().setDate(new Date().getDate() + 1)),
+  },
+  {
+    id: "10",
+    remarks: "Salaire",
+    amount: 2500,
+    date: new Date(new Date().setDate(10)), // 10th of current month
+    accountId: "acc-lcl",
+    paymentMethod: "card",
+    mainCategory: "income",
+    subcategory: "salary",
+    type: "income",
+    recurrence: "monthly",
+    nextRecurrenceDate: new Date(
+      new Date().setMonth(new Date().getMonth() + 1),
+    ),
+  },
+  {
+    id: "11",
+    remarks: "Bonus",
+    amount: 500,
+    date: new Date(new Date().setMonth(new Date().getMonth() - 1, 15)), // 15th of last month
+    accountId: "acc-lcl",
+    paymentMethod: "card",
+    mainCategory: "income",
+    subcategory: "salary",
+    type: "income",
+    recurrence: "none",
   },
 ];
 
@@ -274,6 +302,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       type: "savings",
       borderColor: bankColors[7].color,
     },
+    // Removed the "Prêt Étudiant" mock liability since Net Worth is not the focus now
   ]);
 
   const [transactions, setTransactions] = useState<TransactionsState>([]);
@@ -283,12 +312,31 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const loadUserData = async () => {
       try {
         const userData = await getUserData();
-        if (userData) {
+        if (userData && userData.accounts && userData.transactions) {
+          // Ensure dates are parsed correctly
+          const loadedTransactions = userData.transactions.map(
+            (t: ExpenseData) => ({
+              ...t,
+              date: new Date(t.date),
+              nextRecurrenceDate: t.nextRecurrenceDate
+                ? new Date(t.nextRecurrenceDate)
+                : undefined,
+            }),
+          );
           setAccounts(userData.accounts);
-          setTransactions(userData.transactions);
+          setTransactions(loadedTransactions);
         } else {
           // Utiliser les données mock uniquement au premier démarrage
-          setTransactions(initialMockTransactions);
+          setTransactions(
+            initialMockTransactions.map((t) => ({
+              // Ensure dates are Date objects
+              ...t,
+              date: new Date(t.date),
+              nextRecurrenceDate: t.nextRecurrenceDate
+                ? new Date(t.nextRecurrenceDate)
+                : undefined,
+            })),
+          );
         }
       } catch (error) {
         console.error(
@@ -296,14 +344,23 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           error,
         );
         // En cas d'erreur, utiliser les données mock
-        setTransactions(initialMockTransactions);
+        setTransactions(
+          initialMockTransactions.map((t) => ({
+            // Ensure dates are Date objects
+            ...t,
+            date: new Date(t.date),
+            nextRecurrenceDate: t.nextRecurrenceDate
+              ? new Date(t.nextRecurrenceDate)
+              : undefined,
+          })),
+        );
       }
     };
 
     loadUserData();
   }, []);
 
-  // Sauvegarder les données à chaque modification des transactions
+  // Sauvegarder les données à chaque modification des transactions ou comptes
   useEffect(() => {
     const saveData = async () => {
       try {
@@ -317,7 +374,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     };
 
     saveData();
-  }, [accounts, transactions]);
+  }, [accounts, transactions]); // Depend on accounts as well
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
@@ -359,61 +416,67 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setTransactions((prevTransactions) => {
       const newTransactions: ExpenseData[] = [];
       const updatedTransactions = prevTransactions.map((transaction) => {
-        // Vérifier si c'est une transaction récurrente parent avec une date de récurrence
+        // Only process parent transactions that have a recurrence setup
         if (
           transaction.recurrence !== "none" &&
           transaction.nextRecurrenceDate &&
-          (transaction.isRecurrenceParent || !transaction.recurrenceGroup) // Only process parent transactions
+          transaction.isRecurrenceParent
         ) {
           const nextDate = new Date(transaction.nextRecurrenceDate);
           nextDate.setHours(0, 0, 0, 0); // Normaliser à minuit
 
-          // Si la date de récurrence est atteinte ou dépassée
+          // If the recurrence date is reached or passed
           if (nextDate <= today) {
-            // Calculer la prochaine date de récurrence
+            // Calculate the next recurrence date for the parent transaction
             const newNextDate = calculateNextRecurrenceDate(
               nextDate,
               transaction.recurrence,
             ) as Date;
 
-            // Mettre à jour la date de récurrence de la transaction existante
-            const updatedTransaction = {
+            // Create a new instance transaction based on the recurrence
+            const newTransactionInstance: ExpenseData = {
+              ...transaction,
+              id: Crypto.randomUUID(), // New unique ID for the instance
+              date: new Date(nextDate), // Date of the current recurrence
+              nextRecurrenceDate: undefined, // Instances don't have their own next recurrence dates
+              recurrence: "none", // Instances are not recurring themselves
+              recurrenceGroup: transaction.recurrenceGroup || transaction.id, // Ensure a group ID
+              isRecurrenceParent: false, // This is an instance, not a parent
+              remarks: transaction.remarks
+                ? `${transaction.remarks} (récurrent)`
+                : "(récurrent)", // Mark as recurring instance
+            };
+
+            // Update account balance for the new instance
+            updateAccountBalance(
+              newTransactionInstance.accountId,
+              newTransactionInstance.amount,
+              newTransactionInstance.type,
+            );
+
+            // Add the new instance to the list
+            newTransactions.push(newTransactionInstance);
+
+            // Return the updated parent transaction with its new nextRecurrenceDate
+            return {
               ...transaction,
               nextRecurrenceDate: newNextDate,
             };
-
-            // Créer une nouvelle transaction basée sur la récurrence
-            const newTransaction: ExpenseData = {
-              ...transaction,
-              id: Crypto.randomUUID(),
-              date: new Date(nextDate), // Date de la récurrence
-              nextRecurrenceDate: undefined, // Pas de récurrence pour cette instance
-              recurrence: "none", // Pas de récurrence pour cette instance
-              recurrenceGroup: transaction.recurrenceGroup, // Maintenir le groupe de récurrence
-              isRecurrenceParent: false, // C'est une instance, pas un parent
-              remarks: transaction.remarks
-                ? `${transaction.remarks} (récurrent)`
-                : "(récurrent)",
-            };
-
-            // Ajouter la nouvelle transaction à la liste
-            newTransactions.push(newTransaction);
-
-            // Mettre à jour le solde du compte
-            updateAccountBalance(
-              transaction.accountId,
-              transaction.amount,
-              transaction.type,
-            );
-
-            return updatedTransaction;
           }
         }
         return transaction;
       });
 
-      // Retourner les transactions mises à jour avec les nouvelles
-      return [...updatedTransactions, ...newTransactions];
+      // Filter out any duplicates if the logic was not perfect, and add new transactions
+      const finalTransactions = [...updatedTransactions, ...newTransactions];
+      const uniqueTransactionIds = new Set<string>();
+      return finalTransactions.filter((t) => {
+        if (uniqueTransactionIds.has(t.id)) {
+          return false;
+        }
+        uniqueTransactionIds.add(t.id);
+        return true;
+      });
     });
   }, [updateAccountBalance]);
 
@@ -451,86 +514,70 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const addTransaction = useCallback(
     (transaction: Omit<ExpenseData, "id">) => {
       const transactionId = Crypto.randomUUID();
-      const recurrenceGroup =
-        transaction.recurrence !== "none" ? Crypto.randomUUID() : undefined;
       const transactionDate = new Date(transaction.date);
       const now = new Date();
+      now.setHours(0, 0, 0, 0); // Normalize 'now' to start of day
 
-      // Create the main transaction with proper recurrence properties
+      // Determine if this new transaction should be a parent
+      const isNewParent = transaction.recurrence !== "none";
+      const recurrenceGroup = isNewParent ? Crypto.randomUUID() : undefined;
+
       const newTransaction: ExpenseData = {
         ...transaction,
         id: transactionId,
-        recurrenceGroup,
-        isRecurrenceParent: transaction.recurrence !== "none",
-        nextRecurrenceDate:
-          transaction.recurrence !== "none"
-            ? calculateNextRecurrenceDate(
-                transactionDate,
-                transaction.recurrence,
-              )
-            : undefined,
+        recurrenceGroup: recurrenceGroup,
+        isRecurrenceParent: isNewParent,
+        nextRecurrenceDate: isNewParent
+          ? calculateNextRecurrenceDate(transactionDate, transaction.recurrence)
+          : undefined,
       };
 
-      // Update account balance for the main transaction
-      updateAccountBalance(
-        transaction.accountId,
-        transaction.amount,
-        transaction.type,
-      );
-
       setTransactions((prev) => {
-        let updatedTransactions = [...prev, newTransaction];
+        let updatedTransactions = [...prev];
 
-        // If this is a recurring transaction with a past date
-        if (transaction.recurrence !== "none" && transactionDate < now) {
-          // Generate all transactions that should have occurred between the start date and now
+        // Process the newly added transaction itself
+        updateAccountBalance(
+          newTransaction.accountId,
+          newTransaction.amount,
+          newTransaction.type,
+        );
+        updatedTransactions.push(newTransaction);
+
+        // If it's a recurring transaction and its original date is in the past,
+        // generate instances from the original date up to "now".
+        if (isNewParent && transactionDate < now) {
           const recurringDates = generateRecurringTransactionDates(
             transactionDate,
             transaction.recurrence,
             now,
           );
 
-          // Create a transaction for each recurring date
           for (const recurDate of recurringDates) {
-            const recurringTransaction: ExpenseData = {
+            const recurringInstance: ExpenseData = {
               ...transaction,
-              id: Crypto.randomUUID(),
+              id: Crypto.randomUUID(), // Unique ID for each instance
               date: recurDate,
-              nextRecurrenceDate: undefined, // Child instances don't have next dates
-              recurrenceGroup,
+              nextRecurrenceDate: undefined,
+              recurrence: "none", // Instances are not recurring
+              recurrenceGroup: recurrenceGroup,
               isRecurrenceParent: false,
               remarks: transaction.remarks
                 ? `${transaction.remarks} (récurrent)`
                 : "(récurrent)",
             };
-
-            // Apply this transaction to account balance
             updateAccountBalance(
-              recurringTransaction.accountId,
-              recurringTransaction.amount,
-              recurringTransaction.type,
+              recurringInstance.accountId,
+              recurringInstance.amount,
+              recurringInstance.type,
             );
-
-            updatedTransactions.push(recurringTransaction);
+            updatedTransactions.push(recurringInstance);
           }
         }
-
         return updatedTransactions;
       });
     },
     [updateAccountBalance],
   );
-
-  const generateUUID = () => {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-      /[xy]/g,
-      function (c) {
-        const r = (Math.random() * 16) | 0,
-          v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      },
-    );
-  };
 
   const updateTransaction = useCallback(
     (id: string, updatedTransaction: ExpenseData) => {
@@ -538,148 +585,104 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         const oldTransaction = prevTransactions.find((t) => t.id === id);
         if (!oldTransaction) return prevTransactions;
 
-        // Annuler l'ancienne transaction
+        // Revert old transaction's effect on balance
         updateAccountBalance(
           oldTransaction.accountId,
           oldTransaction.amount,
           oldTransaction.type === "expense" ? "income" : "expense",
         );
 
-        // Appliquer la nouvelle transaction
+        // Apply new transaction's effect on balance
         updateAccountBalance(
           updatedTransaction.accountId,
           updatedTransaction.amount,
           updatedTransaction.type,
         );
 
-        // Check if key attributes have changed
-        const recurrenceChanged =
-          oldTransaction.recurrence !== updatedTransaction.recurrence;
         const oldDate = new Date(oldTransaction.date);
         const newDate = new Date(updatedTransaction.date);
-        const dateChanged = oldDate.getTime() !== newDate.getTime();
         const now = new Date();
+        now.setHours(0, 0, 0, 0); // Normalize 'now'
 
-        // Preserve or create recurrence group as needed
-        let recurrenceGroup = oldTransaction.recurrenceGroup;
-        let updatedTransactions = [...prevTransactions];
+        let updatedTransactions = prevTransactions.filter((t) => t.id !== id);
+        let newRecurrenceGroup =
+          updatedTransaction.recurrence !== "none"
+            ? oldTransaction.recurrenceGroup || Crypto.randomUUID()
+            : undefined;
 
-        // CASE 1: Adding or changing recurrence
+        // If the updated transaction becomes a parent, handle its recurring instances
         if (updatedTransaction.recurrence !== "none") {
-          // Create new recurrence group if none exists or there's a major change
-          if (
-            !recurrenceGroup ||
-            (recurrenceChanged && oldTransaction.recurrence === "none")
-          ) {
-            recurrenceGroup = Crypto.randomUUID();
-          }
+          // Filter out existing instances of this group that are future instances
+          updatedTransactions = updatedTransactions.filter(
+            (t) =>
+              !(
+                t.recurrenceGroup ===
+                  (oldTransaction.recurrenceGroup || newRecurrenceGroup) &&
+                new Date(t.date) > now &&
+                t.id !== id
+              ),
+          );
 
-          // If this is a parent transaction with changed parameters
-          const isParent =
-            oldTransaction.isRecurrenceParent ||
-            !oldTransaction.recurrenceGroup;
-          if (isParent && (recurrenceChanged || dateChanged)) {
-            // If date or recurrence changed, we need to handle existing recurrences
-            if (recurrenceGroup) {
-              const today = new Date();
+          // Generate new instances from the new date up to "now" if new date is in the past
+          if (newDate < now) {
+            const missedDates = generateRecurringTransactionDates(
+              newDate,
+              updatedTransaction.recurrence,
+              now,
+            );
 
-              // Remove future instances - we'll regenerate them with new pattern
-              updatedTransactions = updatedTransactions.filter(
-                (t) =>
-                  !t.recurrenceGroup ||
-                  t.recurrenceGroup !== recurrenceGroup ||
-                  t.id === id ||
-                  new Date(t.date) <= today,
+            for (const missedDate of missedDates) {
+              const missedInstance: ExpenseData = {
+                ...updatedTransaction,
+                id: Crypto.randomUUID(),
+                date: missedDate,
+                nextRecurrenceDate: undefined,
+                recurrence: "none",
+                recurrenceGroup: newRecurrenceGroup,
+                isRecurrenceParent: false,
+                remarks: updatedTransaction.remarks
+                  ? `${updatedTransaction.remarks} (récurrent)`
+                  : "(récurrent)",
+              };
+              updateAccountBalance(
+                missedInstance.accountId,
+                missedInstance.amount,
+                missedInstance.type,
               );
-
-              // If date moved to the past, generate missed occurrences
-              if (newDate < now) {
-                const missedDates = generateRecurringTransactionDates(
-                  newDate,
-                  updatedTransaction.recurrence,
-                  now,
-                );
-
-                // Create transactions for all missed dates
-                for (const missedDate of missedDates) {
-                  const missedTransaction: ExpenseData = {
-                    ...updatedTransaction,
-                    id: Crypto.randomUUID(),
-                    date: missedDate,
-                    nextRecurrenceDate: undefined,
-                    recurrenceGroup,
-                    isRecurrenceParent: false,
-                    remarks: updatedTransaction.remarks
-                      ? `${updatedTransaction.remarks} (récurrent)`
-                      : "(récurrent)",
-                  };
-
-                  // Apply this transaction to account balance
-                  updateAccountBalance(
-                    missedTransaction.accountId,
-                    missedTransaction.amount,
-                    missedTransaction.type,
-                  );
-
-                  updatedTransactions.push(missedTransaction);
-                }
-              }
+              updatedTransactions.push(missedInstance);
             }
           }
-        }
-        // CASE 2: Removing recurrence
-        else if (
-          updatedTransaction.recurrence === "none" &&
-          oldTransaction.recurrence !== "none"
-        ) {
-          // If recurrence is being removed, remove this transaction from the group
-          recurrenceGroup = undefined;
-        }
-
-        // Update the current transaction with correct properties
-        return updatedTransactions.map((t) => {
-          if (t.id === id) {
-            return {
-              ...updatedTransaction,
-              id,
-              recurrenceGroup,
-              isRecurrenceParent: updatedTransaction.recurrence !== "none",
-              nextRecurrenceDate:
-                updatedTransaction.recurrence !== "none"
-                  ? calculateNextRecurrenceDate(
-                      newDate,
-                      updatedTransaction.recurrence,
-                    )
-                  : undefined,
-            };
+        } else {
+          // Recurrence is being removed
+          // Remove all future instances of the old recurrence group
+          if (oldTransaction.recurrenceGroup) {
+            updatedTransactions = updatedTransactions.filter(
+              (t) =>
+                !(
+                  t.recurrenceGroup === oldTransaction.recurrenceGroup &&
+                  new Date(t.date) > now &&
+                  t.id !== id
+                ),
+            );
           }
+        }
 
-          // For modifying details of existing recurrences (like amount, category etc.)
-          // but not their dates or recurrence pattern
-          if (
-            recurrenceGroup &&
-            t.recurrenceGroup === recurrenceGroup &&
-            !recurrenceChanged &&
-            !dateChanged &&
-            new Date(t.date) >= now
-          ) {
-            // Update future occurrences with new details
-            return {
-              ...t,
-              amount: updatedTransaction.amount,
-              remarks: updatedTransaction.remarks
-                ? `${updatedTransaction.remarks} (récurrent)`
-                : "(récurrent)",
-              accountId: updatedTransaction.accountId,
-              mainCategory: updatedTransaction.mainCategory,
-              subcategory: updatedTransaction.subcategory,
-              type: updatedTransaction.type,
-              paymentMethod: updatedTransaction.paymentMethod,
-            };
-          }
-
-          return t;
+        // Add the updated transaction itself
+        updatedTransactions.push({
+          ...updatedTransaction,
+          id,
+          recurrenceGroup: newRecurrenceGroup,
+          isRecurrenceParent: updatedTransaction.recurrence !== "none",
+          nextRecurrenceDate:
+            updatedTransaction.recurrence !== "none"
+              ? calculateNextRecurrenceDate(
+                  newDate,
+                  updatedTransaction.recurrence,
+                )
+              : undefined,
         });
+
+        return updatedTransactions;
       });
     },
     [updateAccountBalance],
@@ -702,18 +705,26 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         if (deleteRecurrenceGroup && transactionToDelete.recurrenceGroup) {
           const recurrenceGroupId = transactionToDelete.recurrenceGroup;
 
-          // Find all transactions in this recurrence group
+          // Find all transactions in this recurrence group (excluding the current one already reverted)
           const groupTransactions = prevTransactions.filter(
             (t) => t.recurrenceGroup === recurrenceGroupId && t.id !== id,
           );
 
-          // Reverse the balance effects for all transactions in the group
+          // Reverse the balance effects for all transactions in the group that are in the future
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
           for (const groupTransaction of groupTransactions) {
-            updateAccountBalance(
-              groupTransaction.accountId,
-              groupTransaction.amount,
-              groupTransaction.type === "expense" ? "income" : "expense",
-            );
+            if (
+              new Date(groupTransaction.date) > now ||
+              groupTransaction.isRecurrenceParent
+            ) {
+              // Also revert parent's balance if it's not a past instance
+              updateAccountBalance(
+                groupTransaction.accountId,
+                groupTransaction.amount,
+                groupTransaction.type === "expense" ? "income" : "expense",
+              );
+            }
           }
 
           // Remove all transactions in this group
@@ -732,37 +743,41 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           const recurrenceGroupId = transactionToDelete.recurrenceGroup;
 
           // Find the next transaction in the recurrence group to make it the parent
-          const nextTransactions = prevTransactions.filter(
+          // This logic should find the next actual instance, not necessarily just future ones
+          const now = new Date();
+          const potentialNewParents = prevTransactions.filter(
             (t) =>
               t.recurrenceGroup === recurrenceGroupId &&
               t.id !== id &&
-              new Date(t.date) > new Date(), // Only future transactions
+              new Date(t.date) > now, // Consider only future instances as potential new parents
           );
 
-          if (nextTransactions.length > 0) {
-            // Sort by date to find the closest one
-            nextTransactions.sort(
+          if (potentialNewParents.length > 0) {
+            potentialNewParents.sort(
               (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
             );
-            const newParentId = nextTransactions[0].id;
+            const newParentCandidate = potentialNewParents[0];
 
-            // Make the next transaction the parent
             return prevTransactions
               .filter((t) => t.id !== id) // Remove the deleted transaction
               .map((t) => {
-                if (t.id === newParentId) {
+                if (t.id === newParentCandidate.id) {
                   return {
                     ...t,
                     isRecurrenceParent: true,
-                    recurrence: transactionToDelete.recurrence, // Keep the recurrence pattern
+                    // Take recurrence properties from the old parent
+                    recurrence: transactionToDelete.recurrence,
                     nextRecurrenceDate: calculateNextRecurrenceDate(
-                      new Date(t.date),
+                      new Date(newParentCandidate.date),
                       transactionToDelete.recurrence,
                     ),
                   };
                 }
                 return t;
               });
+          } else {
+            // If no future instances, just remove the parent and leave past instances
+            return prevTransactions.filter((t) => t.id !== id);
           }
         }
 

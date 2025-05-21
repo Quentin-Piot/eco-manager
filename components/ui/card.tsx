@@ -1,31 +1,28 @@
 import type { TextRef, ViewRef } from "@rn-primitives/types";
 import * as React from "react";
-import { Fragment } from "react";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
 import { cn } from "~/lib/utils";
 import { TextClassContext } from "~/components/ui/text";
 
-const Card = React.forwardRef<ViewRef, ViewProps & { title?: string }>(
-  ({ className, style, title, ...props }, ref) => (
-    <Fragment>
-      {title && (
-        <Text className={"mt-3 font-semibold text-lg text-primary-darker"}>
-          {title}
-        </Text>
-      )}
+const Card = React.forwardRef<ViewRef, ViewProps>(
+  ({ className, style, ...props }, ref) => {
+    return (
       <View
-        ref={ref}
+        style={[{ borderRadius: 16 }, style]}
         className={cn(
-          "px-3 py-2",
-          "rounded-lg border-[1px]  bg-white border-gray-200",
-          "dark:bg-background-dark dark:border-muted-darker/90 dark:border-2 dark:shadow-none",
+          "overflow-hidden bg-white",
+          "border-[0.7px] border-neutral-200/50 dark:border-neutral-800/50",
           className,
         )}
-        {...props}
-        style={style}
-      />
-    </Fragment>
-  ),
+      >
+        <View
+          ref={ref}
+          className={cn("p-4", "bg-white/80 dark:bg-neutral-900/80")}
+          {...props}
+        />
+      </View>
+    );
+  },
 );
 Card.displayName = "Card";
 
@@ -33,10 +30,7 @@ const CardHeader = React.forwardRef<ViewRef, ViewProps>(
   ({ className, ...props }, ref) => (
     <View
       ref={ref}
-      className={cn(
-        "mb-6 flex-row justify-between items-center w-full",
-        className,
-      )}
+      className={cn("flex-row items-center justify-between pb-3", className)}
       {...props}
     />
   ),
@@ -50,7 +44,7 @@ const CardTitle = React.forwardRef<TextRef, TextProps>(
       aria-level={3}
       ref={ref}
       className={cn(
-        "text-lg text-primary-darker font-semibold leading-none tracking-tight",
+        "text-lg font-semibold leading-snug text-neutral-800 dark:text-neutral-100",
         className,
       )}
       {...props}
@@ -64,8 +58,7 @@ const CardDescription = React.forwardRef<TextRef, TextProps>(
     <Text
       ref={ref}
       className={cn(
-        "text-sm text-muted-foreground",
-        "dark:text-white",
+        "text-sm text-neutral-500 dark:text-neutral-400",
         className,
       )}
       {...props}
@@ -77,7 +70,7 @@ CardDescription.displayName = "CardDescription";
 const CardContent = React.forwardRef<ViewRef, ViewProps>(
   ({ className, ...props }, ref) => (
     <TextClassContext.Provider value="text-foreground">
-      <View ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+      <View ref={ref} className={cn("p-4", className)} {...props} />
     </TextClassContext.Provider>
   ),
 );
@@ -87,7 +80,7 @@ const CardFooter = React.forwardRef<ViewRef, ViewProps>(
   ({ className, ...props }, ref) => (
     <View
       ref={ref}
-      className={cn("flex flex-row items-center p-6 pt-0", className)}
+      className={cn("flex-row items-center pt-4", className)}
       {...props}
     />
   ),

@@ -159,15 +159,17 @@ export default function DashboardScreen() {
         </View>
       </Container>
 
-      <Card className={"py-6"} title={"Aperçu des Dépenses Mensuelles"}>
-        <CardContent>
-          <Chart
-            data={chartData}
-            onSlicePress={handleSlicePress}
-            selectedSlice={selectedSlice ?? undefined}
-          />
-        </CardContent>
-      </Card>
+      <Container title={"Aperçu des Dépenses Mensuelles"}>
+        <Card>
+          <CardContent>
+            <Chart
+              data={chartData}
+              onSlicePress={handleSlicePress}
+              selectedSlice={selectedSlice ?? undefined}
+            />
+          </CardContent>
+        </Card>
+      </Container>
 
       <Container title={"Budgets"} className="flex-row flex-wrap gap-3">
         {spendingCategoriesWithValue.map((category) => (
