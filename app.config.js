@@ -38,6 +38,13 @@ export default {
       bundler: "metro",
       output: "static",
       favicon: "./assets/images/favicon.png",
+      // Configuration pour maintenir un format mobile sur le web
+      viewport: {
+        width: "device-width",
+        initialScale: 1,
+        maximumScale: 1,
+        userScalable: false
+      },
     },
     plugins: ["expo-router", "expo-asset"],
     experiments: {

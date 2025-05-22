@@ -1,5 +1,5 @@
 import "../global.css";
-
+import { Platform } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -18,8 +18,16 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { PortalHost } from "@rn-primitives/portal";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "~/components/ui/toast";
+import { WebAlert } from "~/components/ui/web-alert";
+import { WebContainer } from "~/components/ui/web-container";
 import { AccountProvider } from "~/lib/context/account-context";
 import { BackgroundProvider } from "~/lib/context/background";
+
+// Import des styles spécifiques pour la version web
+if (Platform.OS === "web") {
+  require("../assets/web-styles.css");
+}
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -51,18 +59,21 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <BackgroundProvider>
-        <AccountProvider>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
+      <WebContainer>
+        <BackgroundProvider>
+          <AccountProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
 
-          <PortalHost />
-          <Toast config={toastConfig} />
-        </AccountProvider>
-      </BackgroundProvider>
+            <PortalHost />
+            <Toast config={toastConfig} />
+            <WebAlert />
+          </AccountProvider>
+        </BackgroundProvider>
+      </WebContainer>
     </ThemeProvider>
   );
 }
