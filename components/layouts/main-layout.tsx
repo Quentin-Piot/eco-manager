@@ -14,7 +14,11 @@ function MainLayout({
       edges={["right", "left", "top"]} // Remove 'bottom' edge for better FAB positioning if it's a bottom bar
       className={cn(
         `flex-1 bg-gray-50`, // Lighter background for a more open feel
-        Platform.OS === "ios" ? "pb-24" : "pb-24", // Adjust padding for iOS
+        Platform.OS === "ios"
+          ? "pb-24"
+          : Platform.OS === "web"
+            ? "mb-8"
+            : "pb-24", // Adjust padding for iOS
       )}
     >
       <ScrollView

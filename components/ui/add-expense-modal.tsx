@@ -1,16 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { calculateNextRecurrenceDate } from "~/lib/utils/date";
 import { BottomModal } from "~/components/ui/custom-modal";
-import {
-  type AccountDetailsWithId,
-  RecurrenceType,
-  useAccount,
-} from "~/lib/context/account-context";
+import { RecurrenceType, useAccount } from "~/lib/context/account-context";
 import { MainCategory, Subcategory } from "~/lib/types/categories";
 import { TransactionForm } from "~/components/ui/transaction/transaction-form";
 import { CategorySelector } from "~/components/ui/transaction/category-selector";
-import { AccountSelector } from "~/components/ui/transaction/account-selector";
 import { Text } from "~/components/ui/text";
 import { cn, parseAmount } from "~/lib/utils";
 import { colors } from "~/lib/theme";
@@ -20,13 +15,11 @@ import { Button } from "~/components/ui/button";
 interface AddExpenseModalProps {
   isVisible: boolean;
   onClose: () => void;
-  accounts: AccountDetailsWithId[];
 }
 
 const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   isVisible,
   onClose,
-  accounts,
 }) => {
   const { addTransaction } = useAccount();
   const [step, setStep] = useState(0);
@@ -42,39 +35,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     useState<MainCategory | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] =
     useState<Subcategory | null>(null);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
-    null,
-  );
-  const [isAccountSelectorVisible, setIsAccountSelectorVisible] =
-    useState(false);
+
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
   const [isRecurrenceSelectorVisible, setIsRecurrenceSelectorVisible] =
     useState(false);
-
-  const availableAccounts = useMemo(() => {
-    return (
-      accounts?.filter((acc) =>
-        paymentMethod === "card" ? acc.type === "current" : acc.type === "cash",
-      ) || []
-    );
-  }, [accounts, paymentMethod]);
-
-  useEffect(() => {
-    if (paymentMethod === "card") {
-      if (
-        isVisible &&
-        availableAccounts.length > 0 &&
-        (!selectedAccountId ||
-          !availableAccounts.find((acc) => acc.id === selectedAccountId))
-      ) {
-        setSelectedAccountId(availableAccounts[0].id);
-      } else if (isVisible && availableAccounts.length === 0) {
-        setSelectedAccountId(null);
-      }
-    } else {
-      setSelectedAccountId(availableAccounts[0].id);
-    }
-  }, [availableAccounts, selectedAccountId, isVisible, paymentMethod]);
 
   const handleNextStep = () => {
     if (step === 0) {
@@ -82,7 +46,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       if (transactionType === "income") {
         setSelectedMainCategory("income");
       }
-    } else if (step === 1 && amount && selectedAccountId) {
+    } else if (step === 1 && amount) {
       if (transactionType === "income" && selectedMainCategory) {
         setStep(3);
         setSelectedSubcategory("salary");
@@ -115,12 +79,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   };
 
   const handleSubmit = () => {
-    if (
-      !amount ||
-      !selectedMainCategory ||
-      !selectedSubcategory ||
-      !selectedAccountId
-    ) {
+    if (!amount || !selectedMainCategory || !selectedSubcategory) {
       return;
     }
 
@@ -131,7 +90,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       remarks: remarks,
       date,
       paymentMethod: paymentMethod,
-      accountId: selectedAccountId,
+
       mainCategory: selectedMainCategory,
       subcategory: selectedSubcategory,
       type: transactionType,
@@ -151,9 +110,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setPaymentMethod("cash");
     setSelectedMainCategory(null);
     setSelectedSubcategory(null);
-    setSelectedAccountId(
-      availableAccounts.length > 0 ? availableAccounts[0].id : null,
-    );
+
     setRecurrence("none");
     onClose();
   };
@@ -161,11 +118,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const onDateChange = (selectedDate: Date | undefined) => {
     const currentDate = selectedDate || date;
     setDate(currentDate);
-  };
-
-  const handleAccountSelect = (accountId: string) => {
-    setSelectedAccountId(accountId);
-    setIsAccountSelectorVisible(false);
   };
 
   const renderTransactionTypeSelector = () => (
@@ -249,9 +201,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           date={date}
           showDatePicker={showDatePicker}
           paymentMethod={paymentMethod}
-          selectedAccountId={selectedAccountId}
-          availableAccounts={availableAccounts}
-          isAccountSelectorVisible={isAccountSelectorVisible}
           recurrence={recurrence}
           isRecurrenceSelectorVisible={isRecurrenceSelectorVisible}
           onShowRecurrenceSelector={setIsRecurrenceSelectorVisible}
@@ -260,9 +209,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           onRemarksChange={setRemarks}
           onDateChange={onDateChange}
           onPaymentMethodChange={setPaymentMethod}
-          onAccountSelect={handleAccountSelect}
           onShowDatePicker={setShowDatePicker}
-          onShowAccountSelector={setIsAccountSelectorVisible}
           onNext={handleNextStep}
         />
       )}
@@ -290,14 +237,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           onNext={handleNextStep}
         />
       )}
-
-      <AccountSelector
-        isVisible={isAccountSelectorVisible}
-        onClose={() => setIsAccountSelectorVisible(false)}
-        accounts={availableAccounts}
-        selectedAccountId={selectedAccountId}
-        onSelect={handleAccountSelect}
-      />
     </BottomModal>
   );
 };

@@ -1,7 +1,4 @@
-import type {
-  AccountDetailsWithId,
-  ExpenseData,
-} from "~/lib/context/account-context";
+import type { ExpenseData } from "~/lib/context/account-context";
 import { getCategoryDetails } from "~/lib/types/categories";
 import React, { useMemo, useState } from "react";
 import { colors } from "~/lib/theme";
@@ -12,15 +9,9 @@ import { formatAmountWithSign } from "~/lib/utils";
 
 type TransactionItemProps = {
   item: ExpenseData;
-  account?: AccountDetailsWithId;
-  accounts?: AccountDetailsWithId[];
 };
 
-export const TransactionItem = ({
-  item,
-  account,
-  accounts = [],
-}: TransactionItemProps) => {
+export const TransactionItem = ({ item }: TransactionItemProps) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const categoryInfo = getCategoryDetails(item.mainCategory, item.subcategory);
   const iconName = useMemo(
@@ -31,8 +22,6 @@ export const TransactionItem = ({
     colors.categories[item.mainCategory as keyof typeof colors.categories] ||
     colors.muted.darker;
   const iconColor = colors.primary.foreground;
-  const accountName = account ? account.title : "Compte inconnu";
-
   const handlePress = () => {
     setIsEditModalVisible(true);
   };
@@ -59,12 +48,6 @@ export const TransactionItem = ({
             numberOfLines={1}
           >
             {item.remarks || categoryInfo?.label}
-          </Text>
-          <Text
-            className="text-sm text-neutral-500 dark:text-neutral-400 mt-1" // Adjusted text style
-            numberOfLines={1}
-          >
-            {accountName}
           </Text>
         </View>
         <View className="items-end">

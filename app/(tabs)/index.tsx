@@ -1,6 +1,4 @@
-import { BankAccountCard } from "@/components/ui/bank-account-card";
 import { SpendingCard } from "@/components/ui/spending-card";
-import { Card, CardContent } from "@/components/ui/card";
 import { View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
@@ -15,13 +13,155 @@ import {
   useAccount,
 } from "~/lib/context/account-context";
 import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
-import { endOfMonth, isWithinInterval, startOfMonth } from "date-fns";
+import { endOfMonth, isToday, isWithinInterval, startOfMonth } from "date-fns";
 import { colors } from "~/lib/theme";
 import { Container } from "~/components/ui/container";
+import { Ionicons } from "@expo/vector-icons";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Text } from "~/components/ui/text";
+
+interface SummaryCardProps {
+  title: string;
+  value: number;
+  todayValue?: number;
+  valueColorClass?: string;
+  iconName?: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+}
+
+const SummaryCard: React.FC<SummaryCardProps> = ({
+  title,
+  value,
+  todayValue,
+  valueColorClass,
+  iconName,
+  iconColor,
+}) => {
+  const formattedValue = value.toFixed(0).replace(".", ",");
+
+  return (
+    <Card className={"flex-1 basis-[48%]"}>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
+        <View className="flex-row items-center">
+          {iconName && (
+            <Ionicons
+              name={iconName}
+              size={18}
+              color={iconColor || "#6b7280"}
+              className="mr-1"
+            />
+          )}
+          <CardTitle
+            className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </CardTitle>
+        </View>
+      </CardHeader>
+      <CardContent className="pt-0 pb-2">
+        <Text
+          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title === "Taux d'Épargne"
+            ? `${formattedValue}%`
+            : `${formattedValue} €`}
+        </Text>
+        {todayValue !== undefined && (
+          <Text
+            className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {todayValue >= 0 ? "+" : ""}
+            {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
+          </Text>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
+  monthly,
+  today,
+}) => {
+  return (
+    <SummaryCard
+      title="Dépenses"
+      value={monthly}
+      todayValue={today}
+      valueColorClass="text-red-600 dark:text-red-400"
+      iconName="trending-down-outline"
+      iconColor="#EF4444"
+    />
+  );
+};
+
+const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
+  monthly,
+  today,
+}) => {
+  return (
+    <SummaryCard
+      title="Revenus"
+      value={monthly}
+      todayValue={today}
+      valueColorClass="text-green-600 dark:text-green-400"
+      iconName="trending-up-outline"
+      iconColor="#22C55E"
+    />
+  );
+};
+
+const NetFlowCard: React.FC<{ monthly: number; today: number }> = ({
+  monthly,
+  today,
+}) => {
+  const color = monthly >= 0 ? "#007AFF" : "#EF4444";
+  return (
+    <SummaryCard
+      title="Flux Net"
+      value={monthly}
+      todayValue={today}
+      valueColorClass={
+        monthly >= 0
+          ? "text-blue-600 dark:text-blue-400"
+          : "text-red-600 dark:text-red-400"
+      }
+      iconName="stats-chart-outline"
+      iconColor={color}
+    />
+  );
+};
+
+const RemainingBudgetCard: React.FC<{
+  monthlyExpenses: number;
+  monthlySpendingTarget: number;
+}> = ({ monthlyExpenses, monthlySpendingTarget }) => {
+  const remaining = monthlySpendingTarget - monthlyExpenses;
+  const color = remaining >= 0 ? "#1D7BF2" : "#EF4444";
+
+  return (
+    <SummaryCard
+      title="Budget Restant"
+      value={remaining}
+      valueColorClass={
+        remaining >= 0
+          ? "text-blue-600 dark:text-blue-400"
+          : "text-red-600 dark:text-red-400"
+      }
+      iconName="cash-outline"
+      iconColor={color}
+    />
+  );
+};
 
 export default function DashboardScreen() {
-  const { accounts, spendingCategories, transactions, updateBudget } =
-    useAccount();
+  const { spendingCategories, transactions, updateBudget } = useAccount();
 
   const [selectedSlice, setSelectedSlice] = useState<PieSlice | null>(null);
   const [isSliceModalVisible, setIsSliceModalVisible] =
@@ -33,6 +173,60 @@ export default function DashboardScreen() {
     type: MainExpenseCategory;
     currentBudget: number;
   } | null>(null);
+
+  const monthlySpendingTarget = 2500; // Example: User aims to spend no more than 2500€ per month
+
+  const {
+    todayExpenses,
+    todayIncomes,
+    monthlyExpenses,
+    monthlyIncomes,
+    monthlyNetFlow,
+    todayNetFlow,
+  } = useMemo(() => {
+    let todayExpensesSum = 0;
+    let todayIncomesSum = 0;
+    let currentMonthExpenses = 0;
+    let currentMonthIncomes = 0;
+    const now = new Date();
+
+    transactions.forEach((t) => {
+      const transactionDate = new Date(t.date);
+      const isIncome = t.mainCategory === "income" || t.type === "income";
+      const amount = t.amount;
+
+      if (isToday(transactionDate)) {
+        if (isIncome) {
+          todayIncomesSum += amount;
+        } else {
+          todayExpensesSum += amount;
+        }
+      }
+
+      if (
+        transactionDate.getMonth() === now.getMonth() &&
+        transactionDate.getFullYear() === now.getFullYear()
+      ) {
+        if (isIncome) {
+          currentMonthIncomes += amount;
+        } else {
+          currentMonthExpenses += amount;
+        }
+      }
+    });
+
+    const currentMonthlyNetFlow = currentMonthIncomes - currentMonthExpenses;
+    const currentTodayNetFlow = todayIncomesSum - todayExpensesSum;
+
+    return {
+      todayIncomes: todayIncomesSum,
+      todayExpenses: todayExpensesSum,
+      monthlyExpenses: currentMonthExpenses,
+      monthlyIncomes: currentMonthIncomes,
+      monthlyNetFlow: currentMonthlyNetFlow,
+      todayNetFlow: currentTodayNetFlow,
+    };
+  }, [transactions]);
 
   const chartData: PieSlice[] = useMemo(() => {
     // Get current month's transactions
@@ -150,13 +344,17 @@ export default function DashboardScreen() {
 
   return (
     <MainLayout pageName={"Tableau de bord"}>
-      <Container title={"Comptes"} className="flex-row flex-wrap gap-3 w-full">
-        <View className="flex-1 basis-[45%]">
-          <BankAccountCard accounts={accounts} type="current" />
-        </View>
-        <View className="flex-1 basis-[45%]">
-          <BankAccountCard accounts={accounts} type="savings" />
-        </View>
+      <Container
+        title={"Résumé mensuel"}
+        className="flex-row flex-wrap justify-between gap-3 w-full mb-4"
+      >
+        <RemainingBudgetCard
+          monthlyExpenses={monthlyExpenses}
+          monthlySpendingTarget={monthlySpendingTarget}
+        />
+        <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
+        <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
+        <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
       </Container>
 
       <Container title={"Aperçu des Dépenses Mensuelles"}>

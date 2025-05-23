@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import { getUserData, saveUserData } from "~/lib/storage/user-storage";
-import { AccountDetails } from "@/components/ui/bank-account-card";
 import {
   MainCategory,
   MainExpenseCategory,
@@ -17,7 +16,6 @@ import {
   calculateNextRecurrenceDate,
   generateRecurringTransactionDates,
 } from "~/lib/utils/date";
-import { bankColors } from "../constants/bank-colors";
 
 export type SpendingCategory = {
   type: MainExpenseCategory;
@@ -29,11 +27,6 @@ export type SpendingCategoryWithValue = SpendingCategory & {
   percentage: number;
 };
 
-export interface AccountDetailsWithId extends AccountDetails {
-  id: string;
-  // isLiability?: boolean; // No longer needed if not calculating Net Worth
-}
-
 export type RecurrenceType = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
 export type ExpenseData = {
@@ -43,7 +36,6 @@ export type ExpenseData = {
   amountOriginal?: string;
   date: Date;
   paymentMethod: "cash" | "card";
-  accountId: string;
   mainCategory: MainCategory;
   subcategory: Subcategory;
   type: "expense" | "income";
@@ -56,19 +48,12 @@ export type ExpenseData = {
 export type TransactionsState = ExpenseData[];
 
 type AccountContextType = {
-  accounts: AccountDetailsWithId[];
   spendingCategories: SpendingCategory[];
   updateBudget: (categoryType: MainCategory, newBudget: number) => void;
   transactions: TransactionsState;
   addTransaction: (transaction: Omit<ExpenseData, "id">) => void;
   updateTransaction: (id: string, updatedTransaction: ExpenseData) => void;
   deleteTransaction: (id: string, deleteRecurrenceGroup?: boolean) => void;
-  addAccount: (account: Omit<AccountDetailsWithId, "id">) => void;
-  updateAccount: (
-    id: string,
-    updatedAccount: Omit<AccountDetailsWithId, "id">,
-  ) => void;
-  deleteAccount: (id: string) => void;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
@@ -81,7 +66,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 4.19,
     amountOriginal: "21,00 MYR",
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
@@ -94,7 +78,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 9.98,
     amountOriginal: "50,00 MYR",
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "other",
@@ -107,7 +90,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 5.19,
     amountOriginal: "26,00 MYR",
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
@@ -120,7 +102,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 1.6,
     amountOriginal: "8,00 MYR",
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
@@ -133,7 +114,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 3.19,
     amountOriginal: "16,00 MYR",
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "other",
@@ -145,7 +125,6 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Hotel Night",
     amount: 15.5,
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "vacation",
     subcategory: "accommodation",
@@ -157,7 +136,6 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Bank Fee",
     amount: 3.7,
     date: new Date(),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "housing",
     subcategory: "bills",
@@ -173,7 +151,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 6.18,
     amountOriginal: "31,00 MYR",
     date: new Date(Date.now() - 86400000),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "restaurant",
@@ -186,7 +163,6 @@ const initialMockTransactions: TransactionsState = [
     amount: 7.4,
     amountOriginal: "37,00 MYR",
     date: new Date(Date.now() - 86400000),
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "activities",
     subcategory: "cafe",
@@ -199,7 +175,6 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Salaire",
     amount: 2500,
     date: new Date(new Date().setDate(10)), // 10th of current month
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "income",
     subcategory: "salary",
@@ -214,7 +189,6 @@ const initialMockTransactions: TransactionsState = [
     remarks: "Bonus",
     amount: 500,
     date: new Date(new Date().setMonth(new Date().getMonth() - 1, 15)), // 15th of last month
-    accountId: "acc-lcl",
     paymentMethod: "card",
     mainCategory: "income",
     subcategory: "salary",
@@ -244,67 +218,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       budgetAmount: 250,
     },
   ]);
-
-  const [accounts, setAccounts] = useState<AccountDetailsWithId[]>([
-    {
-      id: "acc-lcl",
-      title: "LCL",
-      amount: 1250.75,
-      type: "current",
-      borderColor: bankColors[1].color,
-    },
-    {
-      id: "acc-joint",
-      title: "Compte Joint",
-      amount: 2340.5,
-      type: "current",
-      borderColor: bankColors[2].color,
-    },
-    {
-      id: "acc-bourso",
-      title: "Bourso Personal",
-      amount: 750.0,
-      type: "current",
-      borderColor: bankColors[3].color,
-    },
-    {
-      id: "acc-revolut",
-      title: "Revolut Personal",
-      amount: 159.0,
-      type: "current",
-      borderColor: bankColors[4].color,
-    },
-    {
-      id: "acc-cash",
-      title: "Espèces",
-      amount: 50.0,
-      type: "cash",
-      borderColor: bankColors[5].color,
-    },
-    {
-      id: "sav-livreta",
-      title: "Livret A",
-      amount: 8250.3,
-      type: "savings",
-      borderColor: bankColors[1].color,
-    },
-    {
-      id: "sav-devdurable",
-      title: "Développement Durable",
-      amount: 2500.5,
-      type: "savings",
-      borderColor: bankColors[6].color,
-    },
-    {
-      id: "sav-general",
-      title: "Épargne Générale",
-      amount: 2000.0,
-      type: "savings",
-      borderColor: bankColors[7].color,
-    },
-    // Removed the "Prêt Étudiant" mock liability since Net Worth is not the focus now
-  ]);
-
   const [transactions, setTransactions] = useState<TransactionsState>([]);
 
   // Charger les données du storage au démarrage
@@ -312,7 +225,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     const loadUserData = async () => {
       try {
         const userData = await getUserData();
-        if (userData && userData.accounts && userData.transactions) {
+        if (userData && userData.transactions) {
           // Ensure dates are parsed correctly
           const loadedTransactions = userData.transactions.map(
             (t: ExpenseData) => ({
@@ -323,7 +236,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
                 : undefined,
             }),
           );
-          setAccounts(userData.accounts);
           setTransactions(loadedTransactions);
         } else {
           // Utiliser les données mock uniquement au premier démarrage
@@ -360,11 +272,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, []);
 
-  // Sauvegarder les données à chaque modification des transactions ou comptes
+  // Sauvegarder les données à chaque modification des transactions
   useEffect(() => {
     const saveData = async () => {
       try {
-        await saveUserData(accounts, transactions);
+        await saveUserData(transactions);
       } catch (error) {
         console.error(
           "Erreur lors de la sauvegarde des données utilisateur:",
@@ -374,7 +286,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     };
 
     saveData();
-  }, [accounts, transactions]); // Depend on accounts as well
+  }, [transactions]);
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
@@ -383,25 +295,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           category.type === categoryType
             ? { ...category, budgetAmount: newBudget }
             : category,
-        ),
-      );
-    },
-    [],
-  );
-
-  const updateAccountBalance = useCallback(
-    (accountId: string, amount: number, type: "expense" | "income") => {
-      setAccounts((prevAccounts) =>
-        prevAccounts.map((account) =>
-          account.id === accountId
-            ? {
-                ...account,
-                amount:
-                  type === "expense"
-                    ? account.amount - amount
-                    : account.amount + amount,
-              }
-            : account,
         ),
       );
     },
@@ -447,13 +340,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
                 : "(récurrent)", // Mark as recurring instance
             };
 
-            // Update account balance for the new instance
-            updateAccountBalance(
-              newTransactionInstance.accountId,
-              newTransactionInstance.amount,
-              newTransactionInstance.type,
-            );
-
             // Add the new instance to the list
             newTransactions.push(newTransactionInstance);
 
@@ -478,7 +364,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         return true;
       });
     });
-  }, [updateAccountBalance]);
+  }, []);
 
   // Vérifier les transactions récurrentes au démarrage et à chaque changement de jour
   useEffect(() => {
@@ -511,93 +397,67 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [checkRecurringTransactions]);
 
-  const addTransaction = useCallback(
-    (transaction: Omit<ExpenseData, "id">) => {
-      const transactionId = Crypto.randomUUID();
-      const transactionDate = new Date(transaction.date);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // Normalize 'now' to start of day
+  const addTransaction = useCallback((transaction: Omit<ExpenseData, "id">) => {
+    const transactionId = Crypto.randomUUID();
+    const transactionDate = new Date(transaction.date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Normalize 'now' to start of day
 
-      // Determine if this new transaction should be a parent
-      const isNewParent = transaction.recurrence !== "none";
-      const recurrenceGroup = isNewParent ? Crypto.randomUUID() : undefined;
+    // Determine if this new transaction should be a parent
+    const isNewParent = transaction.recurrence !== "none";
+    const recurrenceGroup = isNewParent ? Crypto.randomUUID() : undefined;
 
-      const newTransaction: ExpenseData = {
-        ...transaction,
-        id: transactionId,
-        recurrenceGroup: recurrenceGroup,
-        isRecurrenceParent: isNewParent,
-        nextRecurrenceDate: isNewParent
-          ? calculateNextRecurrenceDate(transactionDate, transaction.recurrence)
-          : undefined,
-      };
+    const newTransaction: ExpenseData = {
+      ...transaction,
+      id: transactionId,
+      recurrenceGroup: recurrenceGroup,
+      isRecurrenceParent: isNewParent,
+      nextRecurrenceDate: isNewParent
+        ? calculateNextRecurrenceDate(transactionDate, transaction.recurrence)
+        : undefined,
+    };
 
-      setTransactions((prev) => {
-        let updatedTransactions = [...prev];
+    setTransactions((prev) => {
+      let updatedTransactions = [...prev];
 
-        // Process the newly added transaction itself
-        updateAccountBalance(
-          newTransaction.accountId,
-          newTransaction.amount,
-          newTransaction.type,
+      // Add the new transaction
+      updatedTransactions.push(newTransaction);
+
+      // If it's a recurring transaction and its original date is in the past,
+      // generate instances from the original date up to "now".
+      if (isNewParent && transactionDate < now) {
+        const recurringDates = generateRecurringTransactionDates(
+          transactionDate,
+          transaction.recurrence,
+          now,
         );
-        updatedTransactions.push(newTransaction);
 
-        // If it's a recurring transaction and its original date is in the past,
-        // generate instances from the original date up to "now".
-        if (isNewParent && transactionDate < now) {
-          const recurringDates = generateRecurringTransactionDates(
-            transactionDate,
-            transaction.recurrence,
-            now,
-          );
+        for (const recurDate of recurringDates) {
+          const recurringInstance: ExpenseData = {
+            ...transaction,
+            id: Crypto.randomUUID(), // Unique ID for each instance
+            date: recurDate,
+            nextRecurrenceDate: undefined,
+            recurrence: "none", // Instances are not recurring
+            recurrenceGroup: recurrenceGroup,
+            isRecurrenceParent: false,
+            remarks: transaction.remarks
+              ? `${transaction.remarks} (récurrent)`
+              : "(récurrent)",
+          };
 
-          for (const recurDate of recurringDates) {
-            const recurringInstance: ExpenseData = {
-              ...transaction,
-              id: Crypto.randomUUID(), // Unique ID for each instance
-              date: recurDate,
-              nextRecurrenceDate: undefined,
-              recurrence: "none", // Instances are not recurring
-              recurrenceGroup: recurrenceGroup,
-              isRecurrenceParent: false,
-              remarks: transaction.remarks
-                ? `${transaction.remarks} (récurrent)`
-                : "(récurrent)",
-            };
-            updateAccountBalance(
-              recurringInstance.accountId,
-              recurringInstance.amount,
-              recurringInstance.type,
-            );
-            updatedTransactions.push(recurringInstance);
-          }
+          updatedTransactions.push(recurringInstance);
         }
-        return updatedTransactions;
-      });
-    },
-    [updateAccountBalance],
-  );
+      }
+      return updatedTransactions;
+    });
+  }, []);
 
   const updateTransaction = useCallback(
     (id: string, updatedTransaction: ExpenseData) => {
       setTransactions((prevTransactions) => {
         const oldTransaction = prevTransactions.find((t) => t.id === id);
         if (!oldTransaction) return prevTransactions;
-
-        // Revert old transaction's effect on balance
-        updateAccountBalance(
-          oldTransaction.accountId,
-          oldTransaction.amount,
-          oldTransaction.type === "expense" ? "income" : "expense",
-        );
-
-        // Apply new transaction's effect on balance
-        updateAccountBalance(
-          updatedTransaction.accountId,
-          updatedTransaction.amount,
-          updatedTransaction.type,
-        );
 
         const oldDate = new Date(oldTransaction.date);
         const newDate = new Date(updatedTransaction.date);
@@ -644,11 +504,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
                   ? `${updatedTransaction.remarks} (récurrent)`
                   : "(récurrent)",
               };
-              updateAccountBalance(
-                missedInstance.accountId,
-                missedInstance.amount,
-                missedInstance.type,
-              );
+
               updatedTransactions.push(missedInstance);
             }
           }
@@ -685,7 +541,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         return updatedTransactions;
       });
     },
-    [updateAccountBalance],
+    [],
   );
 
   const deleteTransaction = useCallback(
@@ -693,13 +549,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setTransactions((prevTransactions) => {
         const transactionToDelete = prevTransactions.find((t) => t.id === id);
         if (!transactionToDelete) return prevTransactions;
-
-        // Annuler la transaction en inversant son effet sur le solde
-        updateAccountBalance(
-          transactionToDelete.accountId,
-          transactionToDelete.amount,
-          transactionToDelete.type === "expense" ? "income" : "expense",
-        );
 
         // If we need to delete a recurrence group
         if (deleteRecurrenceGroup && transactionToDelete.recurrenceGroup) {
@@ -719,11 +568,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
               groupTransaction.isRecurrenceParent
             ) {
               // Also revert parent's balance if it's not a past instance
-              updateAccountBalance(
-                groupTransaction.accountId,
-                groupTransaction.amount,
-                groupTransaction.type === "expense" ? "income" : "expense",
-              );
             }
           }
 
@@ -785,63 +629,162 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         return prevTransactions.filter((t) => t.id !== id);
       });
     },
-    [updateAccountBalance],
-  );
-
-  const addAccount = useCallback(
-    (account: Omit<AccountDetailsWithId, "id">) => {
-      const newAccount: AccountDetailsWithId = {
-        ...account,
-        id: Crypto.randomUUID(),
-      };
-      setAccounts((prev) => [...prev, newAccount]);
-    },
     [],
   );
 
-  const updateAccount = useCallback(
-    (id: string, updatedAccount: Omit<AccountDetailsWithId, "id">) => {
-      setAccounts((prevAccounts) =>
-        prevAccounts.map((account) =>
-          account.id === id ? { ...updatedAccount, id } : account,
-        ),
+  const getTransactionsByType = useCallback(
+    (type: "expense" | "income") => {
+      return transactions.filter((transaction) => transaction.type === type);
+    },
+    [transactions],
+  );
+
+  const getTransactionsByDateRange = useCallback(
+    (startDate: Date, endDate: Date) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.date >= startDate && transaction.date <= endDate,
       );
     },
-    [],
+    [transactions],
   );
 
-  const deleteAccount = useCallback(
-    (id: string) => {
-      // Vérifier si des transactions utilisent ce compte
-      const hasTransactions = transactions.some((t) => t.accountId === id);
-      if (hasTransactions) {
-        // Option 1: Empêcher la suppression
-        console.warn(
-          "Impossible de supprimer un compte avec des transactions associées",
-        );
-        return false;
+  const getTransactionsBySearch = useCallback(
+    (searchTerm: string) => {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      return transactions.filter(
+        (transaction) =>
+          transaction.remarks.toLowerCase().includes(lowerSearchTerm) ||
+          transaction.mainCategory.toLowerCase().includes(lowerSearchTerm) ||
+          transaction.subcategory.toLowerCase().includes(lowerSearchTerm) ||
+          transaction.paymentMethod.toLowerCase().includes(lowerSearchTerm),
+      );
+    },
+    [transactions],
+  );
 
-        // Option 2 (alternative): Supprimer toutes les transactions associées
-        // setTransactions(prev => prev.filter(t => t.accountId !== id));
-      }
+  const getTransactionsByRecurrence = useCallback(
+    (recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly") => {
+      return transactions.filter(
+        (transaction) => transaction.recurrence === recurrence,
+      );
+    },
+    [transactions],
+  );
 
-      setAccounts((prev) => prev.filter((account) => account.id !== id));
-      return true;
+  const getTransactionsByRecurrenceAndMonth = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      month: Date,
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          transaction.date.getMonth() === month.getMonth() &&
+          transaction.date.getFullYear() === month.getFullYear(),
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndDateRange = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      startDate: Date,
+      endDate: Date,
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          transaction.date >= startDate &&
+          transaction.date <= endDate,
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndCategory = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      mainCategory: string,
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          transaction.mainCategory === mainCategory,
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndSubcategory = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      mainCategory: string,
+      subcategory: string,
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          transaction.mainCategory === mainCategory &&
+          transaction.subcategory === subcategory,
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndPaymentMethod = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      paymentMethod: string,
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          transaction.paymentMethod === paymentMethod,
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndType = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      type: "expense" | "income",
+    ) => {
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence && transaction.type === type,
+      );
+    },
+    [transactions],
+  );
+
+  const getTransactionsByRecurrenceAndSearch = useCallback(
+    (
+      recurrence: "none" | "daily" | "weekly" | "monthly" | "yearly",
+      searchTerm: string,
+    ) => {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      return transactions.filter(
+        (transaction) =>
+          transaction.recurrence === recurrence &&
+          (transaction.remarks.toLowerCase().includes(lowerSearchTerm) ||
+            transaction.mainCategory.toLowerCase().includes(lowerSearchTerm) ||
+            transaction.subcategory.toLowerCase().includes(lowerSearchTerm) ||
+            transaction.paymentMethod.toLowerCase().includes(lowerSearchTerm)),
+      );
     },
     [transactions],
   );
 
   const contextValue: AccountContextType = {
-    accounts,
     spendingCategories,
     updateBudget,
     transactions,
     addTransaction,
     updateTransaction,
     deleteTransaction,
-    addAccount,
-    updateAccount,
-    deleteAccount,
   };
 
   return (

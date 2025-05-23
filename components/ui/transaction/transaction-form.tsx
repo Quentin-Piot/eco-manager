@@ -7,10 +7,7 @@ import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 import { colors } from "~/lib/theme";
 import { DatePickerModal } from "~/components/ui/date-picker-modal";
-import {
-  AccountDetailsWithId,
-  RecurrenceType,
-} from "~/lib/context/account-context";
+import { RecurrenceType } from "~/lib/context/account-context";
 import { RecurrenceSelector } from "~/components/ui/transaction/recurrence-selector";
 
 interface TransactionFormProps {
@@ -20,9 +17,6 @@ interface TransactionFormProps {
   date: Date;
   showDatePicker: boolean;
   paymentMethod: "cash" | "card";
-  selectedAccountId: string | null;
-  availableAccounts: AccountDetailsWithId[];
-  isAccountSelectorVisible: boolean;
   recurrence: RecurrenceType;
   isRecurrenceSelectorVisible: boolean;
   onShowRecurrenceSelector: (show: boolean) => void;
@@ -30,9 +24,7 @@ interface TransactionFormProps {
   onRemarksChange: (value: string) => void;
   onDateChange: (date: Date | undefined) => void;
   onPaymentMethodChange: (method: "cash" | "card") => void;
-  onAccountSelect: (accountId: string) => void;
   onShowDatePicker: (show: boolean) => void;
-  onShowAccountSelector: (show: boolean) => void;
   onRecurrenceChange: (recurrence: RecurrenceType) => void;
   onNext: () => void;
   isEdit?: boolean;
@@ -46,15 +38,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   date,
   showDatePicker,
   paymentMethod,
-  selectedAccountId,
-  availableAccounts,
   recurrence = "none",
   onAmountChange,
   onRemarksChange,
   onDateChange,
   onPaymentMethodChange,
   onShowDatePicker,
-  onShowAccountSelector,
   onRecurrenceChange,
   onNext,
   onDelete,
@@ -62,13 +51,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   isRecurrenceSelectorVisible,
   onShowRecurrenceSelector,
 }) => {
-  const getSelectedAccountName = () => {
-    const account = availableAccounts.find(
-      (acc) => acc.id === selectedAccountId,
-    );
-    return account ? account.title : "Sélectionner un compte";
-  };
-
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("fr-FR", {
       day: "2-digit",
@@ -148,29 +130,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             </Text>
           </Button>
         </View>
-      </View>
-
-      <View className="mb-4">
-        <Text className="text-sm text-muted-foreground mb-1">Compte</Text>
-        <TouchableOpacity
-          onPress={() => onShowAccountSelector(true)}
-          className="flex-row items-center justify-between bg-white dark:bg-input  disabled:bg-gray-300 border-none rounded-md p-3 h-12"
-          disabled={availableAccounts.length === 0 || paymentMethod === "cash"}
-        >
-          <Text
-            className={cn(
-              " dark:text-primary-foreground",
-              !selectedAccountId && "text-muted-foreground",
-            )}
-          >
-            {getSelectedAccountName()}
-          </Text>
-          <MaterialIcons
-            name="arrow-drop-down"
-            size={24}
-            color={colors.muted.foreground}
-          />
-        </TouchableOpacity>
       </View>
 
       <View className="mb-4">

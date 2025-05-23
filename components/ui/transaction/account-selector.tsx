@@ -4,12 +4,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Text as UIText } from "~/components/ui/text";
 import { colors } from "~/lib/theme";
 import { BottomModal } from "~/components/ui/custom-modal";
-import type { AccountDetailsWithId } from "~/lib/context/account-context";
 
 interface AccountSelectorProps {
   isVisible: boolean;
   onClose: () => void;
-  accounts: AccountDetailsWithId[];
+  accounts: any[];
   selectedAccountId: string | null;
   onSelect: (accountId: string) => void;
 }
