@@ -5,9 +5,10 @@ export const USER_DATA_KEY = "user_data";
 
 export const saveUserData = async (
   transactions: TransactionsState,
+  monthlyBudget?: number | null,
 ): Promise<void> => {
   try {
-    const serializedData = JSON.stringify({ transactions });
+    const serializedData = JSON.stringify({ transactions, monthlyBudget });
     await AsyncStorage.setItem(USER_DATA_KEY, serializedData);
   } catch (error) {
     console.error("Error saving user data:", error);
@@ -17,6 +18,7 @@ export const saveUserData = async (
 
 export const getUserData = async (): Promise<{
   transactions: TransactionsState;
+  monthlyBudget?: number | null;
 } | null> => {
   try {
     const data = await AsyncStorage.getItem(USER_DATA_KEY);
@@ -31,6 +33,7 @@ export const getUserData = async (): Promise<{
           ? new Date(tx.nextRecurrenceDate)
           : undefined,
       })),
+      monthlyBudget: parsed.monthlyBudget || null,
     };
   } catch (error) {
     console.error("Error getting user data:", error);

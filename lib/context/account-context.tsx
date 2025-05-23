@@ -54,6 +54,8 @@ type AccountContextType = {
   addTransaction: (transaction: Omit<ExpenseData, "id">) => void;
   updateTransaction: (id: string, updatedTransaction: ExpenseData) => void;
   deleteTransaction: (id: string, deleteRecurrenceGroup?: boolean) => void;
+  monthlyBudget: number | null;
+  updateMonthlyBudget: (newBudget: number) => void;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
@@ -219,24 +221,31 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
   ]);
   const [transactions, setTransactions] = useState<TransactionsState>([]);
+  const [monthlyBudget, setMonthlyBudget] = useState<number | null>(null);
 
   // Charger les données du storage au démarrage
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const userData = await getUserData();
-        if (userData && userData.transactions) {
-          // Ensure dates are parsed correctly
-          const loadedTransactions = userData.transactions.map(
-            (t: ExpenseData) => ({
-              ...t,
-              date: new Date(t.date),
-              nextRecurrenceDate: t.nextRecurrenceDate
-                ? new Date(t.nextRecurrenceDate)
-                : undefined,
-            }),
-          );
-          setTransactions(loadedTransactions);
+        if (userData) {
+          if (userData.transactions) {
+            // Ensure dates are parsed correctly
+            const loadedTransactions = userData.transactions.map(
+              (t: ExpenseData) => ({
+                ...t,
+                date: new Date(t.date),
+                nextRecurrenceDate: t.nextRecurrenceDate
+                  ? new Date(t.nextRecurrenceDate)
+                  : undefined,
+              }),
+            );
+            setTransactions(loadedTransactions);
+          }
+
+          if (userData.monthlyBudget !== undefined) {
+            setMonthlyBudget(userData.monthlyBudget);
+          }
         } else {
           // Utiliser les données mock uniquement au premier démarrage
           setTransactions(
@@ -272,6 +281,22 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, []);
 
+  // Sauvegarder les données à chaque modification des transactions ou du budget mensuel
+  useEffect(() => {
+    const saveData = async () => {
+      try {
+        await saveUserData(transactions, monthlyBudget);
+      } catch (error) {
+        console.error(
+          "Erreur lors de la sauvegarde des données utilisateur:",
+          error,
+        );
+      }
+    };
+
+    saveData();
+  }, [transactions, monthlyBudget]);
+
   // Sauvegarder les données à chaque modification des transactions
   useEffect(() => {
     const saveData = async () => {
@@ -300,6 +325,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  const updateMonthlyBudget = useCallback((newBudget: number) => {
+    setMonthlyBudget(newBudget);
+  }, []);
 
   // Fonction pour vérifier et créer les transactions récurrentes
   const checkRecurringTransactions = useCallback(() => {
@@ -785,6 +814,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     addTransaction,
     updateTransaction,
     deleteTransaction,
+    monthlyBudget,
+    updateMonthlyBudget,
   };
 
   return (

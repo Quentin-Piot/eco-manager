@@ -1,5 +1,5 @@
 import { SpendingCard } from "@/components/ui/spending-card";
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
 import { PieChartTouchLayer, PieSlice } from "~/components/charts/category-pie";
@@ -13,6 +13,7 @@ import {
   useAccount,
 } from "~/lib/context/account-context";
 import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
+import { MonthlyBudgetModal } from "@/components/ui/monthly-budget-modal";
 import { endOfMonth, isToday, isWithinInterval, startOfMonth } from "date-fns";
 import { colors } from "~/lib/theme";
 import { Container } from "~/components/ui/container";
@@ -27,6 +28,8 @@ interface SummaryCardProps {
   valueColorClass?: string;
   iconName?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
+  onPress?: () => void;
+  subtitle?: string;
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -36,52 +39,65 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   valueColorClass,
   iconName,
   iconColor,
+  onPress,
+  subtitle,
 }) => {
   const formattedValue = value.toFixed(0).replace(".", ",");
 
   return (
-    <Card className={"flex-1 basis-[48%]"}>
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
-        <View className="flex-row items-center">
-          {iconName && (
-            <Ionicons
-              name={iconName}
-              size={18}
-              color={iconColor || "#6b7280"}
-              className="mr-1"
-            />
-          )}
-          <CardTitle
-            className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </CardTitle>
-        </View>
-      </CardHeader>
-      <CardContent className="pt-0 pb-2">
-        <Text
-          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {title === "Taux d'Épargne"
-            ? `${formattedValue}%`
-            : `${formattedValue} €`}
-        </Text>
-        {todayValue !== undefined && (
+    <TouchableOpacity className={"flex-1 basis-[48%]"} onPress={onPress}>
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
+          <View className="flex-row items-center">
+            {iconName && (
+              <Ionicons
+                name={iconName}
+                size={18}
+                color={iconColor || "#6b7280"}
+                className="mr-1"
+              />
+            )}
+            <CardTitle
+              className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {title}
+            </CardTitle>
+          </View>
+        </CardHeader>
+        <CardContent className="pt-0 pb-2">
           <Text
-            className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+            className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {todayValue >= 0 ? "+" : ""}
-            {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
+            {title === "Taux d'Épargne"
+              ? `${formattedValue}%`
+              : `${formattedValue} €`}
           </Text>
-        )}
-      </CardContent>
-    </Card>
+          {subtitle && (
+            <Text
+              className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {subtitle}
+            </Text>
+          )}
+          {todayValue !== undefined && (
+            <Text
+              className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {todayValue >= 0 ? "+" : ""}
+              {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
+            </Text>
+          )}
+        </CardContent>
+      </Card>
+    </TouchableOpacity>
   );
 };
 
@@ -141,7 +157,8 @@ const NetFlowCard: React.FC<{ monthly: number; today: number }> = ({
 const RemainingBudgetCard: React.FC<{
   monthlyExpenses: number;
   monthlySpendingTarget: number;
-}> = ({ monthlyExpenses, monthlySpendingTarget }) => {
+  onPress?: () => void;
+}> = ({ monthlyExpenses, monthlySpendingTarget, onPress }) => {
   const remaining = monthlySpendingTarget - monthlyExpenses;
   const color = remaining >= 0 ? "#1D7BF2" : "#EF4444";
 
@@ -156,12 +173,20 @@ const RemainingBudgetCard: React.FC<{
       }
       iconName="cash-outline"
       iconColor={color}
+      onPress={onPress}
+      subtitle={`d'un budget total de ${monthlySpendingTarget.toFixed(0)}€`}
     />
   );
 };
 
 export default function DashboardScreen() {
-  const { spendingCategories, transactions, updateBudget } = useAccount();
+  const {
+    spendingCategories,
+    transactions,
+    updateBudget,
+    monthlyBudget,
+    updateMonthlyBudget,
+  } = useAccount();
 
   const [selectedSlice, setSelectedSlice] = useState<PieSlice | null>(null);
   const [isSliceModalVisible, setIsSliceModalVisible] =
@@ -174,7 +199,16 @@ export default function DashboardScreen() {
     currentBudget: number;
   } | null>(null);
 
-  const monthlySpendingTarget = 2500; // Example: User aims to spend no more than 2500€ per month
+  const [isMonthlyBudgetModalVisible, setIsMonthlyBudgetModalVisible] =
+    useState<boolean>(false);
+
+  // Calcul du total des budgets par catégorie
+  const totalCategoryBudgets = useMemo(() => {
+    return spendingCategories.reduce(
+      (total, category) => total + category.budgetAmount,
+      0,
+    );
+  }, [spendingCategories]);
 
   const {
     todayExpenses,
@@ -342,6 +376,10 @@ export default function DashboardScreen() {
     setIsBudgetModalVisible(false);
   };
 
+  const handleSaveMonthlyBudget = (newBudget: number) => {
+    updateMonthlyBudget(newBudget);
+  };
+
   return (
     <MainLayout pageName={"Tableau de bord"}>
       <Container
@@ -350,7 +388,8 @@ export default function DashboardScreen() {
       >
         <RemainingBudgetCard
           monthlyExpenses={monthlyExpenses}
-          monthlySpendingTarget={monthlySpendingTarget}
+          monthlySpendingTarget={monthlyBudget || totalCategoryBudgets}
+          onPress={() => setIsMonthlyBudgetModalVisible(true)}
         />
         <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
         <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
@@ -394,6 +433,13 @@ export default function DashboardScreen() {
         categoryType={selectedCategoryForBudget?.type ?? null}
         currentBudget={selectedCategoryForBudget?.currentBudget ?? null}
         onSave={handleSaveBudget}
+      />
+      <MonthlyBudgetModal
+        isVisible={isMonthlyBudgetModalVisible}
+        onClose={() => setIsMonthlyBudgetModalVisible(false)}
+        currentBudget={monthlyBudget}
+        onSave={handleSaveMonthlyBudget}
+        totalCategoryBudgets={totalCategoryBudgets}
       />
     </MainLayout>
   );

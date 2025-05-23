@@ -1,6 +1,6 @@
 import MainLayout from "~/components/layouts/main-layout";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons"; // Keep Ionicons for iOS style
+import { MaterialIcons } from "@expo/vector-icons";
 import { Card } from "~/components/ui/card";
 import React, { useMemo, useState } from "react";
 import AddExpenseModal from "~/components/ui/add-expense-modal";
