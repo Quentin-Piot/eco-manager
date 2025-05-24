@@ -18,7 +18,7 @@ function MainLayout({
           ? "pb-24"
           : Platform.OS === "web"
             ? "mb-8"
-            : "pb-24", // Adjust padding for iOS
+            : "pb-10", // Adjust padding for iOS
       )}
     >
       <ScrollView

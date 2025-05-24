@@ -84,7 +84,7 @@ export default function DetailsScreen() {
         </TouchableOpacity>
       }
     >
-      <Container title={"Historique des transactions"}>
+      <Container>
         {Object.entries(groupedTransactions).map(([dateGroup, items]) => (
           <View key={dateGroup} className="mb-4">
             <View className={"flex-row items-center justify-between mb-2 px-1"}>
@@ -110,7 +110,7 @@ export default function DetailsScreen() {
                 €
               </Text>
             </View>
-            <Card className="px-0 py-0">
+            <Card className="px-0 py-0 bg-white">
               {items.map((item) => (
                 <TransactionItem key={item.id} item={item} />
               ))}

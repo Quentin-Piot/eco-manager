@@ -148,7 +148,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <Text className="text-sm text-muted-foreground mb-1">Date</Text>
         <TouchableOpacity
           onPress={() => onShowDatePicker(true)}
-          className="flex-row bg-white items-center  dark:bg-input  rounded-md p-3 h-12"
+          className="flex-row bg-gray-50 items-center  dark:bg-input  rounded-md p-3 h-12 border border-input"
         >
           <MaterialIcons
             name="calendar-today"
@@ -172,7 +172,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <Text className="text-sm text-muted-foreground mb-1">Récurrence</Text>
         <TouchableOpacity
           onPress={() => onShowRecurrenceSelector(true)}
-          className="flex-row items-center justify-between bg-white dark:bg-input rounded-md p-3 h-12"
+          className="flex-row items-center justify-between bg-gray-50 dark:bg-input rounded-md p-3 h-12 border border-input"
         >
           <Text className="dark:text-primary-foreground">
             {recurrence === "none"
@@ -209,11 +209,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           </Button>
         )}
 
-        <Button
-          onPress={onNext}
-          disabled={!amount || !selectedAccountId}
-          className={"flex-1"}
-        >
+        <Button onPress={onNext} disabled={!amount} className={"flex-1"}>
           <Text className="text-primary-foreground">Suivant</Text>
         </Button>
       </View>

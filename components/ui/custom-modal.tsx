@@ -109,7 +109,7 @@ export const BottomModal: React.FC<BottomModalProps> = ({
               >
                 <View
                   className={cn(
-                    "bg-white dark:bg-primary-darker rounded-3xl p-6 pt-6",
+                    "bg-white dark:bg-primary-darker rounded-3xl rounded-b-none p-6 pt-6",
                     className,
                   )}
                   {...rest}

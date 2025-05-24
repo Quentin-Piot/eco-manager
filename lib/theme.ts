@@ -2,6 +2,8 @@ export const colors = {
   border: "#7FB3D5",
   input: "#81aecc",
   ring: "#4382ac",
+  success: "#489e4c",
+  error: "#D32F2F",
   background: {
     DEFAULT: "#fbfbfb",
     dark: "#17202A",

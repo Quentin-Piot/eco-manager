@@ -41,6 +41,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
         <BlurView
           intensity={isDark ? glass.dark.blur - 5 : glass.light.blur - 5}
           tint={isDark ? "dark" : "light"}
+          experimentalBlurMethod={"dimezisBlurView"}
           className="overflow-hidden rounded-xl border-[0.5px] border-gray-200/30 dark:border-muted-darker/30"
         >
           <Button
@@ -63,6 +64,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
         <BlurView
           intensity={isDark ? glass.dark.blur - 5 : glass.light.blur - 5}
           tint={isDark ? "dark" : "light"}
+          experimentalBlurMethod={"dimezisBlurView"}
           className="overflow-hidden rounded-xl border-[0.5px] border-gray-200/30 dark:border-muted-darker/30 mt-2"
         >
           <Button

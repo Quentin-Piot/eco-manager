@@ -12,12 +12,13 @@ const Card = React.forwardRef<ViewRef, ViewProps>(
         className={cn(
           "overflow-hidden bg-white",
           "border-[0.7px] border-neutral-200/50 dark:border-neutral-800/50",
+          "p-4",
           className,
         )}
       >
         <View
           ref={ref}
-          className={cn("p-4", "bg-white/80 dark:bg-neutral-900/80")}
+          className={cn("bg-white/80 dark:bg-neutral-900/80")}
           {...props}
         />
       </View>
