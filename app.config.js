@@ -20,7 +20,7 @@ export default {
     splash: {
       image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
-      backgroundColor: "#113826",
+      backgroundColor: "#ffffff",
     },
     ios: {
       supportsTablet: true,
@@ -43,7 +43,7 @@ export default {
         width: "device-width",
         initialScale: 1,
         maximumScale: 1,
-        userScalable: false
+        userScalable: false,
       },
     },
     plugins: ["expo-router", "expo-asset"],

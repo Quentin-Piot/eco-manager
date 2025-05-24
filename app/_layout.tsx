@@ -22,6 +22,7 @@ import { WebAlert } from "~/components/ui/web-alert";
 import { WebContainer } from "~/components/ui/web-container";
 import { AccountProvider } from "~/lib/context/account-context";
 import { BackgroundProvider } from "~/lib/context/background";
+import { IndicatorColorsProvider } from "~/lib/context/indicator-colors-context";
 
 // Import des styles spécifiques pour la version web
 if (Platform.OS === "web") {
@@ -62,15 +63,17 @@ export default function RootLayout() {
       <WebContainer>
         <BackgroundProvider>
           <AccountProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="auto" />
+            <IndicatorColorsProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="auto" />
 
-            <PortalHost />
-            <Toast config={toastConfig} />
-            <WebAlert />
+              <PortalHost />
+              <Toast config={toastConfig} />
+              <WebAlert />
+            </IndicatorColorsProvider>
           </AccountProvider>
         </BackgroundProvider>
       </WebContainer>

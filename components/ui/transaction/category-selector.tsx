@@ -10,6 +10,7 @@ import {
   subcategoryDetailsMap,
 } from "~/lib/types/categories";
 import { colors } from "~/lib/theme";
+import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
 
 interface CategorySelectorProps {
   type: "main" | "sub";
@@ -34,6 +35,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   onNext,
   isEdit = false,
 }) => {
+  const { getColorForCategory } = useIndicatorColors();
   if (type === "main") {
     return (
       <>
@@ -64,10 +66,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
                   style={[
                     styles.categoryIconContainer,
                     {
-                      backgroundColor:
-                        colors.categories[
-                          key as keyof typeof colors.categories
-                        ] || colors.muted.DEFAULT,
+                      backgroundColor: getColorForCategory(key),
                     },
                   ]}
                 >
@@ -132,9 +131,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
               style={[
                 styles.categoryIconContainer,
                 {
-                  backgroundColor:
-                    colors.categories[selectedMainCategory as MainCategory] ||
-                    colors.muted.DEFAULT,
+                  backgroundColor: getColorForCategory(selectedMainCategory),
                 },
               ]}
             >

@@ -98,8 +98,17 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
   };
 
   const resetForm = () => {
-    setStep(1);
     onClose();
+    setStep(1);
+    setAmount("");
+    setRemarks("");
+    setDate(new Date());
+    setPaymentMethod("card");
+    setSelectedMainCategory(null);
+    setSelectedSubcategory(null);
+    setRecurrence("none");
+    setIsRecurrenceSelectorVisible(false);
+    setShowDeleteOptions(false);
   };
 
   const onDateChange = (selectedDate: Date | undefined) => {

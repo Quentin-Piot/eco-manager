@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Path, Svg } from "react-native-svg";
-import { Category, categoryDetailsMap } from "~/lib/types/categories"; // Import categoryDetailsMap
+import { categoryDetailsMap, MainCategory } from "~/lib/types/categories";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const CHART_SIZE = 180;
@@ -49,7 +49,7 @@ export type PieSlice = {
   value: number;
   color: string;
   percentage: number;
-  type: Category;
+  type: MainCategory;
 };
 type PieChartTouchLayerProps = {
   data: PieSlice[];
@@ -58,8 +58,6 @@ type PieChartTouchLayerProps = {
   selectedSlice: PieSlice | undefined;
 };
 
-// Le mapping typeToIconNameMap n'est peut-être plus nécessaire si categoryDetailsMap est suffisant,
-// mais gardons-le si vous l'utilisez ailleurs.
 const typeToIconNameMap = {
   transport: "flight",
   shopping: "shopping-cart",
@@ -89,7 +87,6 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
       const x2 = center + radius * Math.cos(endAngleRad);
       const y2 = center + radius * Math.sin(endAngleRad);
       const largeArcFlag = sliceAngle > 180 ? 1 : 0;
-      // Le chemin est toujours calculé par rapport au centre (size/2, size/2) du SVG
       return `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
     };
 
@@ -99,29 +96,25 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
       const midAngle = startAngle + sliceAngle / 2;
       const midAngleRad = (midAngle * Math.PI) / 180;
 
-      // Calcul de la position de l'icône
-      // Position relative au coin supérieur gauche du conteneur (0,0)
-      const iconDistanceFromCenter = radius - ICON_MARGIN; // Distance depuis le centre du cercle
+      const iconDistanceFromCenter = radius - ICON_MARGIN;
       const iconX =
         center +
         iconDistanceFromCenter * Math.cos(midAngleRad) -
-        ICON_WIDTH / 2; // Position X dans le conteneur
+        ICON_WIDTH / 2;
       const iconY =
         center +
         iconDistanceFromCenter * Math.sin(midAngleRad) -
-        ICON_WIDTH / 2; // Position Y dans le conteneur
+        ICON_WIDTH / 2;
       startAngle += sliceAngle;
 
-      // Récupérer le nom de l'icône
       const iconName =
-        categoryDetailsMap[slice.type]?.iconName || "help-outline"; // Icône par défaut
+        categoryDetailsMap[slice.type]?.iconName || "help-outline";
 
       return { ...slice, pathData, iconX, iconY, iconName };
     });
-  }, [data, size]); // Les dépendances sont correctes
+  }, [data, size]);
 
   return (
-    // Le conteneur parent qui positionne et dimensionne l'ensemble
     <View
       style={[
         styles.chartContainer,
@@ -138,13 +131,11 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
         style={{ position: "absolute", top: 0, left: 0 }}
       >
         {slicesWithData.map((slice, index) => (
-          // Chaque part est un élément Path à l'intérieur de l'SVG
           <Path
-            key={`path-${index}`} // Clé unique pour chaque Path
+            key={`path-${index}`}
             d={slice.pathData}
             opacity={selectedSlice?.label === slice.label ? 0.5 : 1}
             fill={slice.color}
-            // La détection du toucher peut rester sur le Path si c'est suffisant
             onPress={() => {
               onSlicePress(slice);
             }}

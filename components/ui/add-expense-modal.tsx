@@ -98,10 +98,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       nextRecurrenceDate,
     };
     addTransaction(transactionData);
-    resetForm();
   };
 
   const resetForm = () => {
+    onClose();
     setStep(0);
     setTransactionType("expense");
     setAmount("");
@@ -110,9 +110,13 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setPaymentMethod("cash");
     setSelectedMainCategory(null);
     setSelectedSubcategory(null);
-
     setRecurrence("none");
+    setIsRecurrenceSelectorVisible(false);
+  };
+
+  const handleClose = () => {
     onClose();
+    resetForm();
   };
 
   const onDateChange = (selectedDate: Date | undefined) => {
@@ -191,7 +195,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   );
 
   return (
-    <BottomModal visible={isVisible} onRequestClose={onClose}>
+    <BottomModal visible={isVisible} onRequestClose={handleClose}>
       {step === 0 && renderTransactionTypeSelector()}
       {step === 1 && (
         <TransactionForm

@@ -14,7 +14,13 @@ export type HomeSubcategory =
   | "bills"
   | "medical"
   | "other";
-export type TransportSubcategory = "public" | "train" | "other";
+// Ajout de 'plane' et 'car'
+export type TransportSubcategory =
+  | "public"
+  | "train"
+  | "plane"
+  | "car"
+  | "other";
 export type ShoppingSubcategory =
   | "food"
   | "clothing"
@@ -164,6 +170,22 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     label: "Train",
     type: "expense",
     iconName: "train",
+    mainCategory: "transport",
+  },
+  // Ajout de 'plane'
+  "transport.plane": {
+    name: "plane",
+    label: "Avion",
+    type: "expense",
+    iconName: "flight",
+    mainCategory: "transport",
+  },
+  // Ajout de 'car'
+  "transport.car": {
+    name: "car",
+    label: "Voiture",
+    type: "expense",
+    iconName: "directions-car", // ou un autre icône de voiture
     mainCategory: "transport",
   },
   "transport.other": {
@@ -327,6 +349,10 @@ export function getCategoryDetails(
   return subcategoryDetailsMap[key];
 }
 
+// Cette carte semble être utilisée pour d'autres besoins (ex: affichage UI)
+// et mélange main categories et subcategories spécifiques.
+// Je n'ai pas ajouté 'plane'/'car' ici car leur structure est définie
+// dans les types et subcategoryDetailsMap.
 export const categoryDetailsMap: Record<string, CategoryDetails> = {
   shopping: {
     ...mainCategoryDetailsMap.shopping,
@@ -403,6 +429,8 @@ export const categoryDetailsMap: Record<string, CategoryDetails> = {
     name: "transport",
   },
   flights: {
+    // Note: ceci fait référence au transport des vacances,
+    // mais pourrait potentiellement être lié à 'transport.plane' si nécessaire.
     ...subcategoryDetailsMap["vacation.transport"],
     name: "flights",
   },

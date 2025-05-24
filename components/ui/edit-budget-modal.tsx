@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Button } from "./button";
-import { Text } from "~/components/ui/text"; // Importer le composant Text personnalisé
+import { Text } from "~/components/ui/text";
 import {
   categoryDetailsMap,
   MainExpenseCategory,
 } from "~/lib/types/categories";
 import { BottomModal } from "~/components/ui/custom-modal";
-import { Input } from "~/components/ui/input"; // Importer cn si nécessaire pour combiner les classes
+import { Input } from "~/components/ui/input";
 
 interface EditBudgetModalProps {
   isVisible: boolean;
@@ -27,12 +27,10 @@ export function EditBudgetModal({
   const [newBudgetInput, setNewBudgetInput] = useState<string>("");
 
   useEffect(() => {
-    // Pré-remplir l'input avec le budget actuel lorsque le modal s'ouvre
     if (isVisible && currentBudget) {
-      // Extraire seulement le nombre
       setNewBudgetInput(currentBudget.toString());
     } else {
-      setNewBudgetInput(""); // Réinitialiser si pas visible ou pas de budget
+      setNewBudgetInput("");
     }
   }, [isVisible, currentBudget]);
 
@@ -40,9 +38,8 @@ export function EditBudgetModal({
     const budgetValue = parseFloat(newBudgetInput);
     if (categoryType && !isNaN(budgetValue) && budgetValue >= 0) {
       onSave(categoryType, budgetValue);
-      onClose(); // Fermer le modal après sauvegarde
+      onClose();
     }
-    // Ajouter une gestion d'erreur si l'input n'est pas valide
   };
 
   if (categoryType === null) return null;
@@ -62,7 +59,6 @@ export function EditBudgetModal({
         className={"mb-4"}
       />
 
-      {/* Conteneur des boutons avec Tailwind */}
       <View className="flex-row justify-between w-full space-x-3">
         <Button variant="outline" onPress={onClose} className="flex-1">
           <Text className="text-foreground dark:text-primary-foreground">
@@ -76,5 +72,3 @@ export function EditBudgetModal({
     </BottomModal>
   );
 }
-
-// StyleSheet.create est supprimé car les styles sont maintenant gérés par Tailwind

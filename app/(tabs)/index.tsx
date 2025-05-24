@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
 
 interface SummaryCardProps {
   title: string;
@@ -264,6 +265,8 @@ export default function DashboardScreen() {
     updateMonthlyBudget,
   } = useAccount();
 
+  const { getColorForCategory } = useIndicatorColors();
+
   const [selectedSlice, setSelectedSlice] = useState<PieSlice | null>(null);
   const [isSliceModalVisible, setIsSliceModalVisible] =
     useState<boolean>(false);
@@ -374,12 +377,12 @@ export default function DashboardScreen() {
         return {
           label: mainCategoryDetailsMap[category].label,
           value: amount,
-          color: colors.categories[category] || "#cccccc",
+          color: getColorForCategory(category),
           percentage: percentage,
           type: category,
         };
       });
-  }, [transactions]);
+  }, [getColorForCategory, transactions]);
 
   const spendingCategoriesWithValue: SpendingCategoryWithValue[] =
     useMemo(() => {

@@ -5,6 +5,7 @@ import {
   Modal,
   ModalProps,
   NativeSyntheticEvent,
+  Platform,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -14,6 +15,7 @@ import { Card } from "~/components/ui/card";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { useBackground } from "~/lib/context/background";
+import { Text } from "~/components/ui/text";
 
 type CustomModalProps = ModalProps & {
   noCloseButton?: boolean;
@@ -52,7 +54,13 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         presentationStyle="overFullScreen"
         {...props}
       >
-        {children}
+        {Platform.OS === "web" ? (
+          <View className="flex-1 mx-auto max-w-[500px] w-full">
+            {children}
+          </View>
+        ) : (
+          children
+        )}
       </Modal>
     </View>
   );
@@ -61,6 +69,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 type BottomModalProps = CustomModalProps & {
   closeOnClickOutside?: boolean;
   onRequestClose?: () => void;
+  title?: string;
 };
 
 export const BottomModal: React.FC<BottomModalProps> = ({
@@ -68,6 +77,7 @@ export const BottomModal: React.FC<BottomModalProps> = ({
   closeOnClickOutside = true,
   onRequestClose,
   visible,
+  title,
   ...props
 }) => {
   const { className, ...rest } = props;
@@ -119,6 +129,16 @@ export const BottomModal: React.FC<BottomModalProps> = ({
                       "h-[6px] bg-neutral-900/30 w-16 rounded-xl mx-auto mb-4 "
                     }
                   ></View>
+                  {title && (
+                    <View className="flex-row justify-between items-center mb-6">
+                      <Text className="text-2xl font-bold text-primary">
+                        {title}
+                      </Text>
+                      <TouchableOpacity onPress={onRequestClose}>
+                        <Ionicons name="close" size={24} color="gray" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
                   {children}
                 </View>
               </TouchableWithoutFeedback>
@@ -133,6 +153,21 @@ export const BottomModal: React.FC<BottomModalProps> = ({
               )}
               {...rest}
             >
+              <View
+                className={
+                  "h-[6px] bg-neutral-900/30 w-16 rounded-xl mx-auto mb-4 "
+                }
+              ></View>
+              {title && (
+                <View className="flex-row justify-between items-center mb-6">
+                  <Text className="text-2xl font-bold text-primary">
+                    {title}
+                  </Text>
+                  <TouchableOpacity onPress={onRequestClose}>
+                    <Ionicons name="close" size={24} color="gray" />
+                  </TouchableOpacity>
+                </View>
+              )}
               {children}
             </View>
           </View>

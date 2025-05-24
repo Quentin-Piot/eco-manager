@@ -204,8 +204,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     SpendingCategory[]
   >([
     {
-      type: "housing",
-      budgetAmount: 900,
+      type: "transport",
+      budgetAmount: 250,
     },
     {
       type: "vacation",

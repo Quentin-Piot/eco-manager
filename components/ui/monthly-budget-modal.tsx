@@ -32,15 +32,18 @@ export function MonthlyBudgetModal({
           ? currentBudget.toString()
           : Math.ceil(totalCategoryBudgets * 1.1).toString();
       setNewBudgetInput(initialValue);
-      setError(null);
+      setError(null); // Initialise l'erreur lors de l'ouverture
     } else {
       setNewBudgetInput("");
-      setError(null);
+      setError(null); // Réinitialise l'erreur lors de la fermeture
     }
   }, [isVisible, currentBudget, totalCategoryBudgets]);
 
   const handleSave = () => {
     const budgetValue = parseFloat(newBudgetInput.replace(",", "."));
+    // Réinitialiser l'erreur avant de valider pour ne montrer l'erreur que si la validation échoue maintenant
+    +setError(null);
+
     if (isNaN(budgetValue) || budgetValue <= 0) {
       setError("Veuillez entrer un montant valide supérieur à 0.");
       return;
@@ -104,8 +107,10 @@ export function MonthlyBudgetModal({
 
       <Input
         onChangeText={(text) => {
+          // Ne met à jour que le texte de l'input
           setNewBudgetInput(text);
-          setError(null);
+          // L'erreur sera gérée lors du clic sur sauvegarder
+          // setError(null); <-- Supprimez cette ligne
         }}
         value={newBudgetInput}
         placeholder={`Budget mensuel (€) - Minimum ${totalCategoryBudgets}€`}
