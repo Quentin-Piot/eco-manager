@@ -40,9 +40,9 @@ const styles = StyleSheet.create({
   },
   appContainer: {
     width: "100%",
-    maxWidth: 500,
+    maxWidth: 450,
     height: "100%",
-    maxHeight: "100vh" as any,
+    maxHeight: "95vh" as any,
     overflow: "hidden",
     borderRadius: 0,
     boxShadow: "0 0 20px rgba(0, 0, 0, 0.1)",

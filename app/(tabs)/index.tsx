@@ -308,7 +308,7 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
   );
   return (
     <>
-      <View className="flex-row w-[12rem] mb-6 bg-card dark:bg-primary-darker rounded-full overflow-hidden border border-border dark:border-primary-dark">
+      <View className="flex-row w-[13rem] mb-6 bg-card dark:bg-primary-darker rounded-full overflow-hidden border border-border dark:border-primary-dark">
         <TouchableOpacity
           onPress={() => setViewType("distribution")}
           className={`px-3 py-1 ${viewType === "distribution" ? "bg-primary" : ""}`}
