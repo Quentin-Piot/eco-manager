@@ -1,5 +1,5 @@
 import { SpendingCard } from "@/components/ui/spending-card";
-import { View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
 import PieChart, {
@@ -25,6 +25,8 @@ import {
   NetFlowCard,
   RemainingBudgetCard,
 } from "~/components/pages/dashboard/summary";
+import { Text } from "~/components/ui/text";
+import { cn } from "~/lib/utils";
 
 export default function DashboardScreen() {
   const {
@@ -247,13 +249,11 @@ export default function DashboardScreen() {
       {chartData.length > 1 && (
         <Container title={"Aperçu des Dépenses Mensuelles"}>
           <Card>
-            <CardContent>
-              <Chart
-                data={chartData}
-                onSlicePress={handleSlicePress}
-                selectedSlice={selectedSlice ?? undefined}
-              />
-            </CardContent>
+            <Chart
+              data={chartData}
+              onSlicePress={handleSlicePress}
+              selectedSlice={selectedSlice ?? undefined}
+            />
           </Card>
         </Container>
       )}
@@ -303,21 +303,60 @@ type ChartProps = {
 };
 
 const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
+  const [viewType, setViewType] = useState<"distribution" | "evolution">(
+    "distribution",
+  );
   return (
-    <View
-      style={{
-        height: 200,
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <PieChartTouchLayer
-        data={data}
-        onSlicePress={onSlicePress}
-        selectedSlice={selectedSlice}
-      />
-      <PieChart data={data} />
-    </View>
+    <>
+      <View className="flex-row w-[12rem] mb-6 bg-card dark:bg-primary-darker rounded-full overflow-hidden border border-border dark:border-primary-dark">
+        <TouchableOpacity
+          onPress={() => setViewType("distribution")}
+          className={`px-3 py-1 ${viewType === "distribution" ? "bg-primary" : ""}`}
+        >
+          <Text
+            className={cn(
+              "font-semibold text-center",
+              viewType === "distribution"
+                ? "text-primary-foreground dark:text-primary-foreground text-sm"
+                : "text-muted-foreground text-sm",
+            )}
+          >
+            Répartition
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setViewType("evolution")}
+          className={`px-3 py-1 flex-1  ${viewType === "evolution" ? "bg-primary" : ""}`}
+        >
+          <Text
+            className={cn(
+              "font-semibold text-center",
+              viewType === "evolution"
+                ? "text-primary-foreground dark:text-primary-foreground text-sm"
+                : "text-muted-foreground text-sm",
+            )}
+          >
+            Évolution
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <CardContent>
+        <View
+          style={{
+            height: 200,
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <PieChartTouchLayer
+            data={data}
+            onSlicePress={onSlicePress}
+            selectedSlice={selectedSlice}
+          />
+          <PieChart data={data} />
+        </View>
+      </CardContent>
+    </>
   );
 };

@@ -24,6 +24,13 @@ export function MonthlyBudgetModal({
   const [newBudgetInput, setNewBudgetInput] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
+  const totalCategoryBudgets = useMemo(() => {
+    return spendingCategories.reduce(
+      (total, category) => total + category.budgetAmount,
+      0,
+    );
+  }, [spendingCategories]);
+
   useEffect(() => {
     const reset = () => {
       setError(null);
@@ -37,7 +44,7 @@ export function MonthlyBudgetModal({
     if (isVisible) {
       reset();
     }
-  }, [currentBudget, isVisible]);
+  }, [currentBudget, isVisible, totalCategoryBudgets]);
 
   const handleSave = () => {
     const budgetValue = parseFloat(newBudgetInput.replace(",", "."));
@@ -59,13 +66,6 @@ export function MonthlyBudgetModal({
     onClose();
   };
 
-  const totalCategoryBudgets = useMemo(() => {
-    return spendingCategories.reduce(
-      (total, category) => total + category.budgetAmount,
-      0,
-    );
-  }, [spendingCategories]);
-
   return (
     <BottomModal visible={isVisible} onRequestClose={onClose}>
       <Text className="text-lg font-semibold mb-1 text-foreground dark:text-primary-foreground">
@@ -76,22 +76,23 @@ export function MonthlyBudgetModal({
 
       <View className=" mt-4 mb-6 p-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
         <Text className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-          Détail des budgets par catégorie :
+          Budgets par catégorie :
         </Text>
-        {/* Mapper ici si vous avez des données dynamiques */}
-        {spendingCategories.map((cat, index) => (
-          <View key={index} className="flex-row justify-between mb-1">
-            <Text className="text-sm text-neutral-600 dark:text-neutral-400">
-              - {categoryDetailsMap[cat.type].label}
-            </Text>
-            <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              {cat.budgetAmount}€
-            </Text>
-          </View>
-        ))}
+        {spendingCategories
+          .sort((a, b) => a.type.charCodeAt(0) - b.type.charCodeAt(0))
+          .map((cat, index) => (
+            <View key={index} className="flex-row justify-between mb-1 pl-4">
+              <Text className="text-sm text-neutral-600 dark:text-neutral-400 font-semibold">
+                {categoryDetailsMap[cat.type].label}
+              </Text>
+              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {cat.budgetAmount}€
+              </Text>
+            </View>
+          ))}
         <View className="flex-row justify-between mt-2 pt-2 border-t border-neutral-300 dark:border-neutral-600">
           <Text className="text-sm font-bold text-neutral-700 dark:text-neutral-300">
-            Total catégories
+            Total des budgets de catégories
           </Text>
           <Text className="text-sm font-bold text-neutral-700 dark:text-neutral-300">
             {totalCategoryBudgets}€

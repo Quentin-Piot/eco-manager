@@ -11,7 +11,7 @@ export default {
     },
     name: process.env.CUSTOM_APP_NAME || "Eco Manager",
     slug: "eco-manager",
-    version: "1.0.0",
+    version: "0.0.2",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "myapp",

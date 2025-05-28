@@ -14,7 +14,7 @@ import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
 
 interface CategorySelectorProps {
   type: "main" | "sub";
-  transactionType: "expense" | "income";
+  transactionType: "expense" | "income" | null;
   selectedMainCategory: MainCategory | null;
   selectedSubcategory: Subcategory | null;
   onSelectMainCategory?: (category: MainCategory) => void;

@@ -115,18 +115,18 @@ export const mainCategoryDetailsMap: Record<MainCategory, CategoryDetails> = {
 };
 
 export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
+  "housing.groceries": {
+    name: "groceries",
+    label: "Courses",
+    type: "expense",
+    iconName: "shopping-cart",
+    mainCategory: "housing",
+  },
   "housing.rent": {
     name: "rent",
     label: "Loyer",
     type: "expense",
     iconName: "house",
-    mainCategory: "housing",
-  },
-  "housing.insurance": {
-    name: "insurance",
-    label: "Assurance",
-    type: "expense",
-    iconName: "security",
     mainCategory: "housing",
   },
   "housing.subscriptions": {
@@ -193,21 +193,6 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     iconName: "more-horiz",
     mainCategory: "transport",
   },
-
-  "shopping.food": {
-    name: "food",
-    label: "Restaurants",
-    type: "expense",
-    iconName: "restaurant",
-    mainCategory: "shopping",
-  },
-  "shopping.drinks": {
-    name: "drinks",
-    label: "Verres",
-    type: "expense",
-    iconName: "nightlife",
-    mainCategory: "shopping",
-  },
   "shopping.clothing": {
     name: "clothing",
     label: "Vêtements",
@@ -262,7 +247,7 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     name: "sport",
     label: "Sport",
     type: "expense",
-    iconName: "sports",
+    iconName: "sports-basketball",
     mainCategory: "activities",
   },
   "activities.other": {
@@ -300,13 +285,6 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     type: "expense",
     iconName: "restaurant",
     mainCategory: "vacation",
-  },
-  "housing.groceries": {
-    name: "groceries",
-    label: "Courses",
-    type: "expense",
-    iconName: "shopping-cart",
-    mainCategory: "housing",
   },
   "vacation.other": {
     name: "other",

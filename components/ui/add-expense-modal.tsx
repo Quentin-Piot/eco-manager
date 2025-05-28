@@ -10,7 +10,6 @@ import { Text } from "~/components/ui/text";
 import { cn, parseAmount } from "~/lib/utils";
 import { colors } from "~/lib/theme";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Button } from "~/components/ui/button";
 
 interface AddExpenseModalProps {
   isVisible: boolean;
@@ -23,9 +22,9 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 }) => {
   const { addTransaction } = useAccount();
   const [step, setStep] = useState(0);
-  const [transactionType, setTransactionType] = useState<"expense" | "income">(
-    "expense",
-  );
+  const [transactionType, setTransactionType] = useState<
+    "expense" | "income" | null
+  >(null);
   const [amount, setAmount] = useState("");
   const [remarks, setRemarks] = useState("");
   const [date, setDate] = useState(new Date());
@@ -79,7 +78,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   };
 
   const handleSubmit = () => {
-    if (!amount || !selectedMainCategory || !selectedSubcategory) {
+    if (
+      !amount ||
+      !selectedMainCategory ||
+      !selectedSubcategory ||
+      !transactionType
+    ) {
       return;
     }
 
@@ -104,7 +108,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const resetForm = () => {
     onClose();
     setStep(0);
-    setTransactionType("expense");
+    setTransactionType(null);
     setAmount("");
     setRemarks("");
     setDate(new Date());
@@ -135,7 +139,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       </Text>
       <View className="flex-row gap-4 mb-6">
         <TouchableOpacity
-          onPress={() => setTransactionType("expense")}
+          onPress={() => {
+            setTransactionType("expense");
+            handleNextStep();
+          }}
           className={cn(
             "flex-1 p-4 rounded-lg border items-center",
             transactionType === "expense"
@@ -162,7 +169,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => setTransactionType("income")}
+          onPress={() => {
+            setTransactionType("income");
+            handleNextStep();
+          }}
           className={cn(
             "flex-1 p-4 rounded-lg border items-center",
             transactionType === "income"
@@ -188,10 +198,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           </Text>
         </TouchableOpacity>
       </View>
-
-      <Button onPress={handleNextStep}>
-        <Text className="text-primary-foreground">Suivant</Text>
-      </Button>
     </>
   );
 

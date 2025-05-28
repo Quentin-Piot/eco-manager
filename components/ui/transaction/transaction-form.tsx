@@ -11,7 +11,7 @@ import { RecurrenceType } from "~/lib/context/account-context";
 import { RecurrenceSelector } from "~/components/ui/transaction/recurrence-selector";
 
 interface TransactionFormProps {
-  transactionType: "expense" | "income";
+  transactionType: "expense" | "income" | null;
   amount: string;
   remarks: string;
   date: Date;

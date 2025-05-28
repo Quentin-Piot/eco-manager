@@ -35,7 +35,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
     <TouchableOpacity className={"flex-1 basis-[48%]"} onPress={onPress}>
       <Card className={"relative"}>
         <MaterialIcons
-          className={"absolute right-3 top-3"}
+          className={"absolute right-1 top-1"}
           size={12}
           name="edit"
           color={colors.muted.foreground}

@@ -17,9 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useBackground } from "~/lib/context/background";
 import { Text } from "~/components/ui/text";
 
-type CustomModalProps = ModalProps & {
-  noCloseButton?: boolean;
-};
+type CustomModalProps = ModalProps;
 
 export const CustomModal: React.FC<CustomModalProps> = ({
   children,
@@ -168,7 +166,6 @@ const { width, height } = Dimensions.get("window");
 export const FullHeightModal = ({
   children,
   onRequestClose,
-  noCloseButton = false,
   ...props
 }: CustomModalProps) => {
   return (
@@ -192,14 +189,6 @@ export const FullHeightModal = ({
           experimentalBlurMethod={"dimezisBlurView"}
         />
         <View className="bg-primary-light dark:bg-primary-darker rounded-t-3xl h-[85%] p-6 relative">
-          {!noCloseButton && (
-            <TouchableOpacity
-              onPress={onRequestClose}
-              className="absolute right-6 top-6"
-            >
-              <Ionicons name="close" size={24} color="gray" />
-            </TouchableOpacity>
-          )}
           {children}
         </View>
       </View>
@@ -210,7 +199,6 @@ export const FullHeightModal = ({
 export const FullScreenModal = ({
   children,
   onRequestClose,
-  noCloseButton = false,
   cardClassname,
   ...props
 }: CustomModalProps & { cardClassname?: string }) => {
@@ -246,14 +234,6 @@ export const FullScreenModal = ({
             cardClassname,
           )}
         >
-          {!noCloseButton && (
-            <TouchableOpacity
-              onPress={onClose}
-              className={"absolute right-8 top-8"}
-            >
-              <Ionicons name="close" size={24} color="gray" />
-            </TouchableOpacity>
-          )}
           {children}
         </Card>
       </View>
