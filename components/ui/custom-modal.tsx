@@ -88,24 +88,10 @@ export const BottomModal: React.FC<BottomModalProps> = ({
     }
   };
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      setIsModalOpen(true);
-    }
-  }, [visible, setIsModalOpen]);
-
-  useEffect(() => {
-    if (!visible) {
-      setTimeout(() => setIsModalOpen(false), 0);
-    }
-  }, [visible, setIsModalOpen]);
-
   return (
     <CustomModal
       {...rest}
-      visible={isModalOpen}
+      visible={visible}
       onRequestClose={handleOnRequestClose}
     >
       <View className="flex-1 justify-end">

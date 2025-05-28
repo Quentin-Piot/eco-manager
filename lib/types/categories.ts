@@ -98,7 +98,7 @@ export const mainCategoryDetailsMap: Record<MainCategory, CategoryDetails> = {
     name: "activities",
     label: "Activités",
     type: "expense",
-    iconName: "directions-run",
+    iconName: "restaurant",
   },
   vacation: {
     name: "vacation",
@@ -159,7 +159,7 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
   },
 
   "transport.public": {
-    name: "public transport",
+    name: "public",
     label: "Transport public",
     type: "expense",
     iconName: "directions-bus",
@@ -172,7 +172,6 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     iconName: "train",
     mainCategory: "transport",
   },
-  // Ajout de 'plane'
   "transport.plane": {
     name: "plane",
     label: "Avion",
@@ -180,12 +179,11 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     iconName: "flight",
     mainCategory: "transport",
   },
-  // Ajout de 'car'
   "transport.car": {
     name: "car",
     label: "Voiture",
     type: "expense",
-    iconName: "directions-car", // ou un autre icône de voiture
+    iconName: "directions-car",
     mainCategory: "transport",
   },
   "transport.other": {
@@ -198,9 +196,16 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
 
   "shopping.food": {
     name: "food",
-    label: "Alimentation",
+    label: "Restaurants",
     type: "expense",
     iconName: "restaurant",
+    mainCategory: "shopping",
+  },
+  "shopping.drinks": {
+    name: "drinks",
+    label: "Verres",
+    type: "expense",
+    iconName: "nightlife",
     mainCategory: "shopping",
   },
   "shopping.clothing": {
@@ -296,12 +301,12 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     iconName: "restaurant",
     mainCategory: "vacation",
   },
-  "vacation.groceries": {
+  "housing.groceries": {
     name: "groceries",
     label: "Courses",
     type: "expense",
     iconName: "shopping-cart",
-    mainCategory: "vacation",
+    mainCategory: "housing",
   },
   "vacation.other": {
     name: "other",
@@ -349,10 +354,6 @@ export function getCategoryDetails(
   return subcategoryDetailsMap[key];
 }
 
-// Cette carte semble être utilisée pour d'autres besoins (ex: affichage UI)
-// et mélange main categories et subcategories spécifiques.
-// Je n'ai pas ajouté 'plane'/'car' ici car leur structure est définie
-// dans les types et subcategoryDetailsMap.
 export const categoryDetailsMap: Record<string, CategoryDetails> = {
   shopping: {
     ...mainCategoryDetailsMap.shopping,
@@ -372,7 +373,7 @@ export const categoryDetailsMap: Record<string, CategoryDetails> = {
   activities: {
     ...mainCategoryDetailsMap.activities,
     name: "activities",
-    iconName: "directions-run",
+    iconName: "restaurant",
   },
   other_expenses: {
     name: "other expenses",

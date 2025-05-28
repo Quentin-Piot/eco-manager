@@ -9,7 +9,7 @@ const Container = React.forwardRef<ViewRef, ViewProps & { title?: string }>(
       {title && (
         <Text
           className={
-            "mb-2 font-semibold text-neutral-700 dark:text-neutral-200 text-lg"
+            "mb-2 font-semibold text-primary dark:text-neutral-200 text-lg"
           }
           numberOfLines={1}
           ellipsizeMode="tail"

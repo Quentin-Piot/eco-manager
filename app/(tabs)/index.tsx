@@ -1,8 +1,11 @@
 import { SpendingCard } from "@/components/ui/spending-card";
-import { TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
-import { PieChartTouchLayer, PieSlice } from "~/components/charts/category-pie";
+import PieChart, {
+  PieChartTouchLayer,
+  PieSlice,
+} from "~/components/charts/category-pie";
 import { SliceInfoModal } from "~/components/charts/slice-info-modal";
 import {
   mainCategoryDetailsMap,
@@ -15,246 +18,13 @@ import {
 import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
 import { MonthlyBudgetModal } from "@/components/ui/monthly-budget-modal";
 import { endOfMonth, isToday, isWithinInterval, startOfMonth } from "date-fns";
-import { colors } from "~/lib/theme";
 import { Container } from "~/components/ui/container";
-import { Ionicons } from "@expo/vector-icons";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Text } from "~/components/ui/text";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Card, CardContent } from "~/components/ui/card";
 import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
-
-interface SummaryCardProps {
-  title: string;
-  value: number;
-  todayValue?: number;
-  secondValue?: number;
-  valueColorClass?: string;
-  iconName?: keyof typeof Ionicons.glyphMap;
-  iconColor?: string;
-  onPress?: () => void;
-  subtitle?: string;
-}
-
-const SummaryCard: React.FC<SummaryCardProps> = ({
-  title,
-  value,
-  secondValue,
-  todayValue,
-  valueColorClass,
-  iconName,
-  iconColor,
-  onPress,
-  subtitle,
-}) => {
-  const formattedValue = value.toFixed(0).replace(".", ",");
-  const formattedSecondValue = secondValue?.toFixed(0).replace(".", ",");
-  return onPress ? (
-    <TouchableOpacity className={"flex-1 basis-[48%]"} onPress={onPress}>
-      <Card className={"relative"}>
-        <MaterialIcons
-          className={"absolute right-3 top-3"}
-          size={12}
-          name="edit"
-          color={colors.muted.foreground}
-        />
-
-        <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
-          <View className="flex-row items-center">
-            {iconName && (
-              <View className={"w-6"}>
-                <Ionicons
-                  name={iconName}
-                  size={14}
-                  color={iconColor || "#6b7280"}
-                  className="mr-2"
-                />
-              </View>
-            )}
-            <CardTitle
-              className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {title}
-            </CardTitle>
-          </View>
-        </CardHeader>
-        <CardContent className="pt-0 pb-2 pl-6">
-          <Text
-            className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title === "Taux d'Épargne"
-              ? `${formattedValue}%`
-              : `${formattedValue} €`}
-
-            {formattedSecondValue ? (
-              <Text
-                className={`text-sm font-bold text-muted-foreground`}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {" "}
-                /{formattedSecondValue} €
-              </Text>
-            ) : null}
-          </Text>
-          {subtitle && (
-            <Text
-              className="text-xs text-neutral-500 dark:text-neutral-400"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {subtitle}
-            </Text>
-          )}
-          {todayValue !== undefined && (
-            <Text
-              className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {todayValue >= 0 ? "+ " : ""}
-              {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
-            </Text>
-          )}
-        </CardContent>
-      </Card>
-    </TouchableOpacity>
-  ) : (
-    <Card className={"flex-1 basis-[48%]"}>
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
-        <View className="flex-row items-center">
-          {iconName && (
-            <View className={"w-6"}>
-              <Ionicons
-                name={iconName}
-                size={14}
-                color={iconColor || "#6b7280"}
-              />
-            </View>
-          )}
-          <CardTitle
-            className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {title}
-          </CardTitle>
-        </View>
-      </CardHeader>
-      <CardContent className="pt-0 pb-2 pl-6">
-        <Text
-          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {title === "Taux d'Épargne"
-            ? `${formattedValue}%`
-            : `${formattedValue} €`}
-        </Text>
-        {subtitle && (
-          <Text
-            className="text-xs text-neutral-500 dark:text-neutral-400"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {subtitle}
-          </Text>
-        )}
-        {todayValue !== undefined && (
-          <Text
-            className="text-xs text-neutral-500 dark:text-neutral-400"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {todayValue >= 0 ? "+ " : ""}
-            {todayValue.toFixed(0).replace(".", ",")} € aujourd'hui
-          </Text>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-const ExpensesCard: React.FC<{ monthly: number; today: number }> = ({
-  monthly,
-  today,
-}) => {
-  return (
-    <SummaryCard
-      title="Dépenses"
-      value={monthly}
-      todayValue={today}
-      valueColorClass="text-red-600 dark:text-red-400"
-      iconName="trending-down-outline"
-      iconColor="#EF4444"
-    />
-  );
-};
-
-const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
-  monthly,
-  today,
-}) => {
-  return (
-    <SummaryCard
-      title="Revenus"
-      value={monthly}
-      todayValue={today}
-      valueColorClass="text-green-600 dark:text-green-400"
-      iconName="trending-up-outline"
-      iconColor="#22C55E"
-    />
-  );
-};
-
-const NetFlowCard: React.FC<{ monthly: number; today: number }> = ({
-  monthly,
-  today,
-}) => {
-  const color = monthly >= 0 ? "#007AFF" : "#EF4444";
-  return (
-    <SummaryCard
-      title="Flux Net"
-      value={monthly}
-      todayValue={today}
-      valueColorClass={
-        monthly >= 0
-          ? "text-blue-600 dark:text-blue-400"
-          : "text-red-600 dark:text-red-400"
-      }
-      iconName="stats-chart-outline"
-      iconColor={color}
-    />
-  );
-};
-
-const RemainingBudgetCard: React.FC<{
-  monthlyExpenses: number;
-  monthlySpendingTarget: number;
-  onPress?: () => void;
-}> = ({ monthlyExpenses, monthlySpendingTarget, onPress }) => {
-  const remaining = monthlySpendingTarget - monthlyExpenses;
-  const color = remaining >= 0 ? "#1D7BF2" : "#EF4444";
-
-  return (
-    <SummaryCard
-      title="Budget Restant"
-      value={remaining}
-      valueColorClass={
-        remaining >= 0
-          ? "text-blue-600 dark:text-blue-400"
-          : "text-red-600 dark:text-red-400"
-      }
-      iconName="cash-outline"
-      iconColor={color}
-      onPress={onPress}
-      subtitle={`sur ${monthlySpendingTarget.toFixed(0)}€`}
-    />
-  );
-};
+import {
+  NetFlowCard,
+  RemainingBudgetCard,
+} from "~/components/pages/dashboard/summary";
 
 export default function DashboardScreen() {
   const {
@@ -281,7 +51,6 @@ export default function DashboardScreen() {
   const [isMonthlyBudgetModalVisible, setIsMonthlyBudgetModalVisible] =
     useState<boolean>(false);
 
-  // Calcul du total des budgets par catégorie
   const totalCategoryBudgets = useMemo(() => {
     return spendingCategories.reduce(
       (total, category) => total + category.budgetAmount,
@@ -463,7 +232,7 @@ export default function DashboardScreen() {
     <MainLayout pageName={"Tableau de bord"}>
       <Container
         title={"Résumé mensuel"}
-        className="flex-row flex-wrap justify-between gap-3 w-full mb-4"
+        className="flex-row flex-wrap justify-between gap-3 w-full"
       >
         <RemainingBudgetCard
           monthlyExpenses={monthlyExpenses}
@@ -471,33 +240,37 @@ export default function DashboardScreen() {
           onPress={() => setIsMonthlyBudgetModalVisible(true)}
         />
         <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
-        <ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />
-        <IncomeCard monthly={monthlyIncomes} today={todayIncomes} />
+        {/*<ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />*/}
+        {/*<IncomeCard monthly={monthlyIncomes} today={todayIncomes} />*/}
       </Container>
 
-      <Container title={"Aperçu des Dépenses Mensuelles"}>
-        <Card>
-          <CardContent>
-            <Chart
-              data={chartData}
-              onSlicePress={handleSlicePress}
-              selectedSlice={selectedSlice ?? undefined}
-            />
-          </CardContent>
-        </Card>
-      </Container>
+      {chartData.length > 1 && (
+        <Container title={"Aperçu des Dépenses Mensuelles"}>
+          <Card>
+            <CardContent>
+              <Chart
+                data={chartData}
+                onSlicePress={handleSlicePress}
+                selectedSlice={selectedSlice ?? undefined}
+              />
+            </CardContent>
+          </Card>
+        </Container>
+      )}
 
       <Container title={"Budgets"} className="flex-row flex-wrap gap-3">
-        {spendingCategoriesWithValue.map((category) => (
-          <SpendingCard
-            key={category.type}
-            currentAmount={category.currentAmount}
-            budgetAmount={category.budgetAmount}
-            percentage={category.percentage}
-            category={category.type}
-            onPress={() => handleSpendingCardPress(category)}
-          />
-        ))}
+        {spendingCategoriesWithValue
+          .sort((a, b) => a.type.charCodeAt(0) - b.type.charCodeAt(0))
+          .map((category) => (
+            <SpendingCard
+              key={category.type}
+              currentAmount={category.currentAmount}
+              budgetAmount={category.budgetAmount}
+              percentage={category.percentage}
+              category={category.type}
+              onPress={() => handleSpendingCardPress(category)}
+            />
+          ))}
       </Container>
 
       <SliceInfoModal
@@ -518,7 +291,6 @@ export default function DashboardScreen() {
         onClose={() => setIsMonthlyBudgetModalVisible(false)}
         currentBudget={monthlyBudget}
         onSave={handleSaveMonthlyBudget}
-        totalCategoryBudgets={totalCategoryBudgets}
       />
     </MainLayout>
   );
@@ -545,6 +317,7 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
         onSlicePress={onSlicePress}
         selectedSlice={selectedSlice}
       />
+      <PieChart data={data} />
     </View>
   );
 };

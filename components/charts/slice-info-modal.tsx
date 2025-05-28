@@ -102,14 +102,13 @@ export const SliceInfoModal: React.FC<SliceInfoModalProps> = ({
             Aucune catégorie sélectionnée.
           </Text>
         )}
+        <ColorPicker
+          visible={showColorPicker}
+          selectedColor={currentColor}
+          onColorSelected={handleColorSelected}
+          onClose={() => setShowColorPicker(false)}
+        />
       </BottomModal>
-
-      <ColorPicker
-        visible={showColorPicker}
-        selectedColor={currentColor}
-        onColorSelected={handleColorSelected}
-        onClose={() => setShowColorPicker(false)}
-      />
     </>
   );
 };

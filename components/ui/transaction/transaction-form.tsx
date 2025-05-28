@@ -76,35 +76,26 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className="text-2xl h-12"
         />
       </View>
+      <View className="mb-4">
+        <Text className="text-sm text-muted-foreground mb-1">
+          Intitulé (optionnel)
+        </Text>
+        <Input
+          placeholder={
+            transactionType === "expense"
+              ? "Achat de ..."
+              : "Salaire mensuel ..."
+          }
+          value={remarks}
+          onChangeText={onRemarksChange}
+          className="h-12"
+        />
+      </View>
       <View className="mb-6">
         <Text className="text-sm text-muted-foreground mb-2">
           {transactionType === "expense" ? "Payé avec" : "Compte concerné"}
         </Text>
         <View className="flex-row gap-2">
-          <Button
-            variant={paymentMethod === "cash" ? "default" : "outline"}
-            onPress={() => onPaymentMethodChange("cash")}
-            className="flex-1 flex-row items-center gap-2"
-          >
-            <MaterialIcons
-              name="account-balance-wallet"
-              size={18}
-              color={
-                paymentMethod === "cash"
-                  ? colors.primary.foreground
-                  : colors.foreground
-              }
-            />
-            <Text
-              className={cn(
-                paymentMethod === "cash"
-                  ? "text-primary-foreground"
-                  : "text-foreground dark:text-primary-foreground",
-              )}
-            >
-              Espèces
-            </Text>
-          </Button>
           <Button
             variant={paymentMethod === "card" ? "default" : "outline"}
             onPress={() => onPaymentMethodChange("card")}
@@ -129,21 +120,32 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               Carte
             </Text>
           </Button>
+          <Button
+            variant={paymentMethod === "cash" ? "default" : "outline"}
+            onPress={() => onPaymentMethodChange("cash")}
+            className="flex-1 flex-row items-center gap-2"
+          >
+            <MaterialIcons
+              name="account-balance-wallet"
+              size={18}
+              color={
+                paymentMethod === "cash"
+                  ? colors.primary.foreground
+                  : colors.foreground
+              }
+            />
+            <Text
+              className={cn(
+                paymentMethod === "cash"
+                  ? "text-primary-foreground"
+                  : "text-foreground dark:text-primary-foreground",
+              )}
+            >
+              Espèces
+            </Text>
+          </Button>
         </View>
       </View>
-
-      <View className="mb-4">
-        <Text className="text-sm text-muted-foreground mb-1">
-          Remarques (optionnel)
-        </Text>
-        <Input
-          placeholder="Description..."
-          value={remarks}
-          onChangeText={onRemarksChange}
-          className="h-12"
-        />
-      </View>
-
       <View className="mb-4">
         <Text className="text-sm text-muted-foreground mb-1">Date</Text>
         <TouchableOpacity

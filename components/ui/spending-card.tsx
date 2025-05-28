@@ -83,7 +83,7 @@ export function SpendingCard({
                   € {currentAmount}
                 </Text>
                 <Text
-                  className="text-base font-semibold text-neutral-500 dark:text-neutral-400 pl-1"
+                  className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 pl-1"
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >

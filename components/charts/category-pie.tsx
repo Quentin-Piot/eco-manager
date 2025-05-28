@@ -1,8 +1,10 @@
-import React, { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { memo, useMemo } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { Path, Svg } from "react-native-svg";
 import { categoryDetailsMap, MainCategory } from "~/lib/types/categories";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { LinearGradient, vec } from "@shopify/react-native-skia";
+import { Pie, PolarChart } from "victory-native";
 
 const CHART_SIZE = 180;
 const ICON_WIDTH = 20;
@@ -13,6 +15,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "50%",
     left: "50%",
+    zIndex: 100,
   },
   iconContainer: {
     position: "absolute",
@@ -135,8 +138,13 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
             key={`path-${index}`}
             d={slice.pathData}
             opacity={selectedSlice?.label === slice.label ? 0.5 : 1}
-            fill={slice.color}
+            fill={"transparent"}
             onPress={() => {
+              if (Platform.OS !== "web") return;
+              onSlicePress(slice);
+            }}
+            onPressIn={() => {
+              if (Platform.OS === "web") return;
               onSlicePress(slice);
             }}
           />
@@ -163,3 +171,56 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
     </View>
   );
 };
+
+type PieChartCo2Props = {
+  data: PieSlice[];
+};
+const VictoryChartCategories = ({ data }: PieChartCo2Props) => {
+  return (
+    <View className={"h-full w-full"}>
+      <PolarChart
+        data={data}
+        labelKey="label"
+        valueKey="value"
+        colorKey="color"
+      >
+        <Pie.Chart startAngle={270}>
+          {({ slice }) => {
+            const { startX, startY, endX, endY } = calculateGradientPoints(
+              slice.radius,
+              slice.startAngle,
+              slice.endAngle,
+              slice.center.x,
+              slice.center.y,
+            );
+            return (
+              <>
+                <Pie.Slice
+                  animate={{
+                    type: "spring",
+                    duration: 500,
+                  }}
+                >
+                  <LinearGradient
+                    start={vec(startX, startY)}
+                    end={vec(endX, endY)}
+                    colors={[slice.color, `${slice.color}99`]}
+                    positions={[0, 1]}
+                  />
+                </Pie.Slice>
+                <Pie.SliceAngularInset
+                  animate={{ type: "spring", duration: 500 }}
+                  angularInset={{
+                    angularStrokeWidth: 2,
+                    angularStrokeColor: "white",
+                  }}
+                />
+              </>
+            );
+          }}
+        </Pie.Chart>
+      </PolarChart>
+    </View>
+  );
+};
+export default memo(VictoryChartCategories);
