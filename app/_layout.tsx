@@ -23,6 +23,7 @@ import { WebContainer } from "~/components/ui/web-container";
 import { AccountProvider } from "~/lib/context/account-context";
 import { BackgroundProvider } from "~/lib/context/background";
 import { IndicatorColorsProvider } from "~/lib/context/indicator-colors-context";
+import Head from "expo-router/head";
 
 // Import des styles spécifiques pour la version web
 if (Platform.OS === "web") {
@@ -60,6 +61,35 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <Head>
+        <title>Eco-Manager - Suivi de Dépenses et Revenus</title>
+        <meta
+          name="description"
+          content="Gérez facilement vos dépenses et revenus mensuels avec Eco-Manager. Suivez votre budget, visualisez vos habitudes de dépenses et atteignez vos objectifs financiers."
+        />
+        <meta
+          name="keywords"
+          content="gestion budget, suivi dépenses, suivi revenus, application finance personnelle, budget mensuel, économiser argent"
+        />
+        <meta
+          property="og:title"
+          content="Eco-Manager - Suivi de Dépenses et Revenus"
+        />
+        <meta
+          property="og:description"
+          content="Gérez facilement vos dépenses et revenus mensuels avec Eco-Manager. Suivez votre budget, visualisez vos habitudes de dépenses et atteignez vos objectifs financiers."
+        />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Eco-Manager - Suivi de Dépenses et Revenus"
+        />
+        <meta
+          name="twitter:description"
+          content="Gérez facilement vos dépenses et revenus mensuels avec Eco-Manager. Suivez votre budget, visualisez vos habitudes de dépenses et atteignez vos objectifs financiers."
+        />
+      </Head>
       <WebContainer>
         <BackgroundProvider>
           <AccountProvider>
