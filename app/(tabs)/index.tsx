@@ -2,6 +2,7 @@ import { SpendingCard } from "@/components/ui/spending-card";
 import { TouchableOpacity, View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
+import EvolutionPie from "~/components/charts/evolution-pie";
 import PieChart, {
   PieChartTouchLayer,
   PieSlice,
@@ -60,14 +61,7 @@ export default function DashboardScreen() {
     );
   }, [spendingCategories]);
 
-  const {
-    todayExpenses,
-    todayIncomes,
-    monthlyExpenses,
-    monthlyIncomes,
-    monthlyNetFlow,
-    todayNetFlow,
-  } = useMemo(() => {
+  const { monthlyExpenses, monthlyNetFlow, todayNetFlow } = useMemo(() => {
     let todayExpensesSum = 0;
     let todayIncomesSum = 0;
     let currentMonthExpenses = 0;
@@ -113,17 +107,14 @@ export default function DashboardScreen() {
   }, [transactions]);
 
   const chartData: PieSlice[] = useMemo(() => {
-    // Get current month's transactions
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
-    // Filter transactions for current month only
     const currentMonthTransactions = transactions.filter((transaction) =>
       isWithinInterval(transaction.date, { start: monthStart, end: monthEnd }),
     );
 
-    // Group transactions by main category and sum values
     const categoryTotals = new Map<MainExpenseCategory, number>();
     currentMonthTransactions.forEach((transaction) => {
       if (transaction.mainCategory !== "income") {
@@ -133,15 +124,13 @@ export default function DashboardScreen() {
       }
     });
 
-    // Calculate total spending
     const totalSpending = Array.from(categoryTotals.values()).reduce(
       (sum, amount) => sum + amount,
       0,
     );
 
-    // Convert to PieSlice format
     return Array.from(categoryTotals.entries())
-      .filter(([_, amount]) => amount > 0) // Only include categories with spending
+      .filter(([_, amount]) => amount > 0)
       .map(([category, amount]) => {
         const percentage =
           totalSpending > 0 ? (amount / totalSpending) * 100 : 0;
@@ -157,12 +146,10 @@ export default function DashboardScreen() {
 
   const spendingCategoriesWithValue: SpendingCategoryWithValue[] =
     useMemo(() => {
-      // Get current month's transactions
       const now = new Date();
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
 
-      // Filter transactions for current month only
       const currentMonthTransactions = transactions.filter((transaction) =>
         isWithinInterval(transaction.date, {
           start: monthStart,
@@ -170,10 +157,8 @@ export default function DashboardScreen() {
         }),
       );
 
-      // Create a map to store total spending by category
       const categorySpending = new Map<MainExpenseCategory, number>();
 
-      // Sum up spending by main category
       currentMonthTransactions.forEach((transaction) => {
         if (transaction.mainCategory !== "income") {
           const category = transaction.mainCategory as MainExpenseCategory;
@@ -182,7 +167,6 @@ export default function DashboardScreen() {
         }
       });
 
-      // Convert spending categories to SpendingCategoryWithValue format
       return spendingCategories.map((category) => {
         const currentAmount = categorySpending.get(category.type) || 0;
         const percentage =
@@ -242,8 +226,6 @@ export default function DashboardScreen() {
           onPress={() => setIsMonthlyBudgetModalVisible(true)}
         />
         <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
-        {/*<ExpensesCard monthly={monthlyExpenses} today={todayExpenses} />*/}
-        {/*<IncomeCard monthly={monthlyIncomes} today={todayIncomes} />*/}
       </Container>
 
       {chartData.length > 1 && (
@@ -308,7 +290,7 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
   );
   return (
     <>
-      <View className="flex-row w-[13rem] mb-6 bg-card dark:bg-primary-darker rounded-full overflow-hidden border border-border dark:border-primary-dark">
+      <View className="flex-row w-[13rem] mb-3 bg-card dark:bg-primary-darker rounded-full overflow-hidden border border-border dark:border-primary-dark">
         <TouchableOpacity
           onPress={() => setViewType("distribution")}
           className={`px-3 py-1 ${viewType === "distribution" ? "bg-primary" : ""}`}
@@ -349,12 +331,18 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
             justifyContent: "center",
           }}
         >
-          <PieChartTouchLayer
-            data={data}
-            onSlicePress={onSlicePress}
-            selectedSlice={selectedSlice}
-          />
-          <PieChart data={data} />
+          {viewType === "distribution" ? (
+            <>
+              <PieChartTouchLayer
+                data={data}
+                onSlicePress={onSlicePress}
+                selectedSlice={selectedSlice}
+              />
+              <PieChart data={data} />
+            </>
+          ) : (
+            <EvolutionPie />
+          )}
         </View>
       </CardContent>
     </>

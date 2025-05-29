@@ -44,15 +44,10 @@ export function WebAlert() {
           <MaterialIcons
             name="info-outline"
             size={20}
-            color={isDark ? "#a3e635" : "#166534"}
+            color={"white"}
             style={{ marginRight: 8 }}
           />
-          <Text
-            className={cn(
-              "flex-1 font-medium text-sm",
-              isDark ? "text-primary-lighter" : "text-primary-foreground",
-            )}
-          >
+          <Text className={cn("flex-1 font-medium text-sm text-white")}>
             Cette version web est uniquement à but de test et ne représente pas
             le produit final.
           </Text>
@@ -60,7 +55,7 @@ export function WebAlert() {
             <MaterialIcons
               name="close"
               size={20}
-              color={isDark ? "#a3e635" : "#166534"}
+              color={"white"}
               style={{ marginLeft: 8 }}
             />
           </TouchableOpacity>
