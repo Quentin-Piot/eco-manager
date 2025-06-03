@@ -449,8 +449,21 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setTransactions((prev) => {
       let updatedTransactions = [...prev];
 
-      // Add the new transaction
-      updatedTransactions.push(newTransaction);
+      // Add the new transaction at the beginning of its date group
+      const insertIndex = updatedTransactions.findIndex((t) => {
+        const tDate = new Date(t.date);
+        return (
+          tDate.getTime() > transactionDate.getTime() ||
+          (tDate.getTime() === transactionDate.getTime() &&
+            !t.isRecurrenceParent)
+        );
+      });
+
+      if (insertIndex === -1) {
+        updatedTransactions.push(newTransaction);
+      } else {
+        updatedTransactions.splice(insertIndex, 0, newTransaction);
+      }
 
       // If it's a recurring transaction and its original date is in the past,
       // generate instances from the original date up to "now".

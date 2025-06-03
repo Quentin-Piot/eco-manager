@@ -70,7 +70,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <Text className="text-sm text-muted-foreground mb-1">Montant</Text>
         <Input
           placeholder="0,00"
-          keyboardType="numeric"
+          keyboardType="number-pad"
           value={amount}
           onChangeText={onAmountChange}
           className="text-2xl h-12"

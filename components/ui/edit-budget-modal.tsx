@@ -89,7 +89,7 @@ export function EditBudgetModal({
         onChangeText={setNewBudgetInput}
         value={newBudgetInput}
         placeholder="Nouveau budget (€)"
-        keyboardType="numeric"
+        keyboardType="number-pad"
         className={"mb-4"}
       />
 

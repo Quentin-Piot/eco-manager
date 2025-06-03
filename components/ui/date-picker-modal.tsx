@@ -85,7 +85,6 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
       onChange={handleDateChange}
       textColor={isDark ? colors.muted.light : colors.muted.darker}
       buttonTextColorIOS={isDark ? colors.muted.light : colors.muted.darker}
-      maximumDate={new Date()}
       accentColor={colors.primary.DEFAULT}
       themeVariant={isDark ? "dark" : "light"}
     />
