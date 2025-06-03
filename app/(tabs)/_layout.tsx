@@ -24,12 +24,17 @@ export default function TabLayout() {
           position: "absolute",
           borderTopWidth: 0,
           elevation: 0,
-          height: Platform.OS === "ios" ? TABS_HEIGHT : undefined,
+          height:
+            Platform.OS === "ios"
+              ? TABS_HEIGHT
+              : Platform.OS === "web"
+                ? 60
+                : undefined,
         },
         tabBarBackground: () => (
           <BlurView
             tint={colorScheme === "dark" ? "dark" : "light"}
-            intensity={60}
+            intensity={Platform.OS === "web" ? 100 : 60}
             experimentalBlurMethod={"dimezisBlurView"}
             style={{
               flex: 1,

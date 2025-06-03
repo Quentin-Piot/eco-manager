@@ -1,11 +1,15 @@
 import React, { PropsWithChildren } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Image, Platform, StyleSheet, View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { cn } from "~/lib/utils";
 
 export function WebContainer({ children }: PropsWithChildren) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const isMobile =
+    Platform.OS === "web" &&
+    typeof window !== "undefined" &&
+    window.innerWidth <= 768;
 
   if (Platform.OS !== "web") {
     return <>{children}</>;
@@ -16,15 +20,33 @@ export function WebContainer({ children }: PropsWithChildren) {
       className={cn("flex-1", isDark ? "bg-gray-900" : "bg-gray-100")}
       style={styles.container}
     >
-      <View
-        className={cn(
-          "flex-1 overflow-hidden",
-          isDark ? "bg-gray-800" : "bg-white",
-        )}
-        style={styles.appContainer}
-      >
-        {children}
-      </View>
+      {isMobile ? (
+        // Mobile web view - no phone frame, adjusted for mobile browsers
+        <View
+          className={cn("overflow-hidden", isDark ? "bg-gray-800" : "bg-white")}
+          style={styles.mobileAppContainer}
+        >
+          {children}
+        </View>
+      ) : (
+        // Desktop web view - with phone frame
+        <View style={styles.phoneFrameContainer}>
+          <Image
+            source={require("../../assets/images/phone-frame.png")}
+            style={styles.phoneFrame}
+            resizeMode="contain"
+          />
+          <View
+            className={cn(
+              "overflow-hidden",
+              isDark ? "bg-gray-800" : "bg-white",
+            )}
+            style={styles.appContainer}
+          >
+            {children}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -38,13 +60,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 0,
   },
+  phoneFrameContainer: {
+    position: "relative",
+    width: "100%",
+    height: "95%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  phoneFrame: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 10,
+    pointerEvents: "none" as any,
+  },
   appContainer: {
     width: "100%",
-    maxWidth: 450,
     height: "100%",
-    maxHeight: "95vh" as any,
+    maxWidth: 390,
     overflow: "hidden",
-    borderRadius: 0,
-    boxShadow: "0 0 20px rgba(0, 0, 0, 0.1)",
+    borderRadius: 40,
+    zIndex: 5,
+  },
+  mobileAppContainer: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+    // Add safe area at the bottom for mobile browser UI
+    paddingBottom: "env(safe-area-inset-bottom, 0px)" as any,
   },
 });

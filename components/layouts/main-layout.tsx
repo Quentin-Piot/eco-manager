@@ -13,7 +13,7 @@ function MainLayout({
     <SafeAreaView
       edges={["right", "left", "top"]}
       className={cn(
-        `flex-1 bg-gray-50`,
+        `flex-1`,
         Platform.OS === "ios"
           ? "pb-24"
           : Platform.OS === "web"
