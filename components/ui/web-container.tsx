@@ -1,10 +1,10 @@
 import React, { PropsWithChildren } from "react";
 import { Image, Platform, StyleSheet, View } from "react-native";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { cn } from "~/lib/utils";
+import { useColorScheme } from "~/lib/useColorScheme";
 
 export function WebContainer({ children }: PropsWithChildren) {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const isMobile =
     Platform.OS === "web" &&
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20,
+    paddingVertical: 15,
   },
   phoneFrame: {
     position: "absolute",
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
   appContainer: {
     width: "100%",
     height: "100%",
-    maxWidth: 390,
+    maxWidth: 400,
     overflow: "hidden",
-    borderRadius: 40,
+    borderRadius: 0,
     zIndex: 5,
   },
   mobileAppContainer: {
