@@ -246,6 +246,12 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           if (userData.monthlyBudget !== undefined) {
             setMonthlyBudget(userData.monthlyBudget);
           }
+
+          if (userData.spendingCategories) {
+            setSpendingCategories(
+              userData.spendingCategories as SpendingCategory[],
+            );
+          }
         } else {
           // Utiliser les données mock uniquement au premier démarrage
           setTransactions(
@@ -281,11 +287,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     loadUserData();
   }, []);
 
-  // Sauvegarder les données à chaque modification des transactions ou du budget mensuel
+  // Sauvegarder les données à chaque modification des transactions, du budget mensuel ou des budgets par catégorie
   useEffect(() => {
     const saveData = async () => {
       try {
-        await saveUserData(transactions, monthlyBudget);
+        await saveUserData(transactions, monthlyBudget, spendingCategories);
       } catch (error) {
         console.error(
           "Erreur lors de la sauvegarde des données utilisateur:",
@@ -295,23 +301,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     };
 
     saveData();
-  }, [transactions, monthlyBudget]);
-
-  // Sauvegarder les données à chaque modification des transactions
-  useEffect(() => {
-    const saveData = async () => {
-      try {
-        await saveUserData(transactions);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la sauvegarde des données utilisateur:",
-          error,
-        );
-      }
-    };
-
-    saveData();
-  }, [transactions]);
+  }, [transactions, monthlyBudget, spendingCategories]);
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
@@ -838,10 +828,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAccount() {
+export const useAccount = () => {
   const context = useContext(AccountContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAccount must be used within an AccountProvider");
   }
   return context;
-}
+};

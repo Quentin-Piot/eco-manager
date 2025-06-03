@@ -18,7 +18,16 @@ import {
 } from "~/lib/context/account-context";
 import { EditBudgetModal } from "@/components/ui/edit-budget-modal";
 import { MonthlyBudgetModal } from "@/components/ui/monthly-budget-modal";
-import { endOfMonth, isToday, isWithinInterval, startOfMonth } from "date-fns";
+import {
+  addMonths,
+  endOfMonth,
+  format,
+  isToday,
+  isWithinInterval,
+  startOfMonth,
+  subMonths,
+} from "date-fns";
+import { fr } from "date-fns/locale";
 import { Container } from "~/components/ui/container";
 import { Card, CardContent } from "~/components/ui/card";
 import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
@@ -28,6 +37,7 @@ import {
 } from "~/components/pages/dashboard/summary";
 import { Text } from "~/components/ui/text";
 import { cn } from "~/lib/utils";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function DashboardScreen() {
   const {
@@ -39,6 +49,8 @@ export default function DashboardScreen() {
   } = useAccount();
 
   const { getColorForCategory } = useIndicatorColors();
+
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
 
   const [selectedSlice, setSelectedSlice] = useState<PieSlice | null>(null);
   const [isSliceModalVisible, setIsSliceModalVisible] =
@@ -54,6 +66,19 @@ export default function DashboardScreen() {
   const [isMonthlyBudgetModalVisible, setIsMonthlyBudgetModalVisible] =
     useState<boolean>(false);
 
+  // Fonctions pour naviguer entre les mois
+  const goToPreviousMonth = () => {
+    setSelectedMonth((prevMonth) => subMonths(prevMonth, 1));
+  };
+
+  const goToNextMonth = () => {
+    setSelectedMonth((prevMonth) => addMonths(prevMonth, 1));
+  };
+
+  const formattedMonthYear = format(selectedMonth, "MMMM yyyy", { locale: fr });
+  const capitalizedMonthYear =
+    formattedMonthYear.charAt(0).toUpperCase() + formattedMonthYear.slice(1);
+
   const totalCategoryBudgets = useMemo(() => {
     return spendingCategories.reduce(
       (total, category) => total + category.budgetAmount,
@@ -67,6 +92,8 @@ export default function DashboardScreen() {
     let currentMonthExpenses = 0;
     let currentMonthIncomes = 0;
     const now = new Date();
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
 
     transactions.forEach((t) => {
       const transactionDate = new Date(t.date);
@@ -82,8 +109,7 @@ export default function DashboardScreen() {
       }
 
       if (
-        transactionDate.getMonth() === now.getMonth() &&
-        transactionDate.getFullYear() === now.getFullYear()
+        isWithinInterval(transactionDate, { start: monthStart, end: monthEnd })
       ) {
         if (isIncome) {
           currentMonthIncomes += amount;
@@ -104,12 +130,11 @@ export default function DashboardScreen() {
       monthlyNetFlow: currentMonthlyNetFlow,
       todayNetFlow: currentTodayNetFlow,
     };
-  }, [transactions]);
+  }, [transactions, selectedMonth]);
 
   const chartData: PieSlice[] = useMemo(() => {
-    const now = new Date();
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
+    const monthStart = startOfMonth(selectedMonth);
+    const monthEnd = endOfMonth(selectedMonth);
 
     const currentMonthTransactions = transactions.filter((transaction) =>
       isWithinInterval(transaction.date, { start: monthStart, end: monthEnd }),
@@ -142,13 +167,12 @@ export default function DashboardScreen() {
           type: category,
         };
       });
-  }, [getColorForCategory, transactions]);
+  }, [getColorForCategory, transactions, selectedMonth]);
 
   const spendingCategoriesWithValue: SpendingCategoryWithValue[] =
     useMemo(() => {
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
 
       const currentMonthTransactions = transactions.filter((transaction) =>
         isWithinInterval(transaction.date, {
@@ -184,7 +208,7 @@ export default function DashboardScreen() {
           percentage,
         };
       });
-    }, [spendingCategories, transactions]);
+    }, [spendingCategories, transactions, selectedMonth]);
 
   const handleSlicePress = (slice: PieSlice) => {
     setSelectedSlice(slice);
@@ -214,10 +238,43 @@ export default function DashboardScreen() {
     updateMonthlyBudget(newBudget);
   };
 
+  // Vérifier si le mois sélectionné est le mois actuel
+  const isCurrentMonth = useMemo(() => {
+    const now = new Date();
+    return (
+      selectedMonth.getMonth() === now.getMonth() &&
+      selectedMonth.getFullYear() === now.getFullYear()
+    );
+  }, [selectedMonth]);
+
   return (
     <MainLayout pageName={"Tableau de bord"}>
       <Container
-        title={"Résumé mensuel"}
+        title={
+          <View className="flex-row items-center justify-between w-full">
+            <TouchableOpacity
+              className={
+                "w-10 h-10 rounded-full flex items-center justify-center z-50"
+              }
+              onPress={goToPreviousMonth}
+            >
+              <Ionicons name="chevron-back" size={20} color="#6b7280" />
+            </TouchableOpacity>
+            <Text className="text-base font-semibold text-neutral-700 dark:text-neutral-300">
+              {capitalizedMonthYear}
+            </Text>
+            <TouchableOpacity
+              onPress={goToNextMonth}
+              disabled={isCurrentMonth}
+              className={
+                "w-10 h-10 rounded-full flex items-center justify-center"
+              }
+              style={{ opacity: isCurrentMonth ? 0.5 : 1 }}
+            >
+              <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+        }
         className="flex-row flex-wrap justify-between gap-3 w-full"
       >
         <RemainingBudgetCard
@@ -225,20 +282,21 @@ export default function DashboardScreen() {
           monthlySpendingTarget={monthlyBudget || totalCategoryBudgets}
           onPress={() => setIsMonthlyBudgetModalVisible(true)}
         />
-        <NetFlowCard monthly={monthlyNetFlow} today={todayNetFlow} />
+        <NetFlowCard
+          monthly={monthlyNetFlow}
+          today={isCurrentMonth ? todayNetFlow : undefined}
+        />
       </Container>
 
-      {chartData.length > 1 && (
-        <Container title={"Aperçu des Dépenses Mensuelles"}>
-          <Card>
-            <Chart
-              data={chartData}
-              onSlicePress={handleSlicePress}
-              selectedSlice={selectedSlice ?? undefined}
-            />
-          </Card>
-        </Container>
-      )}
+      <Container title={"Aperçu des Dépenses"}>
+        <Card>
+          <Chart
+            data={chartData}
+            onSlicePress={handleSlicePress}
+            selectedSlice={selectedSlice ?? undefined}
+          />
+        </Card>
+      </Container>
 
       <Container title={"Budgets"} className="flex-row flex-wrap gap-3">
         {spendingCategoriesWithValue
@@ -332,14 +390,20 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
           }}
         >
           {viewType === "distribution" ? (
-            <>
-              <PieChartTouchLayer
-                data={data}
-                onSlicePress={onSlicePress}
-                selectedSlice={selectedSlice}
-              />
-              <PieChart data={data} />
-            </>
+            data.length > 0 ? (
+              <>
+                <PieChartTouchLayer
+                  data={data}
+                  onSlicePress={onSlicePress}
+                  selectedSlice={selectedSlice}
+                />
+                <PieChart data={data} />
+              </>
+            ) : (
+              <Text className="text-muted-foreground text-sm">
+                Aucune dépense pour ce mois
+              </Text>
+            )
           ) : (
             <EvolutionPie />
           )}

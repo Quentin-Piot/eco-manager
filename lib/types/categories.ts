@@ -230,7 +230,7 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     mainCategory: "activities",
   },
   "activities.cafe": {
-    name: "café",
+    name: "cafe",
     label: "Café",
     type: "expense",
     iconName: "local-cafe",

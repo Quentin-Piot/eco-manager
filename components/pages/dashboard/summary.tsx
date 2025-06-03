@@ -8,14 +8,19 @@ import { Text } from "~/components/ui/text";
 
 interface SummaryCardProps {
   title: string;
-  value: number;
+  value: string | number;
   todayValue?: number;
   secondValue?: number;
   valueColorClass?: string;
   iconName?: keyof typeof Ionicons.glyphMap;
+  icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
   onPress?: () => void;
   subtitle?: string;
+  percentage?: number;
+  secondaryValue?: string;
+  secondaryLabel?: string;
+  isPositive?: boolean;
 }
 
 const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -25,12 +30,27 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   todayValue,
   valueColorClass,
   iconName,
+  icon,
   iconColor,
   onPress,
   subtitle,
+  percentage,
+  secondaryValue,
+  secondaryLabel,
+  isPositive,
 }) => {
-  const formattedValue = value.toFixed(0).replace(".", ",");
+  const formattedValue =
+    typeof value === "number" ? value.toFixed(0).replace(".", ",") : value;
   const formattedSecondValue = secondValue?.toFixed(0).replace(".", ",");
+  const iconToUse = icon || iconName;
+  const colorToUse =
+    iconColor ||
+    (isPositive !== undefined
+      ? isPositive
+        ? "#22C55E"
+        : "#EF4444"
+      : "#6b7280");
+
   return onPress ? (
     <TouchableOpacity className={"flex-1 basis-[48%]"} onPress={onPress}>
       <Card className={"relative"}>
@@ -43,12 +63,12 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
         <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
           <View className="flex-row items-center">
-            {iconName && (
+            {iconToUse && (
               <View className={"w-6"}>
                 <Ionicons
-                  name={iconName}
+                  name={iconToUse}
                   size={14}
-                  color={iconColor || "#6b7280"}
+                  color={colorToUse}
                   className="mr-2"
                 />
               </View>
@@ -64,7 +84,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
         </CardHeader>
         <CardContent className="pt-0 pb-2 pl-6">
           <Text
-            className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
+            className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || (isPositive !== undefined ? (isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400") : "")}`}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
@@ -92,6 +112,24 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
               {subtitle}
             </Text>
           )}
+          {percentage !== undefined && (
+            <Text
+              className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {percentage}% utilisé
+            </Text>
+          )}
+          {secondaryValue && secondaryLabel && (
+            <Text
+              className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {secondaryValue} € {secondaryLabel}
+            </Text>
+          )}
           {todayValue !== undefined && (
             <Text
               className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
@@ -109,13 +147,9 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
     <Card className={"flex-1 basis-[48%]"}>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
         <View className="flex-row items-center">
-          {iconName && (
+          {iconToUse && (
             <View className={"w-6"}>
-              <Ionicons
-                name={iconName}
-                size={14}
-                color={iconColor || "#6b7280"}
-              />
+              <Ionicons name={iconToUse} size={14} color={colorToUse} />
             </View>
           )}
           <CardTitle
@@ -129,7 +163,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
       </CardHeader>
       <CardContent className="pt-0 pb-2 pl-6">
         <Text
-          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || ""}`}
+          className={`text-xl font-bold text-neutral-900 dark:text-neutral-50 ${valueColorClass || (isPositive !== undefined ? (isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400") : "")}`}
           numberOfLines={1}
           ellipsizeMode="tail"
         >
@@ -144,6 +178,24 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
             ellipsizeMode="tail"
           >
             {subtitle}
+          </Text>
+        )}
+        {percentage !== undefined && (
+          <Text
+            className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {percentage}% utilisé
+          </Text>
+        )}
+        {secondaryValue && secondaryLabel && (
+          <Text
+            className="text-xs text-neutral-500 dark:text-neutral-400 mt-1"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {secondaryValue} € {secondaryLabel}
           </Text>
         )}
         {todayValue !== undefined && (
@@ -190,47 +242,49 @@ export const IncomeCard: React.FC<{ monthly: number; today: number }> = ({
     />
   );
 };
-export const NetFlowCard: React.FC<{ monthly: number; today: number }> = ({
-  monthly,
-  today,
-}) => {
-  const color = monthly >= 0 ? "#007AFF" : "#EF4444";
-  return (
-    <SummaryCard
-      title="Balance Mensuelle"
-      value={monthly}
-      todayValue={today}
-      valueColorClass={
-        monthly >= 0
-          ? "text-blue-600 dark:text-blue-400"
-          : "text-red-600 dark:text-red-400"
-      }
-      iconName="stats-chart-outline"
-      iconColor={color}
-    />
-  );
-};
-export const RemainingBudgetCard: React.FC<{
+
+type RemainingBudgetCardProps = {
   monthlyExpenses: number;
   monthlySpendingTarget: number;
   onPress?: () => void;
-}> = ({ monthlyExpenses, monthlySpendingTarget, onPress }) => {
-  const remaining = monthlySpendingTarget - monthlyExpenses;
-  const color = remaining >= 0 ? "#1D7BF2" : "#EF4444";
+};
+
+export const RemainingBudgetCard = ({
+  monthlyExpenses,
+  monthlySpendingTarget,
+  onPress,
+}: RemainingBudgetCardProps) => {
+  const remainingBudget = monthlySpendingTarget - monthlyExpenses;
+  const percentage = Math.min(
+    100,
+    Math.round((monthlyExpenses / monthlySpendingTarget) * 100) || 0,
+  );
 
   return (
     <SummaryCard
-      title="Budget Restant"
-      value={remaining}
-      valueColorClass={
-        remaining >= 0
-          ? "text-blue-600 dark:text-blue-400"
-          : "text-red-600 dark:text-red-400"
-      }
-      iconName="cash-outline"
-      iconColor={color}
+      title="Budget restant"
+      value={remainingBudget.toFixed(2)}
+      icon="wallet-outline"
+      percentage={percentage}
       onPress={onPress}
-      subtitle={`sur ${monthlySpendingTarget.toFixed(0)}€`}
+    />
+  );
+};
+
+type NetFlowCardProps = {
+  monthly: number;
+  today?: number;
+};
+
+export const NetFlowCard = ({ monthly, today }: NetFlowCardProps) => {
+  return (
+    <SummaryCard
+      title="Flux net"
+      value={monthly.toFixed(2)}
+      secondaryValue={today !== undefined ? today.toFixed(2) : undefined}
+      secondaryLabel={today !== undefined ? "aujourd'hui" : undefined}
+      icon="trending-up-outline"
+      isPositive={monthly >= 0}
     />
   );
 };

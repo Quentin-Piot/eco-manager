@@ -1,125 +1,90 @@
-import React, { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Text } from "@/components/ui/text";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "~/lib/utils";
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import { TouchableOpacity, View } from "react-native";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Text } from "~/components/ui/text";
 import {
-  categoryDetailsMap,
+  mainCategoryDetailsMap,
   MainExpenseCategory,
 } from "~/lib/types/categories";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
-import { ColorPicker } from "./color-picker";
 
 type SpendingCardProps = {
-  category: MainExpenseCategory;
   currentAmount: string;
-  budgetAmount?: number;
-  percentage?: number;
-  className?: string;
+  budgetAmount: number;
+  percentage: number;
+  category: MainExpenseCategory;
   onPress?: () => void;
 };
 
-export function SpendingCard({
-  category,
+export const SpendingCard = ({
   currentAmount,
-  className,
   budgetAmount,
-  percentage = 0,
+  percentage,
+  category,
   onPress,
-}: SpendingCardProps) {
-  const categoryInfo = categoryDetailsMap[category];
-  const { colors, updateColor } = useIndicatorColors();
-  const [showColorPicker, setShowColorPicker] = useState(false);
-
-  const color: string = useMemo(() => {
-    return colors[category] || colors.housing; // Fallback to housing color if not found
-  }, [category, colors]);
-
-  const handleIndicatorPress = (e: any) => {
-    e.stopPropagation();
-    setShowColorPicker(true);
-  };
-
-  const handleColorSelected = async (newColor: string) => {
-    await updateColor(category, newColor);
-  };
-
-  if (!categoryInfo) return null;
+}: SpendingCardProps) => {
+  const { getColorForCategory } = useIndicatorColors();
+  const categoryColor = getColorForCategory(category);
+  const categoryDetails = mainCategoryDetailsMap[category];
 
   return (
-    <>
-      <TouchableOpacity
-        onPress={onPress}
-        className={cn("flex-1 basis-[48%]", className)}
-        activeOpacity={0.7}
-      >
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <View className="flex-row items-center">
+    <TouchableOpacity className={"flex-1 basis-[48%]"} onPress={onPress}>
+      <Card className={"relative"}>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-1">
+          <View className="flex-row items-center">
+            <View
+              className={
+                "w-6 h-6 rounded-full items-center justify-center mr-2"
+              }
+              style={{ backgroundColor: categoryColor }}
+            >
               <MaterialIcons
-                name={categoryInfo.iconName}
-                size={20}
-                color={color}
+                name={categoryDetails.iconName as any}
+                size={14}
+                color="white"
               />
-              <CardTitle
-                className="ml-2 text-base font-semibold text-neutral-800 dark:text-neutral-100"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {categoryInfo.label}
-              </CardTitle>
             </View>
-          </CardHeader>
-          <CardContent className="pt-0 pb-2 px-1">
-            {budgetAmount !== undefined && budgetAmount > 0 ? (
-              <View className="flex-row items-baseline justify-start mb-1">
-                <Text
-                  className="text-lg font-bold text-neutral-900 dark:text-neutral-50"
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  € {currentAmount}
-                </Text>
-                <Text
-                  className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 pl-1"
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  /€ {budgetAmount}
-                </Text>
-              </View>
-            ) : (
+            <CardTitle
+              className="text-sm font-semibold text-neutral-500 dark:text-neutral-400"
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {categoryDetails.label}
+            </CardTitle>
+          </View>
+        </CardHeader>
+        <CardContent className="pt-0 pb-2 pl-6">
+          <Text
+            className={`text-xl font-bold text-neutral-900 dark:text-neutral-50`}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {currentAmount} €
+            {budgetAmount > 0 && (
               <Text
-                className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 mb-1"
+                className={`text-sm font-bold text-muted-foreground`}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                € {currentAmount}
+                {" "}
+                /{budgetAmount} €
               </Text>
             )}
-            {!isNaN(percentage) && (
-              <TouchableOpacity
-                onPress={handleIndicatorPress}
-                activeOpacity={0.7}
-              >
-                <Progress
-                  value={percentage}
-                  className={`h-3 w-full rounded-full`}
-                  indicatorStyle={{ backgroundColor: color, borderRadius: 999 }}
-                />
-              </TouchableOpacity>
-            )}
-          </CardContent>
-        </Card>
-        <ColorPicker
-          visible={showColorPicker}
-          selectedColor={color}
-          onColorSelected={handleColorSelected}
-          onClose={() => setShowColorPicker(false)}
-        />
-      </TouchableOpacity>
-    </>
+          </Text>
+          {budgetAmount > 0 && (
+            <View className="mt-2 h-1.5 w-full bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+              <View
+                className="h-full rounded-full"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: categoryColor,
+                }}
+              />
+            </View>
+          )}
+        </CardContent>
+      </Card>
+    </TouchableOpacity>
   );
-}
+};
