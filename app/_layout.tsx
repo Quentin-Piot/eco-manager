@@ -65,11 +65,11 @@ export default function RootLayout() {
         <title>Eco-Manager - Suivi de Dépenses et Revenus</title>
         <meta
           name="description"
-          content="Gérez facilement vos dépenses et revenus mensuels avec Eco-Manager. Suivez votre budget, visualisez vos habitudes de dépenses et atteignez vos objectifs financiers."
+          content="Gérez facilement vos dépenses et revenus mensuels avec Eco-Manager. Suivez votre budget, visualisez vos habitudes de dépenses et atteignez vos objectifs financiers. Par Quentin Piot"
         />
         <meta
           name="keywords"
-          content="gestion budget, suivi dépenses, suivi revenus, application finance personnelle, budget mensuel, économiser argent"
+          content="quentin piot, gestion budget, suivi dépenses, suivi revenus, application finance personnelle, budget mensuel, économiser argent"
         />
         <meta
           property="og:title"
