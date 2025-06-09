@@ -53,7 +53,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         {...props}
       >
         {Platform.OS === "web" ? (
-          <View className="flex-1 mx-auto max-w-[500px] w-full">
+          <View className="flex-1 mx-auto max-w-[430px] w-full">
             {children}
           </View>
         ) : (

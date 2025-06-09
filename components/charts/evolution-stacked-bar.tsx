@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const EvolutionPie = () => {
+const EvolutionStackedBar = () => {
   const { transactions } = useAccount();
 
   const data = useMemo<
@@ -209,4 +209,4 @@ const EvolutionPie = () => {
   );
 };
 
-export default memo(EvolutionPie);
+export default memo(EvolutionStackedBar);

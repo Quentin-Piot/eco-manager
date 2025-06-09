@@ -41,6 +41,7 @@ export const getUserData = async (): Promise<{
           : undefined,
       })),
       monthlyBudget: parsed.monthlyBudget || null,
+      spendingCategories: parsed.spendingCategories || [],
     };
   } catch (error) {
     console.error("Error getting user data:", error);

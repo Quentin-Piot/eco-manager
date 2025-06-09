@@ -78,14 +78,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </View>
       <View className="mb-4">
         <Text className="text-sm text-muted-foreground mb-1">
-          Intitulé (optionnel)
+          Libellé (optionnel)
         </Text>
         <Input
-          placeholder={
-            transactionType === "expense"
-              ? "Achat de ..."
-              : "Salaire mensuel ..."
-          }
+          placeholder={"..."}
           value={remarks}
           onChangeText={onRemarksChange}
           className="h-12"

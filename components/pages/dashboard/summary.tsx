@@ -266,6 +266,7 @@ export const RemainingBudgetCard = ({
       value={remainingBudget.toFixed(2)}
       icon="wallet-outline"
       percentage={percentage}
+      valueColorClass={"text-primary"}
       onPress={onPress}
     />
   );

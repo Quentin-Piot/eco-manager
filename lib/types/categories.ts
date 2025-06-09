@@ -32,6 +32,7 @@ export type ActivitiesSubcategory =
   | "cafe"
   | "drinks"
   | "sport"
+  | "dessert"
   | "other";
 export type VacationSubcategory =
   | "transport"
@@ -248,6 +249,13 @@ export const subcategoryDetailsMap: Record<string, SubcategoryDetails> = {
     label: "Sport",
     type: "expense",
     iconName: "sports-basketball",
+    mainCategory: "activities",
+  },
+  "activities.dessert": {
+    name: "dessert",
+    label: "Dessert",
+    type: "expense",
+    iconName: "icecream",
     mainCategory: "activities",
   },
   "activities.other": {

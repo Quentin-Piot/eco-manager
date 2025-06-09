@@ -2,7 +2,7 @@ import { SpendingCard } from "@/components/ui/spending-card";
 import { TouchableOpacity, View } from "react-native";
 import MainLayout from "~/components/layouts/main-layout";
 import React, { useMemo, useState } from "react";
-import EvolutionPie from "~/components/charts/evolution-pie";
+import EvolutionPie from "~/components/charts/evolution-stacked-bar";
 import PieChart, {
   PieChartTouchLayer,
   PieSlice,
