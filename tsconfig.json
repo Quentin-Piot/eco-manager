@@ -3,6 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@firebase/auth": [
+        "./node_modules/@firebase/auth/dist/index.rn.d.ts"
+      ],
       "~/*": [
         "*"
       ],
@@ -10,7 +13,10 @@
         "./*"
       ]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "module": "esnext"
+    // Or "es2020", "commonjs", "node16", "nodenext"
+    // "moduleResolution": "node" // Often a good idea to ensure this is set, though Expo's base might handle it.
   },
   "include": [
     "**/*.ts",

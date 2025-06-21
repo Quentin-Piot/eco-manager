@@ -2,6 +2,7 @@ import React, { PropsWithChildren, ReactNode } from "react";
 import { Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "~/components/ui/text";
+import { UserAvatar } from "~/components/auth/user-avatar";
 import { cn } from "~/lib/utils";
 
 function MainLayout({
@@ -26,14 +27,21 @@ function MainLayout({
         contentContainerStyle={{ flexGrow: 1 }}
       >
         <View className="px-4 py-3">
-          <Text
-            className={cn(
-              "text-primary-darker text-2xl font-bold tracking-tight",
-              "text-center w-full",
-            )}
-          >
-            {pageName}
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1">
+              <Text
+                className={cn(
+                  "text-primary-darker text-2xl font-bold tracking-tight",
+                  "text-center w-full",
+                )}
+              >
+                {pageName}
+              </Text>
+            </View>
+            <View className="absolute right-0">
+              <UserAvatar />
+            </View>
+          </View>
         </View>
 
         <View className={cn(`gap-4 w-full px-4 pt-2`)}>{children}</View>

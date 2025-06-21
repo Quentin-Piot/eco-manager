@@ -4,11 +4,12 @@ import { MainExpenseCategory } from "~/lib/types/categories";
 
 export const USER_DATA_KEY = "user_data";
 
-export const saveUserData = async (
-  transactions: TransactionsState,
-  monthlyBudget?: number | null,
-  spendingCategories?: { type: MainExpenseCategory; budgetAmount: number }[],
-): Promise<void> => {
+export const saveUserData = async (data: {
+  transactions: TransactionsState;
+  monthlyBudget?: number | null;
+  spendingCategories?: { type: MainExpenseCategory; budgetAmount: number }[];
+}): Promise<void> => {
+  const { transactions, monthlyBudget, spendingCategories } = data;
   try {
     const serializedData = JSON.stringify({
       transactions,

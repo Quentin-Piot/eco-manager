@@ -20,9 +20,11 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "~/components/ui/toast";
 import { WebAlert } from "~/components/ui/web-alert";
 import { WebContainer } from "~/components/ui/web-container";
+import { AuthProvider } from "~/lib/context/auth";
 import { AccountProvider } from "~/lib/context/account-context";
 import { BackgroundProvider } from "~/lib/context/background";
 import { IndicatorColorsProvider } from "~/lib/context/indicator-colors-context";
+import { AppStartup } from "~/components/app-startup";
 import Head from "expo-router/head";
 
 // Import des styles spécifiques pour la version web
@@ -91,21 +93,28 @@ export default function RootLayout() {
         />
       </Head>
       <WebContainer>
-        <BackgroundProvider>
-          <AccountProvider>
-            <IndicatorColorsProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
+        <AuthProvider>
+          <BackgroundProvider>
+            <AccountProvider>
+              <IndicatorColorsProvider>
+                <AppStartup>
+                  <Stack>
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen name="+not-found" />
+                  </Stack>
+                </AppStartup>
+                <StatusBar style="auto" />
 
-              <PortalHost />
-              <Toast config={toastConfig} />
-              <WebAlert />
-            </IndicatorColorsProvider>
-          </AccountProvider>
-        </BackgroundProvider>
+                <PortalHost />
+                <Toast config={toastConfig} />
+                <WebAlert />
+              </IndicatorColorsProvider>
+            </AccountProvider>
+          </BackgroundProvider>
+        </AuthProvider>
       </WebContainer>
     </ThemeProvider>
   );

@@ -6,6 +6,8 @@ import React, {
   useState,
 } from "react";
 import { getUserData, saveUserData } from "~/lib/storage/user-storage";
+import { authService } from "~/lib/services/auth.service";
+import { cloudStorageService } from "~/lib/services/cloud-storage.service";
 import {
   MainCategory,
   MainExpenseCategory,
@@ -56,148 +58,19 @@ type AccountContextType = {
   deleteTransaction: (id: string, deleteRecurrenceGroup?: boolean) => void;
   monthlyBudget: number | null;
   updateMonthlyBudget: (newBudget: number) => void;
+  // Fonctions d'authentification
+  isAuthenticated: boolean;
+  signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  syncWithCloud: () => Promise<void>;
+  forceSave: () => Promise<void>;
+  refreshData: () => Promise<void>;
 };
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
 // Ces données ne seront utilisées que si aucune donnée n'est trouvée dans le stockage
-const initialMockTransactions: TransactionsState = [
-  {
-    id: "1",
-    remarks: "Starbucks",
-    amount: 4.19,
-    amountOriginal: "21,00 MYR",
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "cafe",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "2",
-    remarks: "Cinema",
-    amount: 9.98,
-    amountOriginal: "50,00 MYR",
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "other",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "3",
-    remarks: "Dinner",
-    amount: 5.19,
-    amountOriginal: "26,00 MYR",
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "restaurant",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "4",
-    remarks: "Local Cafe",
-    amount: 1.6,
-    amountOriginal: "8,00 MYR",
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "cafe",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "5",
-    remarks: "",
-    amount: 3.19,
-    amountOriginal: "16,00 MYR",
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "housing",
-    subcategory: "other",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "6",
-    remarks: "Hotel Night",
-    amount: 15.5,
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "vacation",
-    subcategory: "accommodation",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "7",
-    remarks: "Bank Fee",
-    amount: 3.7,
-    date: new Date(),
-    paymentMethod: "card",
-    mainCategory: "housing",
-    subcategory: "bills",
-    type: "expense",
-    recurrence: "monthly",
-    nextRecurrenceDate: new Date(
-      new Date().setMonth(new Date().getMonth() + 1),
-    ),
-  },
-  {
-    id: "8",
-    remarks: "Lunch",
-    amount: 6.18,
-    amountOriginal: "31,00 MYR",
-    date: new Date(Date.now() - 86400000),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "restaurant",
-    type: "expense",
-    recurrence: "none",
-  },
-  {
-    id: "9",
-    remarks: "Morning Coffee",
-    amount: 7.4,
-    amountOriginal: "37,00 MYR",
-    date: new Date(Date.now() - 86400000),
-    paymentMethod: "card",
-    mainCategory: "activities",
-    subcategory: "cafe",
-    type: "expense",
-    recurrence: "daily",
-    nextRecurrenceDate: new Date(new Date().setDate(new Date().getDate() + 1)),
-  },
-  {
-    id: "10",
-    remarks: "Salaire",
-    amount: 2500,
-    date: new Date(new Date().setDate(10)), // 10th of current month
-    paymentMethod: "card",
-    mainCategory: "income",
-    subcategory: "salary",
-    type: "income",
-    recurrence: "monthly",
-    nextRecurrenceDate: new Date(
-      new Date().setMonth(new Date().getMonth() + 1),
-    ),
-  },
-  {
-    id: "11",
-    remarks: "Bonus",
-    amount: 500,
-    date: new Date(new Date().setMonth(new Date().getMonth() - 1, 15)), // 15th of last month
-    paymentMethod: "card",
-    mainCategory: "income",
-    subcategory: "salary",
-    type: "income",
-    recurrence: "none",
-  },
-];
+const initialMockTransactions: TransactionsState = [];
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [spendingCategories, setSpendingCategories] = useState<
@@ -222,12 +95,37 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   ]);
   const [transactions, setTransactions] = useState<TransactionsState>([]);
   const [monthlyBudget, setMonthlyBudget] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
+
+  // Vérifier l'état d'authentification au démarrage
+  useEffect(() => {
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
 
   // Charger les données du storage au démarrage
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const userData = await getUserData();
+        let userData = null;
+
+        // Essayer de charger depuis le cloud d'abord si l'utilisateur est authentifié
+        if (authService.isAuthenticated()) {
+          try {
+            userData = await cloudStorageService.getFinancialData();
+          } catch (cloudError) {
+            console.warn(
+              "Erreur lors du chargement depuis le cloud, utilisation du stockage local:",
+              cloudError,
+            );
+          }
+        }
+
+        // Si pas de données cloud, charger depuis le stockage local
+        if (!userData) {
+          userData = await getUserData();
+        }
+
         if (userData) {
           if (userData.transactions) {
             // Ensure dates are parsed correctly
@@ -281,6 +179,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
               : undefined,
           })),
         );
+      } finally {
+        // Marquer la fin du chargement initial
+        setIsInitialLoad(false);
       }
     };
 
@@ -289,9 +190,27 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   // Sauvegarder les données à chaque modification des transactions, du budget mensuel ou des budgets par catégorie
   useEffect(() => {
+    // Ne pas sauvegarder pendant le chargement initial pour éviter d'écraser les données cloud
+    if (isInitialLoad) {
+      return;
+    }
+
     const saveData = async () => {
       try {
-        await saveUserData(transactions, monthlyBudget, spendingCategories);
+        // Sauvegarder localement
+        await saveUserData({ transactions, monthlyBudget, spendingCategories });
+        console.log("la");
+
+        console.log(authService);
+        // Sauvegarder dans le cloud si l'utilisateur est authentifié
+        if (authService.isAuthenticated()) {
+          console.log("ici");
+          await cloudStorageService.saveFinancialData({
+            transactions,
+            monthlyBudget,
+            spendingCategories,
+          });
+        }
       } catch (error) {
         console.error(
           "Erreur lors de la sauvegarde des données utilisateur:",
@@ -301,7 +220,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     };
 
     saveData();
-  }, [transactions, monthlyBudget, spendingCategories]);
+  }, [transactions, monthlyBudget, spendingCategories, isInitialLoad]);
 
   const updateBudget = useCallback(
     (categoryType: MainCategory, newBudget: number) => {
@@ -318,6 +237,124 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const updateMonthlyBudget = useCallback((newBudget: number) => {
     setMonthlyBudget(newBudget);
+  }, []);
+
+  // Fonction pour forcer la sauvegarde (utilisée après résolution de conflit)
+  const forceSave = useCallback(async () => {
+    try {
+      // Sauvegarder localement
+      await saveUserData({ transactions, monthlyBudget, spendingCategories });
+
+      // Sauvegarder dans le cloud si l'utilisateur est authentifié
+      if (authService.isAuthenticated()) {
+        await cloudStorageService.saveFinancialData({
+          transactions,
+          monthlyBudget,
+          spendingCategories,
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde forcée:", error);
+      throw error;
+    }
+  }, [transactions, monthlyBudget, spendingCategories]);
+
+  // Fonction pour rafraîchir les données depuis le stockage local
+  const refreshData = useCallback(async () => {
+    try {
+      const userData = await getUserData();
+
+      if (userData) {
+        if (userData.transactions) {
+          const loadedTransactions = userData.transactions.map(
+            (t: ExpenseData) => ({
+              ...t,
+              date: new Date(t.date),
+              nextRecurrenceDate: t.nextRecurrenceDate
+                ? new Date(t.nextRecurrenceDate)
+                : undefined,
+            }),
+          );
+          setTransactions(loadedTransactions);
+        }
+
+        if (userData.monthlyBudget !== undefined) {
+          setMonthlyBudget(userData.monthlyBudget);
+        }
+
+        if (userData.spendingCategories) {
+          setSpendingCategories(
+            userData.spendingCategories as SpendingCategory[],
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des données:", error);
+      throw error;
+    }
+  }, []);
+
+  // Fonction de synchronisation avec le cloud
+  const syncWithCloud = useCallback(async () => {
+    try {
+      if (!authService.isAuthenticated()) {
+        console.warn("Utilisateur non authentifié, impossible de synchroniser");
+        return;
+      }
+
+      // Récupérer les données du cloud
+      const cloudData = await cloudStorageService.getFinancialData();
+
+      if (cloudData) {
+        // Mettre à jour les états avec les données du cloud
+        if (cloudData.transactions) {
+          const loadedTransactions = cloudData.transactions.map(
+            (t: ExpenseData) => ({
+              ...t,
+              date: new Date(t.date),
+              nextRecurrenceDate: t.nextRecurrenceDate
+                ? new Date(t.nextRecurrenceDate)
+                : undefined,
+            }),
+          );
+          setTransactions(loadedTransactions);
+        }
+
+        if (cloudData.monthlyBudget !== undefined) {
+          setMonthlyBudget(cloudData.monthlyBudget);
+        }
+
+        if (cloudData.spendingCategories) {
+          setSpendingCategories(cloudData.spendingCategories);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la synchronisation:", error);
+      throw error;
+    }
+  }, []);
+
+  // Fonctions d'authentification
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      await authService.signInWithGoogle();
+      setIsAuthenticated(true);
+      // Synchroniser les données après la connexion
+      await syncWithCloud();
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
+      throw error;
+    }
+  }, [syncWithCloud]);
+
+  const signOut = useCallback(async () => {
+    try {
+      await authService.signOut();
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      throw error;
+    }
   }, []);
 
   // Fonction pour vérifier et créer les transactions récurrentes
@@ -819,6 +856,12 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     deleteTransaction,
     monthlyBudget,
     updateMonthlyBudget,
+    isAuthenticated,
+    signInWithGoogle,
+    signOut,
+    syncWithCloud,
+    forceSave,
+    refreshData,
   };
 
   return (

@@ -5,23 +5,8 @@ export interface BaseTransaction {
   id: string;
   amount: number;
   remarks?: string;
+  amountOriginal?: string;
   date: Date;
-  accountId: string;
-  type: "expense" | "income";
-  paymentMethod: "cash" | "card";
-  mainCategory: MainCategory;
-  subcategory: Subcategory;
-  recurrence: RecurrenceType;
-  nextRecurrenceDate?: Date;
-  parentTransactionId?: string; // For recurring instances, reference to the original
-}
-
-export interface BaseTransaction {
-  id: string;
-  amount: number;
-  remarks?: string;
-  date: Date;
-  accountId: string;
   type: "expense" | "income";
   paymentMethod: "cash" | "card";
   mainCategory: MainCategory;
@@ -34,7 +19,5 @@ export interface BaseTransaction {
   isRecurrenceParent?: boolean; // Whether this is the parent transaction of a recurrence group
 }
 
-export type ExpenseData = BaseTransaction;
-export type IncomeData = BaseTransaction;
 export type ExpenseData = BaseTransaction;
 export type IncomeData = BaseTransaction;
