@@ -1,17 +1,11 @@
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "~/lib/context/auth";
 import { useAccount } from "~/lib/context/account-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "~/lib/theme";
-import { cloudStorageService } from "~/lib/services/cloud-storage.service";
-import { authService } from "~/lib/services/auth.service";
+import { DataConflictResolver } from "~/lib/utils/data-conflict-resolver";
+import alert from "~/components/alert";
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -27,81 +21,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     try {
       setIsProcessingData(true);
 
-      // Wait a bit for auth state to update after sign-in
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Check if user is authenticated before proceeding
-      if (!authService.isAuthenticated()) {
-        console.log(
-          "User not authenticated yet, skipping data conflict resolution",
-        );
-        onLoginSuccess();
-        return;
-      }
-
-      // Check if there's data in the cloud
-      const cloudData = await cloudStorageService.getFinancialData();
-
-      if (
-        cloudData &&
-        (cloudData.transactions?.length > 0 ||
-          cloudData.monthlyBudget ||
-          cloudData.spendingCategories?.length > 0)
-      ) {
-        // Show dialog to choose between restore or overwrite
-        Alert.alert(
-          "Data Found in Cloud",
-          "We found existing data in your cloud storage. What would you like to do?",
-          [
-            {
-              text: "Restore from Cloud",
-              onPress: async () => {
-                try {
-                  await restoreDataFromCloud();
-                  // Refresh data to update the interface
-                  await refreshData();
-                  Alert.alert(
-                    "Success",
-                    "Your data has been restored from the cloud.",
-                  );
-                  onLoginSuccess();
-                } catch (error) {
-                  console.error("Error restoring data:", error);
-                  Alert.alert("Error", "Failed to restore data from cloud.");
-                }
-              },
-            },
-            {
-              text: "Overwrite Cloud",
-              style: "destructive",
-              onPress: async () => {
-                try {
-                  await forceSave();
-                  Alert.alert(
-                    "Success",
-                    "Your local data has been synced to the cloud.",
-                  );
-                  onLoginSuccess();
-                } catch (error) {
-                  console.error("Error syncing data:", error);
-                  Alert.alert("Error", "Failed to sync data to cloud.");
-                }
-              },
-            },
-            {
-              text: "Cancel",
-              style: "cancel",
-              onPress: () => onLoginSuccess(), // Continue without syncing
-            },
-          ],
-        );
-      } else {
-        // No cloud data, just sync local data
-        await forceSave();
-        onLoginSuccess();
-      }
+      await DataConflictResolver.handleDataConflictResolution({
+        restoreDataFromCloud,
+        forceSave,
+        refreshData,
+        onComplete: () => {
+          onLoginSuccess();
+        },
+      });
     } catch (error) {
-      console.error("Error checking cloud data:", error);
+      console.error("Error in data conflict resolution:", error);
       onLoginSuccess(); // Continue anyway
     } finally {
       setIsProcessingData(false);
@@ -116,14 +45,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       // After successful login, handle data conflict resolution
       await handleDataConflictResolution();
     } catch (error) {
-      console.error("Sign in error:", error);
-      Alert.alert(
-        "Sign In Failed",
-        "There was an error signing in with Google. Please try again.",
+      console.error("Erreur de connexion:", error);
+      alert(
+        "Échec de la connexion",
+        "Une erreur s'est produite lors de la connexion avec Google. Veuillez réessayer.",
         [{ text: "OK" }],
       );
+      // Ensure we call onLoginSuccess even if there's an error
+      onLoginSuccess();
     } finally {
       setIsSigningIn(false);
+      setIsProcessingData(false);
     }
   };
 
@@ -136,7 +68,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color={colors.primary.DEFAULT} />
         <Text className="mt-4 text-gray-600">
-          {isProcessingData ? "Processing your data..." : "Loading..."}
+          {isProcessingData ? "Traitement de vos données..." : "Chargement..."}
         </Text>
       </View>
     );
@@ -155,10 +87,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             />
           </View>
           <Text className="mb-3 text-center text-3xl font-bold text-gray-900">
-            Welcome to Eco-Manager
+            Bienvenue sur Eco-Manager
           </Text>
           <Text className="text-center text-lg leading-relaxed text-gray-600">
-            Manage your finances with ease and sync across all your devices
+            Gérez vos finances facilement et synchronisez sur tous vos appareils
           </Text>
         </View>
 
@@ -169,7 +101,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <Ionicons name="checkmark" size={16} color="#10B981" />
             </View>
             <Text className="flex-1 text-base text-gray-700">
-              Sync your data across all devices
+              Synchronisez vos données sur tous vos appareils
             </Text>
           </View>
           <View className="flex-row items-center">
@@ -177,7 +109,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <Ionicons name="checkmark" size={16} color="#10B981" />
             </View>
             <Text className="flex-1 text-base text-gray-700">
-              Automatic backup to the cloud
+              Sauvegarde automatique dans le cloud
             </Text>
           </View>
           <View className="flex-row items-center">
@@ -185,7 +117,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <Ionicons name="checkmark" size={16} color="#10B981" />
             </View>
             <Text className="flex-1 text-base text-gray-700">
-              Never lose your financial data
+              Ne perdez jamais vos données financières
             </Text>
           </View>
         </View>
@@ -211,7 +143,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <>
               <Ionicons name="logo-google" size={24} color="white" />
               <Text className="ml-3 text-lg font-semibold text-white">
-                Continue with Google
+                Continuer avec Google
               </Text>
             </>
           )}
@@ -224,14 +156,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           disabled={isSigningIn}
         >
           <Text className="text-base font-medium text-gray-500">
-            Continue without signing in
+            Continuer sans se connecter
           </Text>
         </TouchableOpacity>
 
         {/* Privacy Note */}
         <Text className="mt-8 text-center text-sm text-gray-400">
-          Your data is encrypted and secure. We never share your personal
-          information.
+          Vos données sont chiffrées et sécurisées. Nous ne partageons jamais
+          vos informations personnelles.
         </Text>
       </View>
     </View>

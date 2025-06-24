@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { Button } from "./button";
 import { Text } from "~/components/ui/text";
 import { BottomModal } from "~/components/ui/custom-modal";
-import { Input } from "~/components/ui/input";
+import { NumericInput } from "~/components/ui/numeric-input";
 import { useAccount } from "~/lib/context/account-context";
 import { categoryDetailsMap } from "~/lib/types/categories";
 
@@ -105,13 +105,10 @@ export function MonthlyBudgetModal({
         catégories.
       </Text>
 
-      <Input
-        onChangeText={(text) => {
-          setNewBudgetInput(text);
-        }}
+      <NumericInput
+        onChangeText={setNewBudgetInput}
         value={newBudgetInput}
         placeholder={`Budget mensuel (€) - Minimum ${totalCategoryBudgets}€`}
-        keyboardType="number-pad"
         className={"mb-4"}
       />
 

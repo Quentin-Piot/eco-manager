@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Switch,
   Text,
@@ -11,6 +10,7 @@ import {
 import { useAuth } from "~/lib/context/auth";
 import { useAccount } from "~/lib/context/account-context";
 import { Ionicons } from "@expo/vector-icons";
+import alert from "~/components/alert";
 
 // Les couleurs doivent être définies dans tailwind.config.js
 // Par exemple:
@@ -42,7 +42,7 @@ export const AuthSettings: React.FC<AuthSettingsProps> = ({
   const [autoSync, setAutoSync] = useState(true);
 
   const handleSignOut = async () => {
-    Alert.alert(
+    alert(
       "Sign Out",
       "Are you sure you want to sign out? Your data will remain on this device.",
       [
@@ -56,7 +56,7 @@ export const AuthSettings: React.FC<AuthSettingsProps> = ({
               await signOut();
             } catch (error) {
               console.error("Sign out error:", error);
-              Alert.alert("Error", "Failed to sign out. Please try again.");
+              alert("Error", "Failed to sign out. Please try again.");
             } finally {
               setIsSigningOut(false);
             }
@@ -70,13 +70,10 @@ export const AuthSettings: React.FC<AuthSettingsProps> = ({
     try {
       setIsSyncing(true);
       await forceSave();
-      Alert.alert("Success", "Your data has been synced to the cloud.");
+      alert("Success", "Your data has been synced to the cloud.");
     } catch (error) {
       console.error("Sync error:", error);
-      Alert.alert(
-        "Sync Failed",
-        "Failed to sync data to cloud. Please try again.",
-      );
+      alert("Sync Failed", "Failed to sync data to cloud. Please try again.");
     } finally {
       setIsSyncing(false);
     }

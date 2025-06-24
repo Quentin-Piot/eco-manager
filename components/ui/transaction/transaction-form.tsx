@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Text } from "~/components/ui/text";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { NumericInput } from "~/components/ui/numeric-input";
 import { cn } from "~/lib/utils";
 import { colors } from "~/lib/theme";
 import { DatePickerModal } from "~/components/ui/date-picker-modal";
@@ -68,9 +69,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
       <View className="mb-4">
         <Text className="text-sm text-muted-foreground mb-1">Montant</Text>
-        <Input
+        <NumericInput
           placeholder="0,00"
-          keyboardType="number-pad"
           value={amount}
           onChangeText={onAmountChange}
           className="text-2xl h-12"

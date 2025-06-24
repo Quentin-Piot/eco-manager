@@ -1,13 +1,9 @@
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "~/lib/context/auth";
 import { Ionicons } from "@expo/vector-icons";
+
+import alert from "~/components/alert";
 
 // Assurez-vous que vos couleurs Tailwind sont configurées dans tailwind.config.js
 // par exemple:
@@ -44,10 +40,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       onClose?.();
     } catch (error) {
       console.error("Sign in error:", error);
-      Alert.alert(
+      alert(
         "Sign In Failed",
         "There was an error signing in with Google. Please try again.",
-        [{ text: "OK" }],
       );
     } finally {
       setIsSigningIn(false);

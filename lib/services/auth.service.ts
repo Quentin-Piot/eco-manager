@@ -49,7 +49,7 @@ export class AuthService {
       const result = await signInWithPopup(auth, googleProvider);
       return result.user;
     } catch (error) {
-      console.error("Error signing in with Google:", error);
+      console.error("Erreur lors de la connexion avec Google:", error);
       throw error;
     }
   }
@@ -62,7 +62,10 @@ export class AuthService {
       const result = await signInWithCredential(auth, credential);
       return result.user;
     } catch (error) {
-      console.error("Error signing in with Google credential:", error);
+      console.error(
+        "Erreur lors de la connexion avec les identifiants Google:",
+        error,
+      );
       throw error;
     }
   }
@@ -79,7 +82,7 @@ export class AuthService {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Erreur lors de la déconnexion:", error);
       throw error;
     }
   }

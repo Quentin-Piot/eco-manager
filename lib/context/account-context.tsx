@@ -197,14 +197,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
     const saveData = async () => {
       try {
-        // Sauvegarder localement
         await saveUserData({ transactions, monthlyBudget, spendingCategories });
-        console.log("la");
 
-        console.log(authService);
-        // Sauvegarder dans le cloud si l'utilisateur est authentifié
         if (authService.isAuthenticated()) {
-          console.log("ici");
           await cloudStorageService.saveFinancialData({
             transactions,
             monthlyBudget,

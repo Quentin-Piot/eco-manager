@@ -9,9 +9,11 @@ import { useAccount } from "~/lib/context/account-context";
 import { format, isToday, isYesterday } from "date-fns";
 import { TransactionItem } from "~/components/pages/details/transaction-item";
 import { fr } from "date-fns/locale/fr";
-import { capitalizeFirstLetter } from "~/lib/utils";
+import { capitalizeFirstLetter, cn } from "~/lib/utils";
 import { useBackground } from "~/lib/context/background";
 import { Container } from "~/components/ui/container";
+import { Button } from "~/components/ui/button";
+import { colors } from "~/lib/theme";
 
 const formatDateKey = (date: Date): string => {
   return format(date, "yyyy-MM-dd");
@@ -65,19 +67,24 @@ export default function DetailsScreen() {
       fab={
         <TouchableOpacity
           onPress={() => setIsModalVisible(true)}
-          className="absolute justify-center items-center right-6 w-14 h-14 rounded-full z-10"
+          className={cn(
+            "absolute justify-center items-center right-6 w-14 h-14 rounded-full z-10",
+            Object.entries(groupedTransactions).length === 0
+              ? "invisible"
+              : "visible",
+          )}
           style={
             Platform.OS === "ios"
               ? {
                   bottom: 100,
-                  backgroundColor: "#007AFF",
-                  shadowColor: "#007AFF",
+                  backgroundColor: colors.primary.DEFAULT,
+                  shadowColor: colors.primary.DEFAULT,
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.3,
                   shadowRadius: 8,
                   elevation: 5,
                 }
-              : { bottom: 45, backgroundColor: "#007AFF" }
+              : { bottom: 45, backgroundColor: colors.primary.DEFAULT }
           }
         >
           <MaterialIcons name="add" size={28} color="white" />
@@ -85,6 +92,15 @@ export default function DetailsScreen() {
       }
     >
       <Container>
+        {Object.entries(groupedTransactions).length === 0 && (
+          <View className={"h-full items-center justify-center"}>
+            <Button onPress={() => setIsModalVisible(true)}>
+              <Text className={"text-white"}>
+                Ajouter ma première transaction
+              </Text>
+            </Button>
+          </View>
+        )}
         {Object.entries(groupedTransactions).map(([dateGroup, items]) => (
           <View key={dateGroup} className="mb-4">
             <View className={"flex-row items-center justify-between mb-2 px-1"}>

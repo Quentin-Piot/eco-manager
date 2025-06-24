@@ -7,7 +7,7 @@ import {
   MainExpenseCategory,
 } from "~/lib/types/categories";
 import { BottomModal } from "~/components/ui/custom-modal";
-import { Input } from "~/components/ui/input";
+import { NumericInput } from "~/components/ui/numeric-input";
 import { useIndicatorColors } from "~/lib/context/indicator-colors-context";
 import { colors } from "~/lib/theme";
 import { ColorPicker } from "~/components/ui/color-picker";
@@ -85,11 +85,10 @@ export function EditBudgetModal({
         </Text>
       </View>
 
-      <Input
+      <NumericInput
         onChangeText={setNewBudgetInput}
         value={newBudgetInput}
         placeholder="Nouveau budget (€)"
-        keyboardType="number-pad"
         className={"mb-4"}
       />
 

@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Switch,
   TouchableOpacity,
@@ -19,8 +18,8 @@ import { useAuth } from "~/lib/context/auth";
 import { useAccount } from "~/lib/context/account-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "~/lib/theme";
-import { cloudStorageService } from "~/lib/services/cloud-storage.service";
-import { authService } from "~/lib/services/auth.service";
+import { DataConflictResolver } from "~/lib/utils/data-conflict-resolver";
+import alert from "~/components/alert";
 
 export const UserAvatar = () => {
   const {
@@ -40,7 +39,7 @@ export const UserAvatar = () => {
   const [autoSync, setAutoSync] = useState(true);
 
   const handleSignOut = async () => {
-    Alert.alert(
+    alert(
       "Déconnexion",
       "Êtes-vous sûr de vouloir vous déconnecter ? Vos données resteront sur cet appareil.",
       [
@@ -54,10 +53,7 @@ export const UserAvatar = () => {
               await signOut();
             } catch (error) {
               console.error("Erreur de déconnexion:", error);
-              Alert.alert(
-                "Erreur",
-                "Échec de la déconnexion. Veuillez réessayer.",
-              );
+              alert("Erreur", "Échec de la déconnexion. Veuillez réessayer.");
             } finally {
               setIsSigningOut(false);
             }
@@ -71,10 +67,10 @@ export const UserAvatar = () => {
     try {
       setIsSyncing(true);
       await forceSave();
-      Alert.alert("Succès", "Vos données ont été synchronisées dans le cloud.");
+      alert("Succès", "Vos données ont été synchronisées dans le cloud.");
     } catch (error) {
       console.error("Erreur de synchronisation:", error);
-      Alert.alert(
+      alert(
         "Échec de la synchronisation",
         "Impossible de synchroniser les données dans le cloud. Veuillez réessayer.",
       );
@@ -84,85 +80,11 @@ export const UserAvatar = () => {
   };
 
   const handleDataConflictResolution = async () => {
-    try {
-      // Wait a bit for auth state to update after sign-in
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Check if user is authenticated before proceeding
-      if (!authService.isAuthenticated()) {
-        console.log(
-          "User not authenticated yet, skipping data conflict resolution",
-        );
-        return;
-      }
-
-      // Check if there's data in the cloud
-      const cloudData = await cloudStorageService.getFinancialData();
-
-      if (
-        cloudData &&
-        (cloudData.transactions?.length > 0 ||
-          cloudData.monthlyBudget ||
-          cloudData.spendingCategories?.length > 0)
-      ) {
-        // Show dialog to choose between restore or overwrite
-        Alert.alert(
-          "Données trouvées dans le cloud",
-          "Nous avons trouvé des données existantes dans votre stockage cloud. Que souhaitez-vous faire ?",
-          [
-            {
-              text: "Restaurer depuis le cloud",
-              onPress: async () => {
-                try {
-                  await restoreDataFromCloud();
-                  // Rafraîchir les données pour mettre à jour l'interface
-                  await refreshData();
-                  Alert.alert(
-                    "Succès",
-                    "Vos données ont été restaurées depuis le cloud.",
-                  );
-                } catch (error) {
-                  console.error("Erreur lors de la restauration:", error);
-                  Alert.alert(
-                    "Erreur",
-                    "Échec de la restauration des données depuis le cloud.",
-                  );
-                }
-              },
-            },
-            {
-              text: "Écraser le cloud",
-              style: "destructive",
-              onPress: async () => {
-                try {
-                  await forceSave();
-                  Alert.alert(
-                    "Succès",
-                    "Vos données locales ont été synchronisées vers le cloud.",
-                  );
-                } catch (error) {
-                  console.error("Erreur lors de la synchronisation:", error);
-                  Alert.alert(
-                    "Erreur",
-                    "Échec de la synchronisation des données vers le cloud.",
-                  );
-                }
-              },
-            },
-            {
-              text: "Annuler",
-              style: "cancel",
-            },
-          ],
-        );
-      } else {
-        // No cloud data, just sync local data
-        await forceSave();
-      }
-    } catch (error) {
-      console.error("Erreur lors de la vérification des données cloud:", error);
-      // Continue anyway, don't block the user
-    }
+    await DataConflictResolver.handleDataConflictResolution({
+      restoreDataFromCloud,
+      forceSave,
+      refreshData,
+    });
   };
 
   const handleSignIn = async () => {
@@ -173,7 +95,7 @@ export const UserAvatar = () => {
       await handleDataConflictResolution();
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      Alert.alert("Erreur", "Échec de la connexion. Veuillez réessayer.");
+      alert("Erreur", "Échec de la connexion. Veuillez réessayer.");
     }
   };
 
