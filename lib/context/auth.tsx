@@ -12,8 +12,8 @@ import { Platform } from "react-native";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { AuthSessionResult, makeRedirectUri } from "expo-auth-session";
+import { getUserData, saveUserData } from "~/lib/storage/user-storage";
 
-// Configure WebBrowser for Expo
 WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextType {
@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
   }, []);
 
-  // Google Auth hook for mobile
   const googleAuthConfig = authService.getGoogleAuthConfig();
   const SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email"];
 
@@ -60,7 +59,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     redirectUri,
   });
 
-  // Handle Google Auth response
   useEffect(() => {
     if (response?.type === "success") {
       const handleGoogleResponse = async () => {
@@ -68,7 +66,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsLoading(true);
           const { id_token } = response.params;
           const user = await authService.signInWithGoogleCredential(id_token);
-          // Don't automatically restore data here - let the calling component handle it
         } catch (error) {
           console.error("Error handling Google response:", error);
         } finally {
@@ -86,10 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (Platform.OS === "web") {
         await authService.signInWithGoogleWeb();
-        // Don't automatically restore data here - let the calling component handle it
         return undefined;
       } else {
-        // For mobile, trigger the auth request
         return promptAsync();
       }
     } catch (error) {
@@ -120,14 +115,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      // Import storage functions dynamically to avoid circular dependencies
-      const { getUserData } = await import("~/lib/storage/user-storage");
-
-      // Get current local financial data
       const userData = await getUserData();
 
       if (userData) {
-        // Sync financial data to cloud
         await cloudStorageService.saveFinancialData({
           transactions: userData.transactions || [],
           monthlyBudget: userData.monthlyBudget || null,
@@ -146,15 +136,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      // Import storage functions dynamically to avoid circular dependencies
-      const { saveUserData } = await import("~/lib/storage/user-storage");
-
-      // Get financial data from cloud
       const cloudData = await cloudStorageService.getFinancialData();
 
-      console.log("c", cloudData);
       if (cloudData) {
-        // Restore financial data to local storage
         await saveUserData({
           transactions: cloudData.transactions,
           monthlyBudget: cloudData.monthlyBudget,
@@ -163,7 +147,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error("Error restoring data from cloud:", error);
-      // Don't throw error here as we want the app to continue working even if cloud restore fails
     }
   };
 

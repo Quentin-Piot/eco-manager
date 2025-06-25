@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Switch,
   TouchableOpacity,
@@ -20,6 +19,7 @@ import { useAccount } from "~/lib/context/account-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "~/lib/theme";
 import { DataConflictResolver } from "~/lib/utils/data-conflict-resolver";
+import alert from "~/components/alert";
 
 export const UserAvatar = () => {
   const {
@@ -39,7 +39,7 @@ export const UserAvatar = () => {
   const [autoSync, setAutoSync] = useState(true);
 
   const handleSignOut = async () => {
-    Alert.alert(
+    alert(
       "Déconnexion",
       "Êtes-vous sûr de vouloir vous déconnecter ? Vos données resteront sur cet appareil.",
       [
@@ -53,10 +53,7 @@ export const UserAvatar = () => {
               await signOut();
             } catch (error) {
               console.error("Erreur de déconnexion:", error);
-              Alert.alert(
-                "Erreur",
-                "Échec de la déconnexion. Veuillez réessayer.",
-              );
+              alert("Erreur", "Échec de la déconnexion. Veuillez réessayer.");
             } finally {
               setIsSigningOut(false);
             }
@@ -70,10 +67,10 @@ export const UserAvatar = () => {
     try {
       setIsSyncing(true);
       await forceSave();
-      Alert.alert("Succès", "Vos données ont été synchronisées dans le cloud.");
+      alert("Succès", "Vos données ont été synchronisées dans le cloud.");
     } catch (error) {
       console.error("Erreur de synchronisation:", error);
-      Alert.alert(
+      alert(
         "Échec de la synchronisation",
         "Impossible de synchroniser les données dans le cloud. Veuillez réessayer.",
       );
@@ -98,7 +95,7 @@ export const UserAvatar = () => {
       await handleDataConflictResolution();
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      Alert.alert("Erreur", "Échec de la connexion. Veuillez réessayer.");
+      alert("Erreur", "Échec de la connexion. Veuillez réessayer.");
     }
   };
 
