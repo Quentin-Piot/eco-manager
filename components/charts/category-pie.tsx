@@ -1,10 +1,10 @@
-import React, { memo, useMemo } from "react";
-import { Platform, StyleSheet, View } from "react-native";
-import { Path, Svg } from "react-native-svg";
-import { categoryDetailsMap, MainCategory } from "~/lib/types/categories";
+import React, {memo, useMemo} from "react";
+import {Platform, StyleSheet, View} from "react-native";
+import {Path, Svg} from "react-native-svg";
+import {categoryDetailsMap, MainCategory} from "~/lib/types/categories";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { LinearGradient, vec } from "@shopify/react-native-skia";
-import { Pie, PolarChart } from "victory-native";
+import {LinearGradient, vec} from "@shopify/react-native-skia";
+import {Pie, PolarChart} from "victory-native";
 
 const CHART_SIZE = 180;
 const ICON_WIDTH = 20;
@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "50%",
     left: "50%",
-    zIndex: 100,
+    zIndex: 1001,
   },
   iconContainer: {
     position: "absolute",
@@ -128,11 +128,7 @@ export const PieChartTouchLayer: React.FC<PieChartTouchLayerProps> = ({
         },
       ]}
     >
-      <Svg
-        width={size}
-        height={size}
-        style={{ position: "absolute", top: 0, left: 0 }}
-      >
+      <Svg width={size} height={size}>
         {slicesWithData.map((slice, index) => (
           <Path
             key={`path-${index}`}
@@ -177,7 +173,7 @@ type PieChartCo2Props = {
 };
 const VictoryChartCategories = ({ data }: PieChartCo2Props) => {
   return (
-    <View className={"h-full w-full"}>
+      <View className={"h-full w-full"} style={{zIndex: 1000, elevation: 1000}}>
       <PolarChart
         data={data}
         labelKey="label"

@@ -1,7 +1,7 @@
 import { CartesianChart, StackedBar } from "victory-native";
-import { memo, useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { matchFont, useFont } from "@shopify/react-native-skia";
-import { Platform, StyleSheet, Text, View } from "react-native"; // Import StyleSheet // Use basic Text for legends outside the chart
+import { Platform, StyleSheet, View } from "react-native";
 import { colors } from "~/lib/theme";
 import { useAccount } from "~/lib/context/account-context";
 import {
@@ -12,12 +12,12 @@ import {
   subMonths,
 } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Text } from "~/components/ui/text";
 
 const FONT_SIZE = 12;
 const ROUNDED_CORNER = 5;
 const INNER_PADDING = 0.66;
 
-// Add styles for the legend
 const styles = StyleSheet.create({
   legendContainer: {
     flexDirection: "row",
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: FONT_SIZE,
-    color: colors.primary.DEFAULT, // Use your theme colors
+    color: colors.primary.DEFAULT,
   },
 });
 
@@ -53,14 +53,13 @@ const EvolutionStackedBar = () => {
     }[]
   >(() => {
     const now = new Date();
-    const relevantMonthsData: {
+    const monthsData: {
       month: string;
       expenses: number;
       incomes: number;
     }[] = [];
 
-    let addedMonths = 0;
-    for (let i = 0; i < 4 && addedMonths < 4; i++) {
+    for (let i = 3; i >= 0; i--) {
       const date = subMonths(now, i);
       const monthStart = startOfMonth(date);
       const monthEnd = endOfMonth(date);
@@ -77,44 +76,20 @@ const EvolutionStackedBar = () => {
         .filter((t) => t.type === "income")
         .reduce((sum, t) => sum + t.amount, 0);
 
-      if (monthTransactions.length > 0) {
-        relevantMonthsData.unshift({
-          month: format(date, "MMM", { locale: fr }),
-          expenses,
-          incomes,
-        });
-        addedMonths++;
-      } else {
-        if (relevantMonthsData.length === 0 && i === 0) {
-          relevantMonthsData.unshift({
-            month: format(date, "MMM", { locale: fr }),
-            expenses: 0,
-            incomes: 0,
-          });
-          addedMonths++;
-        } else if (relevantMonthsData.length > 0) {
-          break;
-        }
-      }
-    }
-
-    while (relevantMonthsData.length < 4) {
-      const date = subMonths(now, 4 - relevantMonthsData.length);
-      relevantMonthsData.unshift({
+      monthsData.push({
         month: format(date, "MMM", { locale: fr }),
-        expenses: 0,
-        incomes: 0,
+        expenses,
+        incomes,
       });
     }
 
-    return relevantMonthsData;
+    return monthsData;
   }, [transactions]);
 
   const maxValue = useMemo(() => {
     if (data.length === 0) return 1;
-    // Calculate the max value based on the sum of expenses and incomes
     const maxTotal = Math.max(...data.map((d) => d.expenses + d.incomes));
-    return maxTotal > 0 ? maxTotal * 1.1 : 1; // Ensure a minimum value
+    return maxTotal > 0 ? maxTotal * 1.1 : 1;
   }, [data]);
 
   const geist = require("../../assets/fonts/Geist-Regular.ttf");
@@ -132,12 +107,13 @@ const EvolutionStackedBar = () => {
         })
       : geistFont;
 
-  if (data.length === 0 || maxValue <= 1) {
-    // Also check maxValue
+  const hasAnyTransactions = data.some((d) => d.expenses > 0 || d.incomes > 0);
+
+  if (!hasAnyTransactions) {
     return (
       <View className={"h-full w-full flex items-center justify-center"}>
-        <Text style={styles.legendText}>
-          Aucune donnée disponible pour les 4 derniers mois.
+        <Text className="text-muted-foreground text-sm">
+          Aucune donnée à afficher pour les 4 derniers mois.
         </Text>
       </View>
     );
@@ -146,15 +122,26 @@ const EvolutionStackedBar = () => {
   return (
     <View className={"h-full w-full"}>
       <CartesianChart
-        data={data}
+        data={data.map((v, i) => ({
+          ...v,
+          month: i,
+        }))}
         xKey={"month"}
         yKeys={["expenses", "incomes"]}
         domainPadding={{ left: 50, right: 50, top: 20 }}
-        domain={{ y: [0, maxValue] }}
+        domain={{
+          y: [0, maxValue],
+          x: [0, 3],
+        }}
         axisOptions={{
           font,
           lineColor: "#d4d4d8",
           labelColor: colors.primary.DEFAULT,
+          formatXLabel: (v) => {
+            const isInteger = v === Math.floor(v);
+            const exists = !!(isInteger ? data[v] : false);
+            return exists ? data[v].month : " ";
+          },
         }}
         padding={0}
       >

@@ -244,7 +244,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       if (authService.isAuthenticated()) {
         await cloudStorageService.saveFinancialData({
           transactions,
-          monthlyBudget,
+          monthlyBudget: monthlyBudget,
           spendingCategories,
         });
       }

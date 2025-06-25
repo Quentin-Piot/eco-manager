@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { BlurView } from "expo-blur";
-import { glass } from "~/lib/theme-ios18";
+import { View } from "react-native";
 
 type BackgroundContextType = {
   blurredCount: number;
@@ -35,12 +34,9 @@ export function BackgroundProvider({
       value={{ blurredCount, isBlurred, addBlur, removeBlur }}
     >
       {isBlurred && (
-        <BlurView
-          className={"absolute top-0 left-0 w-full h-full z-50"}
-          style={{ backgroundColor: "rgba(0,0,0,0.2)" }}
-          intensity={glass.light.blur - 5}
-          tint={"light"}
-          experimentalBlurMethod={"dimezisBlurView"}
+        <View
+          className={"absolute top-0 left-0 w-full h-full"}
+          style={{ backgroundColor: "rgba(0,0,0,0.2)", zIndex: 50 }}
         />
       )}
       {children}

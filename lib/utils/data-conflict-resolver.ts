@@ -1,6 +1,6 @@
-import { authService } from "~/lib/services/auth.service";
-import { cloudStorageService } from "~/lib/services/cloud-storage.service";
-import alert from "~/components/alert";
+import {Alert} from "react-native";
+import {authService} from "~/lib/services/auth.service";
+import {cloudStorageService} from "~/lib/services/cloud-storage.service";
 
 interface DataConflictResolverOptions {
   restoreDataFromCloud: () => Promise<void>;
@@ -33,7 +33,7 @@ export class DataConflictResolver {
         );
 
         // Show alert to retry or continue without sync
-        alert(
+        Alert.alert(
           "Problème d'authentification",
           "L'authentification prend plus de temps que prévu. Que souhaitez-vous faire ?",
           [
@@ -74,7 +74,7 @@ export class DataConflictResolver {
           cloudData.monthlyBudget ||
           cloudData.spendingCategories?.length > 0)
       ) {
-        alert(
+        Alert.alert(
           "Données trouvées dans le cloud",
           "Nous avons trouvé des données existantes dans votre stockage cloud. Que souhaitez-vous faire ?",
           [
@@ -84,14 +84,14 @@ export class DataConflictResolver {
                 try {
                   await restoreDataFromCloud();
                   await refreshData();
-                  alert(
+                  Alert.alert(
                     "Succès",
                     "Vos données ont été restaurées depuis le cloud.",
                   );
                   onComplete?.();
                 } catch (error) {
                   console.error("Erreur lors de la restauration:", error);
-                  alert(
+                  Alert.alert(
                     "Erreur",
                     "Échec de la restauration des données depuis le cloud.",
                   );
@@ -105,14 +105,14 @@ export class DataConflictResolver {
               onPress: async () => {
                 try {
                   await forceSave();
-                  alert(
+                  Alert.alert(
                     "Succès",
                     "Vos données locales ont été synchronisées vers le cloud.",
                   );
                   onComplete?.();
                 } catch (error) {
                   console.error("Erreur lors de la synchronisation:", error);
-                  alert(
+                  Alert.alert(
                     "Erreur",
                     "Échec de la synchronisation des données vers le cloud.",
                   );
@@ -152,15 +152,15 @@ export class DataConflictResolver {
   }
 
   private static async waitForAuthentication(
-    maxRetries: number = 10,
-    retryDelay: number = 500,
+      maxRetries: number = 10,
+      retryDelay: number = 500,
   ): Promise<boolean> {
     for (let i = 0; i < maxRetries; i++) {
       if (authService.isAuthenticated()) {
         return true;
       }
       console.log(
-        `En attente d'authentification... tentative ${i + 1}/${maxRetries}`,
+          `En attente d'authentification... tentative ${i + 1}/${maxRetries}`,
       );
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }

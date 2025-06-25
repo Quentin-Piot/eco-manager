@@ -1,5 +1,5 @@
 import MainLayout from "~/components/layouts/main-layout";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Platform, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Card } from "~/components/ui/card";
 import React, { useMemo, useState } from "react";
@@ -14,6 +14,7 @@ import { useBackground } from "~/lib/context/background";
 import { Container } from "~/components/ui/container";
 import { Button } from "~/components/ui/button";
 import { colors } from "~/lib/theme";
+import { Text } from "~/components/ui/text";
 
 const formatDateKey = (date: Date): string => {
   return format(date, "yyyy-MM-dd");
@@ -93,7 +94,7 @@ export default function DetailsScreen() {
     >
       <Container>
         {Object.entries(groupedTransactions).length === 0 && (
-          <View className={"h-full items-center justify-center"}>
+          <View className={"h-[80vh] items-center justify-center"}>
             <Button onPress={() => setIsModalVisible(true)}>
               <Text className={"text-white"}>
                 Ajouter ma première transaction

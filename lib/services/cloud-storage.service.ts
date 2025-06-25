@@ -44,6 +44,28 @@ export class CloudStorageService {
     spendingCategories: SpendingCategory[];
   }): Promise<void> {
     const { transactions, monthlyBudget, spendingCategories } = data;
+
+    const serializedTransactions = transactions.map((t) => {
+      const { nextRecurrenceDate, ...tx } = t;
+      const serialized: any = {
+        ...tx,
+        date: t.date.toISOString(),
+      };
+
+      // Only add nextRecurrenceDate if it exists
+      if (nextRecurrenceDate) {
+        serialized.nextRecurrenceDate = nextRecurrenceDate.toISOString();
+      }
+
+      return serialized;
+    });
+
+    const defaultMonthlyBudget = spendingCategories.reduce(
+      (acc, v) => acc + v.budgetAmount,
+      0,
+    );
+    const serializedMonthlyBudget = monthlyBudget ?? defaultMonthlyBudget;
+
     try {
       // Check if user is authenticated before attempting cloud access
       if (!authService.isAuthenticated()) {
@@ -52,42 +74,30 @@ export class CloudStorageService {
 
       const userDocRef = this.getUserDocRef();
 
-      // Serialize dates for Firestore
-      const serializedTransactions = transactions.map((t) => ({
-        ...t,
-        date: t.date.toISOString(),
-        nextRecurrenceDate: t.nextRecurrenceDate
-          ? t.nextRecurrenceDate.toISOString()
-          : undefined,
-      }));
-
-      await updateDoc(userDocRef, {
+      const updateData: any = {
         transactions: serializedTransactions,
-        monthlyBudget,
+        monthlyBudget: serializedMonthlyBudget,
         spendingCategories,
         lastUpdated: serverTimestamp(),
-      });
+      };
+
+      await updateDoc(userDocRef, updateData);
     } catch (error) {
       // If document doesn't exist, create it
       if (
         error instanceof Error &&
         error.message.includes("No document to update")
       ) {
-        const serializedTransactions = transactions.map((t) => ({
-          ...t,
-          date: t.date.toISOString(),
-          nextRecurrenceDate: t.nextRecurrenceDate
-            ? t.nextRecurrenceDate.toISOString()
-            : undefined,
-        }));
-
         await this.createUserDocument({
           transactions: serializedTransactions,
-          monthlyBudget,
+          monthlyBudget: serializedMonthlyBudget,
           spendingCategories,
         });
       } else {
-        console.error("Error saving financial data to cloud:", error);
+        console.error(
+          "Erreur lors de la sauvegarde des données financières dans le cloud:",
+          error,
+        );
         throw error;
       }
     }
@@ -130,7 +140,10 @@ export class CloudStorageService {
       }
       return null;
     } catch (error) {
-      console.error("Error getting financial data from cloud:", error);
+      console.error(
+        "Erreur lors de la récupération des données financières depuis le cloud:",
+        error,
+      );
       return null;
     }
   }
@@ -160,16 +173,25 @@ export class CloudStorageService {
         error instanceof Error &&
         error.message.includes("No document to update")
       ) {
-        const serializedTransactions = transactions.map((t) => ({
-          ...t,
-          date: t.date.toISOString(),
-          nextRecurrenceDate: t.nextRecurrenceDate
-            ? t.nextRecurrenceDate.toISOString()
-            : undefined,
-        }));
+        const serializedTransactions = transactions.map((t) => {
+          const serialized: any = {
+            ...t,
+            date: t.date.toISOString(),
+          };
+
+          // Only add nextRecurrenceDate if it exists
+          if (t.nextRecurrenceDate) {
+            serialized.nextRecurrenceDate = t.nextRecurrenceDate.toISOString();
+          }
+
+          return serialized;
+        });
         await this.createUserDocument({ transactions: serializedTransactions });
       } else {
-        console.error("Error saving transactions to cloud:", error);
+        console.error(
+          "Erreur lors de la sauvegarde des transactions dans le cloud:",
+          error,
+        );
         throw error;
       }
     }
@@ -196,7 +218,10 @@ export class CloudStorageService {
       ) {
         await this.createUserDocument({ spendingCategories });
       } else {
-        console.error("Error saving spending categories to cloud:", error);
+        console.error(
+          "Erreur lors de la sauvegarde des catégories de dépenses dans le cloud:",
+          error,
+        );
         throw error;
       }
     }
@@ -210,10 +235,17 @@ export class CloudStorageService {
       }
 
       const userDocRef = this.getUserDocRef();
-      await updateDoc(userDocRef, {
-        monthlyBudget,
+      // Filter out undefined values before updating
+      const updateData: any = {
         lastUpdated: serverTimestamp(),
-      });
+      };
+
+      // Only add monthlyBudget if it's not undefined
+      if (monthlyBudget !== undefined) {
+        updateData.monthlyBudget = monthlyBudget;
+      }
+
+      await updateDoc(userDocRef, updateData);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -221,7 +253,10 @@ export class CloudStorageService {
       ) {
         await this.createUserDocument({ monthlyBudget });
       } else {
-        console.error("Error saving monthly budget to cloud:", error);
+        console.error(
+          "Erreur lors de la sauvegarde du budget mensuel dans le cloud:",
+          error,
+        );
         throw error;
       }
     }
@@ -243,7 +278,10 @@ export class CloudStorageService {
       }
       return null;
     } catch (error) {
-      console.error("Error getting all user data from cloud:", error);
+      console.error(
+        "Erreur lors de la récupération de toutes les données utilisateur depuis le cloud:",
+        error,
+      );
       return null;
     }
   }
@@ -290,12 +328,21 @@ export class CloudStorageService {
   ): Promise<void> {
     try {
       const userDocRef = this.getUserDocRef();
+
+      // Filter out undefined values
+      const cleanData = Object.fromEntries(
+        Object.entries(initialData).filter(([_, value]) => value !== undefined),
+      );
+
       await setDoc(userDocRef, {
-        ...initialData,
+        ...cleanData,
         lastUpdated: serverTimestamp(),
       });
     } catch (error) {
-      console.error("Error creating user document:", error);
+      console.error(
+        "Erreur lors de la création du document utilisateur:",
+        error,
+      );
       throw error;
     }
   }

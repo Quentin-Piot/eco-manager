@@ -387,6 +387,8 @@ const Chart = ({ data, onSlicePress, selectedSlice }: ChartProps) => {
             width: "100%",
             alignItems: "center",
             justifyContent: "center",
+            zIndex: 1000,
+            elevation: 1000,
           }}
         >
           {viewType === "distribution" ? (

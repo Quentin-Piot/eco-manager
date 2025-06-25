@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useAuth } from "~/lib/context/auth";
 import { useAccount } from "~/lib/context/account-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "~/lib/theme";
 import { DataConflictResolver } from "~/lib/utils/data-conflict-resolver";
-import alert from "~/components/alert";
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -46,7 +51,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       await handleDataConflictResolution();
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      alert(
+      Alert.alert(
         "Échec de la connexion",
         "Une erreur s'est produite lors de la connexion avec Google. Veuillez réessayer.",
         [{ text: "OK" }],
