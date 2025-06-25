@@ -40,10 +40,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const handleGoogleSignIn = async () => {
     try {
       setIsSigningIn(true);
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
 
-      // After successful login, handle data conflict resolution
-      await handleDataConflictResolution();
+      // Vérifier si la connexion a réussi
+      if (result !== undefined) {
+        // After successful login, handle data conflict resolution
+        await handleDataConflictResolution();
+      } else {
+        // Connexion réussie sur web ou mobile
+        await handleDataConflictResolution();
+      }
     } catch (error) {
       console.error("Erreur de connexion:", error);
       alert(

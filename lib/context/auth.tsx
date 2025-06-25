@@ -35,13 +35,59 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    return authService.onAuthStateChange((user) => {
-      setUser(user);
-      setIsLoading(false);
+    const initializeAuth = async () => {
+      try {
+        // Attendre l'initialisation du service d'authentification
+        await authService.waitForInitialization();
+
+        // Vérifier s'il y a une session locale valide si pas d'utilisateur Firebase
+        const currentUser = authService.getCurrentUser();
+        if (!currentUser) {
+          const hasLocalSession = await authService.hasLocalSession();
+          if (hasLocalSession) {
+            const localSession = await authService.getLocalSession();
+            console.log("Session locale trouvée:", localSession?.email);
+            // Créer un objet utilisateur temporaire basé sur la session locale
+            if (localSession) {
+              const tempUser = {
+                uid: localSession.uid,
+                email: localSession.email,
+                displayName: localSession.displayName,
+                photoURL: localSession.photoURL,
+              } as User;
+              setUser(tempUser);
+            }
+          }
+        }
+
+        setIsInitialized(true);
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'initialisation de l'authentification:",
+          error,
+        );
+        setIsInitialized(true);
+      }
+    };
+
+    initializeAuth();
+
+    return authService.onAuthStateChange((firebaseUser) => {
+      setUser(firebaseUser);
+      if (isInitialized) {
+        setIsLoading(false);
+      }
     });
-  }, []);
+  }, [isInitialized]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      setIsLoading(false);
+    }
+  }, [isInitialized]);
 
   const googleAuthConfig = authService.getGoogleAuthConfig();
   const SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email"];
@@ -101,6 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       await authService.signOut();
+      setUser(null);
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
@@ -110,7 +157,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const syncDataToCloud = async () => {
-    if (!authService.isAuthenticated()) {
+    if (!user) {
       throw new Error("User not authenticated");
     }
 
@@ -131,7 +178,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const restoreDataFromCloud = async () => {
-    if (!authService.isAuthenticated()) {
+    if (!user) {
       return;
     }
 

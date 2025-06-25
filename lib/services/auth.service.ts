@@ -7,6 +7,7 @@ import {
   User,
 } from "firebase/auth";
 import { auth, googleProvider } from "~/lib/config/firebase";
+import { sessionService } from "~/lib/services/session.service";
 import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -14,11 +15,17 @@ WebBrowser.maybeCompleteAuthSession();
 export class AuthService {
   private static instance: AuthService;
   private currentUser: User | null = null;
+  private isInitialized: boolean = false;
+  private initializationPromise: Promise<void> | null = null;
 
   private constructor() {
-    onAuthStateChanged(auth, (user) => {
-      this.currentUser = user;
-    });
+    this.initializationPromise = this.initialize();
+  }
+
+  public async waitForInitialization(): Promise<void> {
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
   }
 
   public static getInstance(): AuthService {
@@ -26,6 +33,19 @@ export class AuthService {
       AuthService.instance = new AuthService();
     }
     return AuthService.instance;
+  }
+
+  public async signInWithGoogleWeb(): Promise<User | null> {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        await sessionService.saveSession(result.user);
+      }
+      return result.user;
+    } catch (error) {
+      console.error("Erreur lors de la connexion avec Google:", error);
+      throw error;
+    }
   }
 
   public getCurrentUser(): User | null {
@@ -44,28 +64,30 @@ export class AuthService {
     return this.signInWithGoogleWeb();
   }
 
-  public async signInWithGoogleWeb(): Promise<User | null> {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      return result.user;
-    } catch (error) {
-      console.error("Erreur lors de la connexion avec Google:", error);
-      throw error;
-    }
-  }
-
   public async signInWithGoogleCredential(
     idToken: string,
   ): Promise<User | null> {
     try {
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
+      if (result.user) {
+        await sessionService.saveSession(result.user);
+      }
       return result.user;
     } catch (error) {
       console.error(
         "Erreur lors de la connexion avec les identifiants Google:",
         error,
       );
+      throw error;
+    }
+  }
+
+  public async signOut(): Promise<void> {
+    try {
+      await Promise.all([signOut(auth), sessionService.clearSession()]);
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
       throw error;
     }
   }
@@ -78,17 +100,59 @@ export class AuthService {
     };
   }
 
-  public async signOut(): Promise<void> {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      throw error;
-    }
+  public onAuthStateChange(callback: (user: User | null) => void): () => void {
+    return onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await sessionService.extendSession();
+      }
+      callback(user);
+    });
   }
 
-  public onAuthStateChange(callback: (user: User | null) => void): () => void {
-    return onAuthStateChanged(auth, callback);
+  /**
+   * Vérifie s'il y a une session locale valide
+   */
+  public async hasLocalSession(): Promise<boolean> {
+    return await sessionService.hasValidSession();
+  }
+
+  /**
+   * Récupère les données de session locale
+   */
+  public async getLocalSession() {
+    return await sessionService.getSession();
+  }
+
+  /**
+   * Nettoie la session locale
+   */
+  public async clearLocalSession(): Promise<void> {
+    await sessionService.clearSession();
+  }
+
+  private async initialize(): Promise<void> {
+    return new Promise((resolve) => {
+      onAuthStateChanged(auth, async (user) => {
+        this.currentUser = user;
+
+        if (user) {
+          // Sauvegarder la session quand l'utilisateur est connecté
+          await sessionService.saveSession(user);
+        } else {
+          // Vérifier s'il y a une session locale valide
+          const localSession = await sessionService.getSession();
+          if (localSession && !this.isInitialized) {
+            console.log("Session locale trouvée, tentative de restauration...");
+            // Ne pas essayer de restaurer automatiquement, laisser l'app gérer
+          }
+        }
+
+        if (!this.isInitialized) {
+          this.isInitialized = true;
+          resolve();
+        }
+      });
+    });
   }
 }
 

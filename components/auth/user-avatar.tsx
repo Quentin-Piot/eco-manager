@@ -41,7 +41,7 @@ export const UserAvatar = () => {
   const handleSignOut = async () => {
     alert(
       "Déconnexion",
-      "Êtes-vous sûr de vouloir vous déconnecter ? Vos données resteront sur cet appareil.",
+      "Êtes-vous sûr de vouloir vous déconnecter ? Vos données resteront sur cet appareil mais la session sera supprimée.",
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -51,6 +51,7 @@ export const UserAvatar = () => {
             try {
               setIsSigningOut(true);
               await signOut();
+              alert("Succès", "Vous avez été déconnecté avec succès.");
             } catch (error) {
               console.error("Erreur de déconnexion:", error);
               alert("Erreur", "Échec de la déconnexion. Veuillez réessayer.");
@@ -89,10 +90,17 @@ export const UserAvatar = () => {
 
   const handleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
 
-      // After successful login, handle data conflict resolution
-      await handleDataConflictResolution();
+      // Vérifier si la connexion a réussi
+      if (result !== undefined || isAuthenticated) {
+        // After successful login, handle data conflict resolution
+        await handleDataConflictResolution();
+        alert(
+          "Succès",
+          "Connexion réussie ! Vos données sont maintenant synchronisées.",
+        );
+      }
     } catch (error) {
       console.error("Erreur de connexion:", error);
       alert("Erreur", "Échec de la connexion. Veuillez réessayer.");

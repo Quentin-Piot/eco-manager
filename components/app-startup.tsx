@@ -1,57 +1,82 @@
-import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LoginScreen } from "~/components/auth/login-screen";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "~/lib/context/auth";
+import { LoginScreen } from "~/components/auth/login-screen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator, View } from "react-native";
+import { authService } from "~/lib/services/auth.service";
 
 const INITIAL_LOGIN_COMPLETED_KEY = "@initial_login_completed";
 
-export const AppStartup: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [showLoginScreen, setShowLoginScreen] = useState<boolean | null>(null);
-  const { isAuthenticated } = useAuth();
+export function AppStartup({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [isInitialLoginCompleted, setIsInitialLoginCompleted] = useState<
+    boolean | null
+  >(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  const checkAuthenticationStatus = useCallback(async () => {
+    try {
+      setIsCheckingSession(true);
+
+      // Attendre l'initialisation du service d'authentification
+      await authService.waitForInitialization();
+
+      const completed = await AsyncStorage.getItem("@initial_login_completed");
+      const hasCompletedLogin = completed === "true";
+
+      // Vérifier s'il y a une session locale valide
+      const hasLocalSession = await authService.hasLocalSession();
+
+      if (isAuthenticated) {
+        // Utilisateur authentifié via Firebase
+        if (!hasCompletedLogin) {
+          await AsyncStorage.setItem("@initial_login_completed", "true");
+        }
+        setIsInitialLoginCompleted(true);
+      } else if (hasLocalSession && hasCompletedLogin) {
+        // Session locale valide trouvée
+        console.log("Session locale valide trouvée");
+        setIsInitialLoginCompleted(true);
+      } else {
+        // Aucune session valide
+        setIsInitialLoginCompleted(false);
+        if (hasCompletedLogin) {
+          // Nettoyer le flag si la session n'est plus valide
+          await AsyncStorage.removeItem("@initial_login_completed");
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors de la vérification du statut d'authentification:",
+        error,
+      );
+      setIsInitialLoginCompleted(false);
+    } finally {
+      setIsCheckingSession(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    checkInitialLoginStatus();
-  }, []);
-
-  const checkInitialLoginStatus = async () => {
-    try {
-      const hasCompletedInitialLogin = await AsyncStorage.getItem(
-        INITIAL_LOGIN_COMPLETED_KEY,
-      );
-
-      // Show login screen if user hasn't completed initial login flow
-      setShowLoginScreen(!hasCompletedInitialLogin);
-    } catch (error) {
-      console.error("Error checking initial login status:", error);
-      // Default to showing login screen on error
-      setShowLoginScreen(true);
-    }
-  };
+    checkAuthenticationStatus();
+  }, [checkAuthenticationStatus]);
 
   const handleLoginSuccess = async () => {
-    try {
-      // Mark initial login as completed
-      await AsyncStorage.setItem(INITIAL_LOGIN_COMPLETED_KEY, "true");
-      setShowLoginScreen(false);
-    } catch (error) {
-      console.error("Error saving initial login status:", error);
-      setShowLoginScreen(false);
-    }
+    await AsyncStorage.setItem("@initial_login_completed", "true");
+    setIsInitialLoginCompleted(true);
   };
 
-  // Show loading state while checking login status
-  if (showLoginScreen === null) {
-    return <View className="flex-1 bg-white" />;
+  // Afficher un indicateur de chargement pendant l'initialisation
+  if (isLoading || isCheckingSession || isInitialLoginCompleted === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
-  // Show login screen if user hasn't completed initial login
-  if (showLoginScreen) {
+  if (!isInitialLoginCompleted) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Show main app
   return <>{children}</>;
-};
+}
