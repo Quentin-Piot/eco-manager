@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { useAuth } from "~/lib/context/auth";
-import { useAccount } from "~/lib/context/account-context";
-import { Ionicons } from "@expo/vector-icons";
-import { colors } from "~/lib/theme";
-import { DataConflictResolver } from "~/lib/utils/data-conflict-resolver";
+import {useState} from "react";
+import {ActivityIndicator, Text, TouchableOpacity, View} from "react-native";
+import {useAuth} from "~/lib/context/auth";
+import {useAccount} from "~/lib/context/account-context";
+import {Ionicons} from "@expo/vector-icons";
+import {colors} from "~/lib/theme";
+import {DataConflictResolver} from "~/lib/utils/data-conflict-resolver";
 import alert from "~/components/alert";
 
 interface LoginScreenProps {
@@ -31,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       });
     } catch (error) {
       console.error("Error in data conflict resolution:", error);
-      onLoginSuccess(); // Continue anyway
+      onLoginSuccess();
     } finally {
       setIsProcessingData(false);
     }
@@ -41,13 +41,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     try {
       setIsSigningIn(true);
       const result = await signInWithGoogle();
-
-      // Vérifier si la connexion a réussi
       if (result !== undefined) {
-        // After successful login, handle data conflict resolution
         await handleDataConflictResolution();
       } else {
-        // Connexion réussie sur web ou mobile
         await handleDataConflictResolution();
       }
     } catch (error) {
@@ -57,7 +53,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         "Une erreur s'est produite lors de la connexion avec Google. Veuillez réessayer.",
         [{ text: "OK" }],
       );
-      // Ensure we call onLoginSuccess even if there's an error
       onLoginSuccess();
     } finally {
       setIsSigningIn(false);
@@ -83,7 +78,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   return (
     <View className="flex-1 items-center justify-center bg-white p-6">
       <View className="w-full max-w-md items-center">
-        {/* Header */}
         <View className="mb-12 items-center">
           <View className="mb-6 h-20 w-20 items-center justify-center rounded-full bg-blue-100">
             <Ionicons
@@ -100,7 +94,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </Text>
         </View>
 
-        {/* Benefits */}
         <View className="mb-12 w-full space-y-4">
           <View className="flex-row items-center">
             <View className="mr-4 h-8 w-8 items-center justify-center rounded-full bg-green-100">
@@ -128,7 +121,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </View>
         </View>
 
-        {/* Sign In Button */}
         <TouchableOpacity
           className={`mb-4 w-full flex-row items-center justify-center rounded-xl px-6 py-4 shadow-lg ${
             isSigningIn ? "bg-blue-400" : "bg-blue-600"
@@ -155,7 +147,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           )}
         </TouchableOpacity>
 
-        {/* Skip Button */}
         <TouchableOpacity
           className="px-6 py-3"
           onPress={handleSkip}
@@ -166,7 +157,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </Text>
         </TouchableOpacity>
 
-        {/* Privacy Note */}
         <Text className="mt-8 text-center text-sm text-gray-400">
           Vos données sont chiffrées et sécurisées. Nous ne partageons jamais
           vos informations personnelles.

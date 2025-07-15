@@ -1,34 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { Platform, TouchableOpacity, View } from "react-native";
-import { Text } from "~/components/ui/text";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { cn } from "~/lib/utils";
-import { MaterialIcons } from "@expo/vector-icons";
+import {useState} from "react";
+import {Platform, TouchableOpacity, View} from "react-native";
+import {Text} from "~/components/ui/text";
+import {useColorScheme} from "@/hooks/useColorScheme";
+import {cn} from "~/lib/utils";
+import {MaterialIcons} from "@expo/vector-icons";
 
 export function WebAlert() {
   const [isVisible, setIsVisible] = useState(true);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  // Vérifier si l'alerte a déjà été fermée (uniquement sur le web)
-  useEffect(() => {
-    if (Platform.OS === "web") {
-      const alertClosed = localStorage.getItem("webAlertClosed");
-      if (alertClosed === "true") {
-        setIsVisible(false);
-      }
-    }
-  }, []);
-
-  // Fonction pour fermer l'alerte et enregistrer la préférence
   const closeAlert = () => {
     setIsVisible(false);
-    if (Platform.OS === "web") {
-      localStorage.setItem("webAlertClosed", "true");
-    }
   };
 
-  // Ne rien afficher si ce n'est pas la version web
   if (Platform.OS !== "web") {
     return null;
   }
@@ -48,8 +33,8 @@ export function WebAlert() {
             style={{ marginRight: 8 }}
           />
           <Text className={cn("flex-1 font-medium text-sm text-white")}>
-            Cette version web est uniquement à but de test et ne représente pas
-            le produit final.
+            Version de démonstration web • L'application native mobile offre la
+            véritable expérience utilisateur optimisée
           </Text>
           <TouchableOpacity onPress={closeAlert}>
             <MaterialIcons

@@ -1,18 +1,12 @@
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { User } from "firebase/auth";
-import { authService } from "~/lib/services/auth.service";
-import { cloudStorageService } from "~/lib/services/cloud-storage.service";
-import { Platform } from "react-native";
+import React, {createContext, ReactNode, useContext, useEffect, useState,} from "react";
+import {User} from "firebase/auth";
+import {authService} from "~/lib/services/auth.service";
+import {cloudStorageService} from "~/lib/services/cloud-storage.service";
+import {Platform} from "react-native";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
-import { AuthSessionResult, makeRedirectUri } from "expo-auth-session";
-import { getUserData, saveUserData } from "~/lib/storage/user-storage";
+import {AuthSessionResult, makeRedirectUri} from "expo-auth-session";
+import {getUserData, saveUserData} from "~/lib/storage/user-storage";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -49,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const hasLocalSession = await authService.hasLocalSession();
           if (hasLocalSession) {
             const localSession = await authService.getLocalSession();
-            console.log("Session locale trouvée:", localSession?.email);
+            console.log('Session locale trouvée:', localSession?.email);
             // Créer un objet utilisateur temporaire basé sur la session locale
             if (localSession) {
               const tempUser = {
@@ -65,10 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         setIsInitialized(true);
       } catch (error) {
-        console.error(
-          "Erreur lors de l'initialisation de l'authentification:",
-          error,
-        );
+        console.error('Erreur lors de l\'initialisation de l\'authentification:', error);
         setIsInitialized(true);
       }
     };
