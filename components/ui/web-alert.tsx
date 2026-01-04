@@ -1,9 +1,9 @@
-import {useState} from "react";
-import {Platform, TouchableOpacity, View} from "react-native";
-import {Text} from "~/components/ui/text";
-import {useColorScheme} from "@/hooks/useColorScheme";
-import {cn} from "~/lib/utils";
-import {MaterialIcons} from "@expo/vector-icons";
+import { useState } from "react";
+import { Platform, TouchableOpacity, View } from "react-native";
+import { Text } from "~/components/ui/text";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { cn } from "~/lib/utils";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export function WebAlert() {
   const [isVisible, setIsVisible] = useState(true);
